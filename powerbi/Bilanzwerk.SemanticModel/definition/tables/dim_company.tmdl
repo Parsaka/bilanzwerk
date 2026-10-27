@@ -19,7 +19,6 @@ table dim_company
 
 	column company_id
 		dataType: string
-		isHidden
 		summarizeBy: none
 		sourceColumn: company_id
 		lineageTag: 90848242-2393-5634-b9b8-b5b3d4ebfe0e

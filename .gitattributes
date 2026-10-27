@@ -1,0 +1,5 @@
+# VBA modules: CRLF and Windows-1252, as the VBA editor imports and exports them
+*.bas text eol=crlf working-tree-encoding=CP1252
+*.ps1 text eol=crlf
+*.xlsx binary
+*.xlsm binary

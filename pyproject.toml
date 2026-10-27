@@ -48,6 +48,10 @@ target-version = "py312"
 select = ["E", "F", "I", "B", "UP", "SIM", "PL", "RUF"]
 ignore = ["PLC0415", "PLR0913", "PLR0917", "PLR2004", "PLR0912", "PLR0915"]
 
+[tool.ruff.lint.per-file-ignores]
+# German typography in cell texts and formulas: the en dash marks a missing value on purpose.
+"excel/*.py" = ["RUF001"]
+
 [tool.pytest.ini_options]
 testpaths = ["ingestion/tests", "mdm/tests", "analysis/tests", "powerbi/tests"]
 addopts = "-q"

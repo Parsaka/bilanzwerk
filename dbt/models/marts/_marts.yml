@@ -117,6 +117,8 @@ models:
         tests: [{values_between: {min_value: 0, max_value: 1}}]
       - name: risk_band
         tests: [{accepted_values: {values: ['green', 'yellow', 'red']}}]
+      - name: is_champion
+        tests: [{accepted_values: {values: [0, 1], quote: false}}]
 
   - name: fact_data_quality
     tests:

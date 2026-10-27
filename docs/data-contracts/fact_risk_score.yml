@@ -16,6 +16,8 @@ columns:
   type: date
 - name: model_name
   type: string
+- name: is_champion
+  type: integer
 - name: probability_12m
   type: float
 - name: risk_band

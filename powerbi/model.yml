@@ -7,7 +7,7 @@ culture: de-DE
 warehouse_schema: marts
 
 tables:
-  dim_company: {hidden_columns: [company_id, valid_from, valid_to, version_number, match_probability, n_ciks, last_accepted_at, is_financial], key: company_key, description: "Golden record je Unternehmen (SCD Typ 2 auf Name und Sektor)."}
+  dim_company: {hidden_columns: [valid_from, valid_to, version_number, match_probability, n_ciks, last_accepted_at, is_financial], key: company_key, description: "Golden record je Unternehmen (SCD Typ 2 auf Name und Sektor)."}
   dim_period: {hidden_columns: [company_id, first_filing, sec_fiscal_year, sec_fiscal_period, fye_month], key: period_key, description: "Geschäftsperioden je Unternehmen mit Veröffentlichungsverzug."}
   dim_date: {key: date_key, mark_as_date: true, description: "Kalender für Stichtage, Ereignisse und Periodenenden."}
   dim_line_item: {key: line_item_key, description: "Positionen: Bilanz, GuV, Cashflow mit Hierarchie."}
@@ -364,17 +364,35 @@ measures:
     name: "Risiko 12M"
     folder: "Kreditrisiko"
     format: "0.0%"
-    description: "Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten."
+    description: "Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten, Champion-Modell (ADR-007), zum letzten Stichtag im Kontext."
     expression: |
-      AVERAGE ( fact_risk_score[probability_12m] )
+      VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+      RETURN
+          CALCULATE (
+              AVERAGE ( fact_risk_score[probability_12m] ),
+              fact_risk_score[is_champion] = 1,
+              fact_risk_score[as_of_date] = _stichtag
+          )
 
   - table: fact_risk_score
     name: "Unternehmen rot"
     folder: "Kreditrisiko"
     format: "#,0"
-    description: "Anzahl Unternehmen im roten Risikoband."
+    description: "Anzahl Unternehmen im roten Risikoband (Champion-Modell, letzter Stichtag je Unternehmen im Kontext)."
     expression: |
-      CALCULATE ( DISTINCTCOUNT ( fact_risk_score[company_key] ), fact_risk_score[risk_band] = "red" )
+      COUNTROWS (
+          FILTER (
+              VALUES ( dim_company[company_id] ),
+              VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+              RETURN
+                  CALCULATE (
+                      COUNTROWS ( fact_risk_score ),
+                      fact_risk_score[is_champion] = 1,
+                      fact_risk_score[as_of_date] = _stichtag,
+                      fact_risk_score[risk_band] = "red"
+                  ) > 0
+          )
+      )
 
   - table: fact_risk_score
     name: "Risiko Veränderung zum Vorquartal"
@@ -404,6 +422,14 @@ measures:
           VAR _fc = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
           RETURN IF ( NOT ISBLANK ( _fc ) && _ist <> 0, ABS ( _ist - _fc ) / ABS ( _ist ) )
       )
+
+  - table: fact_financial_line
+    name: "Datenstand"
+    folder: "Datenqualität"
+    format: "dd.MM.yyyy"
+    description: "Letzter Veröffentlichungszeitpunkt (available_at) aller Werte im Modell, unabhängig von Filtern. Für Fußzeilen und das Excel-Cockpit."
+    expression: |
+      CALCULATE ( MAX ( fact_financial_line[available_at] ), REMOVEFILTERS () )
 
   - table: fact_data_quality
     name: "DQ Pass-Rate"

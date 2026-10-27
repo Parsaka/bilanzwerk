@@ -43,7 +43,7 @@ select sum({{ numerator }}) as passed, sum({{ denominator }}) as checked
 from {{ model }}
 {%- if where %} where {{ where }}{% endif %}
 having sum({{ denominator }}) > 0
-    and cast(sum({{ numerator }}) as {{ dbt.type_float() }}) / sum({{ denominator }}) < {{ threshold }}
+    and cast(sum({{ numerator }}) as {{ bw_float() }}) / sum({{ denominator }}) < {{ threshold }}
 {% endtest %}
 
 {% test hash_is_sha256_hex(model, column_name) %}

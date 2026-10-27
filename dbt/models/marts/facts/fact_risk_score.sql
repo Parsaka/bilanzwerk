@@ -6,6 +6,7 @@ select
     g.golden_company_id as company_id,
     r.as_of_date,
     r.model_name,
+    case when r.model_name = '{{ var("risk_champion_model") }}' then 1 else 0 end as is_champion,
     r.probability_12m,
     r.risk_band,
     r.top_3_drivers,

@@ -38,3 +38,11 @@ Z'' = 6.56 WC/TA + 3.26 RE/TA + 6.72 EBIT/TA + 1.05 Equity/TL.
 - A KPI is used at an as-of date only if its `available_at` (latest acceptance time of any
   input) is on or before that date; otherwise it is missing.
 - `assert_no_leakage` fails the run; a pytest and a dbt singular test check the same rule.
+
+## Which score the reports show
+
+Both M2 and M3 write their scores to `fact_risk_score`; the column `is_champion` marks the model
+the reports and the Excel cockpit show (dbt var `risk_champion_model`, default M2 because a
+controller can follow its drivers). Switching to M3 is a one-line change in a pull request, and
+only when the pooled backtest shows a PR-AUC gain whose bootstrap interval excludes zero. The
+decision and the numbers behind it go into this ADR when it happens.

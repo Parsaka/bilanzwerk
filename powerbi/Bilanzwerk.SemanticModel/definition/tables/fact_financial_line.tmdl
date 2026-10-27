@@ -215,6 +215,12 @@ table fact_financial_line
 		displayFolder: Plan-Ist
 		lineageTag: dde69af8-6f7b-5bbb-887c-2b5b6f37d0d7
 
+	/// Letzter Veröffentlichungszeitpunkt (available_at) aller Werte im Modell, unabhängig von Filtern. Für Fußzeilen und das Excel-Cockpit.
+	measure Datenstand = CALCULATE ( MAX ( fact_financial_line[available_at] ), REMOVEFILTERS () )
+		formatString: dd.MM.yyyy
+		displayFolder: Datenqualität
+		lineageTag: 62dec0ef-aba2-5432-8de4-d108326771b4
+
 	column company_key
 		dataType: string
 		isHidden

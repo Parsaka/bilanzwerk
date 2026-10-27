@@ -38,3 +38,6 @@ powerbi/**/.pbi/cache.abf
 .DS_Store
 .idea/
 .vscode/
+
+# Tableau extract: produced by scripts/export_tableau.py, published to Tableau Public, not versioned
+tableau/data/

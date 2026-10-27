@@ -3,14 +3,34 @@ table fact_risk_score
 	lineageTag: c19198bb-03ab-5305-86e6-5a741a04c2ba
 	sourceLineageTag: [marts].[fact_risk_score]
 
-	/// Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten.
-	measure 'Risiko 12M' = AVERAGE ( fact_risk_score[probability_12m] )
+	/// Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten, Champion-Modell (ADR-007), zum letzten Stichtag im Kontext.
+	measure 'Risiko 12M' =
+			VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+			RETURN
+			    CALCULATE (
+			        AVERAGE ( fact_risk_score[probability_12m] ),
+			        fact_risk_score[is_champion] = 1,
+			        fact_risk_score[as_of_date] = _stichtag
+			    )
 		formatString: 0.0%
 		displayFolder: Kreditrisiko
 		lineageTag: b562c582-e93b-5404-a5a2-d922cb3c2d2c
 
-	/// Anzahl Unternehmen im roten Risikoband.
-	measure 'Unternehmen rot' = CALCULATE ( DISTINCTCOUNT ( fact_risk_score[company_key] ), fact_risk_score[risk_band] = "red" )
+	/// Anzahl Unternehmen im roten Risikoband (Champion-Modell, letzter Stichtag je Unternehmen im Kontext).
+	measure 'Unternehmen rot' =
+			COUNTROWS (
+			    FILTER (
+			        VALUES ( dim_company[company_id] ),
+			        VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+			        RETURN
+			            CALCULATE (
+			                COUNTROWS ( fact_risk_score ),
+			                fact_risk_score[is_champion] = 1,
+			                fact_risk_score[as_of_date] = _stichtag,
+			                fact_risk_score[risk_band] = "red"
+			            ) > 0
+			    )
+			)
 		formatString: #,0
 		displayFolder: Kreditrisiko
 		lineageTag: 8d9dc8d2-ea49-5347-8b04-e5afa7a2c364
@@ -60,6 +80,14 @@ table fact_risk_score
 		sourceColumn: model_name
 		lineageTag: f09d260a-b609-5f76-b7c6-de36e18ad166
 		sourceLineageTag: model_name
+
+	column is_champion
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_champion
+		lineageTag: e19adb3c-e01f-5494-80ba-7713aa03c9fc
+		sourceLineageTag: is_champion
 
 	column probability_12m
 		dataType: double

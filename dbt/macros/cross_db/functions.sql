@@ -11,11 +11,16 @@
     percentile_cont({{ p }}) within group (order by {{ expr }}) over (partition by {{ partition_by }})
 {%- endmacro %}
 
-{#- Floating point type and safe division returning float. -#}
-{% macro bw_float() -%}{{ dbt.type_float() }}{%- endmacro %}
+{#- 64-bit floating point type and safe division. dbt.type_float() is FLOAT on DuckDB, which is
+    32-bit and loses amounts above about 16 million at the last digits; Fabric FLOAT is 64-bit. -#}
+{% macro bw_float() -%}
+    {{ adapter.dispatch('bw_float', 'bilanzwerk')() }}
+{%- endmacro %}
+{% macro default__bw_float() -%}double{%- endmacro %}
+{% macro fabric__bw_float() -%}float{%- endmacro %}
 
 {% macro bw_div(numerator, denominator) -%}
-    cast({{ numerator }} as {{ dbt.type_float() }}) / nullif(cast({{ denominator }} as {{ dbt.type_float() }}), 0)
+    cast({{ numerator }} as {{ bw_float() }}) / nullif(cast({{ denominator }} as {{ bw_float() }}), 0)
 {%- endmacro %}
 
 {#- Timestamp type and current time. -#}
