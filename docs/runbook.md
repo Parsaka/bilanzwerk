@@ -32,6 +32,12 @@ cd dbt && BW_HAS_MDM=true BW_HAS_RISK_SCORES=true uv run dbt build && cd ..
 
 A second run of any loader loads nothing new (checksum in `ingest_manifest`).
 
+The same sequence runs on a GitHub runner without Azure: `.github/workflows/real-data-run.yml`
+(Actions -> real-data-run -> Run workflow, or a push to the branch `run/real-data`). The landing
+zone is cached between runs, so a rerun loads only new files. The results (analysis CSVs and
+`answer.json`, MDM review sample, event counts, contract check, ingest manifest, dbt run
+results; no raw data) land on the branch `real-data-results` and in the run's artifacts.
+
 ## Scheduled loads (prod)
 
 | Workflow | When | What |

@@ -90,6 +90,8 @@ Ehrlich aufgeführt, damit niemand eine Zahl für gemessen hält, die es nicht i
 
 - **Erster Lauf auf echten Daten** (SEC, ESEF, GLEIF, EZB): danach Antwortbox, Ergebnistabelle,
   Fallstudien und Diagrammtitel. Alles bis dahin läuft auf einem synthetischen CI-Fixture.
+  Der Lauf selbst braucht kein Azure: `real-data-run.yml` fährt die ganze Kette auf einem
+  GitHub-Runner und legt die Ergebnisse auf den Branch `real-data-results` (Runbook).
 - **300 Paare von Hand prüfen** für Precision/Recall des Stammdatenabgleichs (`mdm/`).
 - **Power BI Desktop:** Hauptvisuals je Seite nach `powerbi/report-pages.md` platzieren,
   Screenshots, DAX-Studio-Messung vorher/nachher.
