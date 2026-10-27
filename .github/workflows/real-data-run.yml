@@ -30,6 +30,7 @@ env:
   BW_DATA_ROOT: ${{ github.workspace }}/data
   BW_USER_AGENT: ${{ vars.BW_USER_AGENT || 'Parsa Kamali parsa.kamali.data@gmail.com' }}
   BW_DUCKDB_MEMORY: 10GB
+  BW_DBT_THREADS: "2"
   DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
   UV_PYTHON: "3.12"
   FSDS_START: ${{ inputs.fsds_start || '2009q2' }}
@@ -88,13 +89,26 @@ jobs:
             data/_manifest
           key: landing-${{ github.run_id }}
 
-      - name: dbt build (without MDM and model outputs)
+      - name: Raw vault, one SEC quarter at a time
         working-directory: dbt
         run: |
           uv run dbt seed
           # Unit tests of incremental models need the relations to exist (as in ci.yml).
           uv run dbt run --empty
-          uv run dbt build
+          # The full FSDS history (~180 M amounts) in one batch exceeds the runner's memory and
+          # temp disk. Loading quarter by quarter is also how production loads it: the
+          # satellites are incremental and insert only changes.
+          for q in $(ls ../data/raw/sec_fsds/num | sed 's/quarter=//' | sort); do
+            echo "::group::raw vault $q"
+            # Staging views are rebuilt too: they hold the quarter filter.
+            uv run dbt run --vars "{load_quarter: $q}" \
+              --select "source:sec_fsds+,path:models/staging" "source:sec_fsds+,path:models/raw_vault"
+            echo "::endgroup::"
+            echo "LAST_QUARTER=$q" >> "$GITHUB_ENV"
+          done
+      - name: dbt build (without MDM and model outputs)
+        run: |
+          uv run dbt build --project-dir dbt --vars "{load_quarter: ${LAST_QUARTER}}"
       - name: MDM matching (Splink) and review sample
         run: |
           uv run python -m mdm.cli match
@@ -102,7 +116,8 @@ jobs:
       - name: dbt build with MDM
         env:
           BW_HAS_MDM: "true"
-        run: uv run dbt build --project-dir dbt
+        run: |
+          uv run dbt build --project-dir dbt --vars "{load_quarter: ${LAST_QUARTER}}"
       - name: Early-warning analysis (M0-M3, S1, H1-H4)
         env:
           BW_HAS_MDM: "true"
@@ -113,7 +128,8 @@ jobs:
         env:
           BW_HAS_MDM: "true"
           BW_HAS_RISK_SCORES: "true"
-        run: uv run dbt build --project-dir dbt
+        run: |
+          uv run dbt build --project-dir dbt --vars "{load_quarter: ${LAST_QUARTER}}"
       - name: Data contracts match the warehouse
         run: uv run python scripts/check_contracts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" | tee data/results/contracts.txt
       - name: Tableau extract

@@ -6,6 +6,9 @@ unit_tests:
       Two taxonomy versions that normalise to the same taxonomy, and a filing repeated in a later
       quarter file, give one row per hk_fact (seen in the real data: duplicate satellite keys).
     model: stg_sec_fsds__num
+    overrides:
+      vars:
+        load_quarter: null
     given:
       # The source is external Parquet, so the fixture is given as SQL (dbt cannot read its columns).
       - input: source('sec_fsds', 'num')

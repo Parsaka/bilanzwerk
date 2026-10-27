@@ -74,11 +74,32 @@ history as (
     select * from esef_history
 ),
 
+last_per_day as (
+    -- valid_from/valid_to are dates: of several states on one day (two filings accepted the
+    -- same day, or a CIK and its merged twin), the last one of the day is the state of that day
+    select
+        golden_company_id,
+        effective_from,
+        company_name,
+        sic,
+        country_ba
+    from (
+        select
+            h.*,
+            row_number() over (
+                partition by h.golden_company_id, cast(h.effective_from as date)
+                order by h.effective_from desc, h.company_name desc, h.sic desc
+            ) as day_rn
+        from history as h
+    ) as ranked
+    where day_rn = 1
+),
+
 with_sector as (
     select
         h.*,
         coalesce(sm.sector_code, 'S99') as sector_code
-    from history as h
+    from last_per_day as h
     left join {{ ref('sector_map') }} as sm
         on h.sic between sm.sic_from and sm.sic_to
 ),
@@ -130,13 +151,25 @@ ids as (
 ),
 
 gleif as (
-    select
-        g.golden_company_id,
-        gl.*
-    from golden as g
-    inner join {{ bw_sat_current('sat_company_gleif', 'hk_company') }} as gl
-        on g.hk_company = gl.hk_company
-    where g.company_bk_type = 'LEI'
+    -- one LEI record per golden id (a golden id can hold more than one LEI): issued before
+    -- lapsed, then the most recently updated
+    select * from (
+        select
+            g.golden_company_id,
+            gl.*,
+            row_number() over (
+                partition by g.golden_company_id
+                order by
+                    case when gl.registration_status = 'ISSUED' then 0 else 1 end,
+                    gl.last_update_date desc,
+                    gl.hk_company
+            ) as lei_rn
+        from golden as g
+        inner join {{ bw_sat_current('sat_company_gleif', 'hk_company') }} as gl
+            on g.hk_company = gl.hk_company
+        where g.company_bk_type = 'LEI'
+    ) as ranked
+    where lei_rn = 1
 ),
 
 last_filing as (
