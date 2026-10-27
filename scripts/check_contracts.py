@@ -20,11 +20,23 @@ import yaml
 CONTRACT_DIR = Path(__file__).resolve().parents[1] / "docs" / "data-contracts"
 
 LOGICAL = {
-    "VARCHAR": "string", "CHAR": "string", "TEXT": "string",
-    "BIGINT": "integer", "INTEGER": "integer", "SMALLINT": "integer", "TINYINT": "integer", "HUGEINT": "integer",
-    "INT": "integer", "BIT": "integer",
-    "DOUBLE": "float", "FLOAT": "float", "REAL": "float",
-    "DATE": "date", "TIMESTAMP": "timestamp", "DATETIME2": "timestamp", "DATETIME": "timestamp",
+    "VARCHAR": "string",
+    "CHAR": "string",
+    "TEXT": "string",
+    "BIGINT": "integer",
+    "INTEGER": "integer",
+    "SMALLINT": "integer",
+    "TINYINT": "integer",
+    "HUGEINT": "integer",
+    "INT": "integer",
+    "BIT": "integer",
+    "DOUBLE": "float",
+    "FLOAT": "float",
+    "REAL": "float",
+    "DATE": "date",
+    "TIMESTAMP": "timestamp",
+    "DATETIME2": "timestamp",
+    "DATETIME": "timestamp",
     "BOOLEAN": "integer",
 }
 
@@ -39,7 +51,8 @@ def logical_type(db_type: str) -> str:
 def actual_columns(con: duckdb.DuckDBPyConnection, schema: str) -> dict[str, dict[str, str]]:
     rows = con.execute(
         "select table_name, column_name, data_type from information_schema.columns "
-        "where table_schema = ? order by table_name, ordinal_position", [schema]
+        "where table_schema = ? order by table_name, ordinal_position",
+        [schema],
     ).fetchall()
     out: dict[str, dict[str, str]] = {}
     for table, column, dtype in rows:
@@ -74,10 +87,13 @@ def write_missing(actual: dict[str, dict[str, str]]) -> None:
         if path.exists():
             continue
         contract = {
-            "table": table, "schema": "marts", "owner": "TODO", "grain": "TODO",
+            "table": table,
+            "schema": "marts",
+            "owner": "TODO",
+            "grain": "TODO",
             "freshness": "new SEC quarter within 24 hours of publication",
             "breaking_change_rule": "Removing or retyping a column needs a new major version and an ADR; "
-                                    "adding a column is allowed.",
+            "adding a column is allowed.",
             "columns": [{"name": c, "type": t} for c, t in cols.items()],
         }
         path.write_text(yaml.safe_dump(contract, sort_keys=False, allow_unicode=True))

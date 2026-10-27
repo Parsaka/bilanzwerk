@@ -100,19 +100,38 @@ def quarter_values(c: Company, i: int) -> dict[str, float]:
     re = eq - rev * 0.5
     cfo = ni + da - (0 if c.growth_q >= 0 else rev * 0.05)
     return {
-        "Revenues": rev, "CostOfRevenue": cogs, "OperatingIncomeLoss": ebit,
-        "DepreciationDepletionAndAmortization": da, "InterestExpense": intexp, "NetIncomeLoss": ni,
+        "Revenues": rev,
+        "CostOfRevenue": cogs,
+        "OperatingIncomeLoss": ebit,
+        "DepreciationDepletionAndAmortization": da,
+        "InterestExpense": intexp,
+        "NetIncomeLoss": ni,
         "NetCashProvidedByUsedInOperatingActivities": cfo,
-        "CashAndCashEquivalentsAtCarryingValue": cash, "AccountsReceivableNetCurrent": ar,
-        "InventoryNet": inv, "AssetsCurrent": tca, "PropertyPlantAndEquipmentNet": ppe, "Assets": ta,
-        "AccountsPayableCurrent": ap, "LiabilitiesCurrent": tcl, "LongTermDebtNoncurrent": ltd,
-        "Liabilities": tl, "StockholdersEquity": eq, "RetainedEarningsAccumulatedDeficit": re,
+        "CashAndCashEquivalentsAtCarryingValue": cash,
+        "AccountsReceivableNetCurrent": ar,
+        "InventoryNet": inv,
+        "AssetsCurrent": tca,
+        "PropertyPlantAndEquipmentNet": ppe,
+        "Assets": ta,
+        "AccountsPayableCurrent": ap,
+        "LiabilitiesCurrent": tcl,
+        "LongTermDebtNoncurrent": ltd,
+        "Liabilities": tl,
+        "StockholdersEquity": eq,
+        "RetainedEarningsAccumulatedDeficit": re,
         "LiabilitiesAndStockholdersEquity": ta,
     }
 
 
-FLOWS = {"Revenues", "CostOfRevenue", "OperatingIncomeLoss", "DepreciationDepletionAndAmortization",
-         "InterestExpense", "NetIncomeLoss", "NetCashProvidedByUsedInOperatingActivities"}
+FLOWS = {
+    "Revenues",
+    "CostOfRevenue",
+    "OperatingIncomeLoss",
+    "DepreciationDepletionAndAmortization",
+    "InterestExpense",
+    "NetIncomeLoss",
+    "NetCashProvidedByUsedInOperatingActivities",
+}
 YTD_ONLY = {"NetCashProvidedByUsedInOperatingActivities", "DepreciationDepletionAndAmortization"}
 
 
@@ -138,19 +157,55 @@ def build_fsds(out: Path) -> tuple[list[tuple], dict[int, list[tuple]]]:
             bucket = per_quarter.setdefault(qlabel, {"sub": [], "num": []})
             fy = end.year + (1 if end.month > c.fye_month else 0)
             fp = "FY" if fq == 4 else f"Q{fq}"
-            bucket["sub"].append("\t".join([
-                adsh, str(c.cik), c.name, str(c.sic), "US", "NY", "NEW YORK", "10001", "US", "", "",
-                "1-LAF", f"{c.fye_month:02d}{month_end(2021, c.fye_month).day:02d}", form,
-                end.strftime("%Y%m%d"), str(fy), fp, accepted.strftime("%Y%m%d"),
-                accepted.strftime("%Y-%m-%d 16:05:00.0"), "0", "1", f"x-{adsh}.htm", "1", "",
-            ]))
+            bucket["sub"].append(
+                "\t".join(
+                    [
+                        adsh,
+                        str(c.cik),
+                        c.name,
+                        str(c.sic),
+                        "US",
+                        "NY",
+                        "NEW YORK",
+                        "10001",
+                        "US",
+                        "",
+                        "",
+                        "1-LAF",
+                        f"{c.fye_month:02d}{month_end(2021, c.fye_month).day:02d}",
+                        form,
+                        end.strftime("%Y%m%d"),
+                        str(fy),
+                        fp,
+                        accepted.strftime("%Y%m%d"),
+                        accepted.strftime("%Y-%m-%d 16:05:00.0"),
+                        "0",
+                        "1",
+                        f"x-{adsh}.htm",
+                        "1",
+                        "",
+                    ]
+                )
+            )
             filings[c.cik].append((adsh, form, accepted, end, ""))
 
-            def emit(tag: str, ddate: date, qtrs: int, value: float) -> None:
-                bucket["num"].append("\t".join([
-                    adsh, tag, "us-gaap/2023", ddate.strftime("%Y%m%d"), str(qtrs), "USD", "", "",
-                    f"{value:.2f}", "",
-                ]))
+            def emit(tag: str, ddate: date, qtrs: int, value: float, bucket=bucket, adsh=adsh) -> None:
+                bucket["num"].append(
+                    "\t".join(
+                        [
+                            adsh,
+                            tag,
+                            "us-gaap/2023",
+                            ddate.strftime("%Y%m%d"),
+                            str(qtrs),
+                            "USD",
+                            "",
+                            "",
+                            f"{value:.2f}",
+                            "",
+                        ]
+                    )
+                )
 
             for comparative in (0, 4):  # current period and the same period one year earlier
                 j = idx - comparative
@@ -176,18 +231,63 @@ def build_fsds(out: Path) -> tuple[list[tuple], dict[int, list[tuple]]]:
         path = out / "src" / f"{qlabel}.zip"
         path.parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(path, "w") as zf:
-            zf.writestr("sub.txt", "\t".join([
-                "adsh", "cik", "name", "sic", "countryba", "stprba", "cityba", "zipba", "countryinc",
-                "former", "changed", "afs", "fye", "form", "period", "fy", "fp", "filed", "accepted",
-                "prevrpt", "detail", "instance", "nciks", "aciks"]) + "\n" + "\n".join(rows["sub"]) + "\n")
-            zf.writestr("num.txt", "adsh\ttag\tversion\tddate\tqtrs\tuom\tsegments\tcoreg\tvalue\tfootnote\n"
-                        + "\n".join(dict.fromkeys(rows["num"])) + "\n")
-            zf.writestr("tag.txt", "tag\tversion\tcustom\tabstract\tdatatype\tiord\tcrdr\ttlabel\tdoc\n"
-                        + "\n".join(f"{t}\tus-gaap/2023\t0\t0\tmonetary\t{'D' if t in FLOWS else 'I'}\tD\t{t}\t{t}"
-                                    for t in quarter_values(COMPANIES[0], 0)) + "\n")
-            zf.writestr("pre.txt", "adsh\treport\tline\tstmt\tinpth\trfile\ttag\tversion\tplabel\tnegating\n"
-                        + "\n".join(f"{r.split(chr(9))[0]}\t2\t1\tIS\t0\tH\tRevenues\tus-gaap/2023\tRevenue\t0"
-                                    for r in rows["sub"]) + "\n")
+            zf.writestr(
+                "sub.txt",
+                "\t".join(
+                    [
+                        "adsh",
+                        "cik",
+                        "name",
+                        "sic",
+                        "countryba",
+                        "stprba",
+                        "cityba",
+                        "zipba",
+                        "countryinc",
+                        "former",
+                        "changed",
+                        "afs",
+                        "fye",
+                        "form",
+                        "period",
+                        "fy",
+                        "fp",
+                        "filed",
+                        "accepted",
+                        "prevrpt",
+                        "detail",
+                        "instance",
+                        "nciks",
+                        "aciks",
+                    ]
+                )
+                + "\n"
+                + "\n".join(rows["sub"])
+                + "\n",
+            )
+            zf.writestr(
+                "num.txt",
+                "adsh\ttag\tversion\tddate\tqtrs\tuom\tsegments\tcoreg\tvalue\tfootnote\n"
+                + "\n".join(dict.fromkeys(rows["num"]))
+                + "\n",
+            )
+            zf.writestr(
+                "tag.txt",
+                "tag\tversion\tcustom\tabstract\tdatatype\tiord\tcrdr\ttlabel\tdoc\n"
+                + "\n".join(
+                    f"{t}\tus-gaap/2023\t0\t0\tmonetary\t{'D' if t in FLOWS else 'I'}\tD\t{t}\t{t}"
+                    for t in quarter_values(COMPANIES[0], 0)
+                )
+                + "\n",
+            )
+            zf.writestr(
+                "pre.txt",
+                "adsh\treport\tline\tstmt\tinpth\trfile\ttag\tversion\tplabel\tnegating\n"
+                + "\n".join(
+                    f"{r.split(chr(9))[0]}\t2\t1\tIS\t0\tH\tRevenues\tus-gaap/2023\tRevenue\t0" for r in rows["sub"]
+                )
+                + "\n",
+            )
     return list(per_quarter), filings
 
 
@@ -202,36 +302,55 @@ def build_submissions(out: Path, filings: dict[int, list[tuple]]) -> Path:
                 rows.append((f"0000{c.cik:06d}-23-900003", "25-NSE", c.bankrupt_on + timedelta(days=20), None, ""))
             rows.append((f"0000{c.cik:06d}-22-800001", "8-K", date(2022, 5, 2), None, "2.02,9.01"))
             payload = {
-                "cik": f"{c.cik:010d}", "entityType": "operating", "sic": str(c.sic),
-                "sicDescription": "fixture", "name": c.name, "tickers": [c.name[:4]], "exchanges": ["Nasdaq"],
+                "cik": f"{c.cik:010d}",
+                "entityType": "operating",
+                "sic": str(c.sic),
+                "sicDescription": "fixture",
+                "name": c.name,
+                "tickers": [c.name[:4]],
+                "exchanges": ["Nasdaq"],
                 "fiscalYearEnd": f"{c.fye_month:02d}{month_end(2021, c.fye_month).day:02d}",
-                "stateOfIncorporation": "DE", "lei": None,
+                "stateOfIncorporation": "DE",
+                "lei": None,
                 "addresses": {"business": {"city": "NEW YORK", "stateOrCountry": "NY", "zipCode": "10001"}},
-                "formerNames": [{"name": c.name.replace("INC", "HOLDINGS"), "from": "2005-01-01T00:00:00.000Z",
-                                 "to": "2021-06-30T00:00:00.000Z"}] if c.cik == 1001 else [],
-                "filings": {"recent": {
-                    "accessionNumber": [r[0] for r in rows], "form": [r[1] for r in rows],
-                    "filingDate": [r[2].isoformat() for r in rows],
-                    "reportDate": [r[3].isoformat() if r[3] else "" for r in rows],
-                    "acceptanceDateTime": [r[2].isoformat() + "T16:05:00.000Z" for r in rows],
-                    "items": [r[4] for r in rows],
-                }},
+                "formerNames": [
+                    {
+                        "name": c.name.replace("INC", "HOLDINGS"),
+                        "from": "2005-01-01T00:00:00.000Z",
+                        "to": "2021-06-30T00:00:00.000Z",
+                    }
+                ]
+                if c.cik == 1001
+                else [],
+                "filings": {
+                    "recent": {
+                        "accessionNumber": [r[0] for r in rows],
+                        "form": [r[1] for r in rows],
+                        "filingDate": [r[2].isoformat() for r in rows],
+                        "reportDate": [r[3].isoformat() if r[3] else "" for r in rows],
+                        "acceptanceDateTime": [r[2].isoformat() + "T16:05:00.000Z" for r in rows],
+                        "items": [r[4] for r in rows],
+                    }
+                },
             }
             zf.writestr(f"CIK{c.cik:010d}.json", json.dumps(payload))
     return path
 
 
 def build_gleif(out: Path) -> Path:
-    header = ('"LEI","Entity.LegalName","Entity.OtherEntityNames.OtherEntityName.1",'
-              '"Entity.LegalAddress.FirstAddressLine","Entity.LegalAddress.City","Entity.LegalAddress.Country",'
-              '"Entity.LegalAddress.PostalCode","Entity.HeadquartersAddress.FirstAddressLine",'
-              '"Entity.HeadquartersAddress.City","Entity.HeadquartersAddress.Country",'
-              '"Entity.HeadquartersAddress.PostalCode","Entity.EntityStatus","Registration.RegistrationStatus",'
-              '"Registration.LastUpdateDate"\n')
+    header = (
+        '"LEI","Entity.LegalName","Entity.OtherEntityNames.OtherEntityName.1",'
+        '"Entity.LegalAddress.FirstAddressLine","Entity.LegalAddress.City","Entity.LegalAddress.Country",'
+        '"Entity.LegalAddress.PostalCode","Entity.HeadquartersAddress.FirstAddressLine",'
+        '"Entity.HeadquartersAddress.City","Entity.HeadquartersAddress.Country",'
+        '"Entity.HeadquartersAddress.PostalCode","Entity.EntityStatus","Registration.RegistrationStatus",'
+        '"Registration.LastUpdateDate"\n'
+    )
     rows = "".join(
         f'"{c.lei}","{c.name.title()}","{c.name[:4]}","1 Main St","New York","US","10001","1 Main St",'
         f'"New York","US","10001","ACTIVE","ISSUED","2024-01-02T00:00:00Z"\n'
-        for c in COMPANIES if c.lei
+        for c in COMPANIES
+        if c.lei
     )
     path = out / "src" / "lei2.csv.zip"
     with zipfile.ZipFile(path, "w") as zf:
@@ -242,20 +361,30 @@ def build_gleif(out: Path) -> Path:
 def build_ecb(settings: Settings) -> None:
     days = [date(2019, 1, 1) + timedelta(days=i) for i in range(5 * 366)]
     business = [d for d in days if d.weekday() < 5]
-    tbl = pa.table({
-        "currency": ["USD"] * len(business),
-        "rate_date": business,
-        "rate_per_eur": pa.array([1.10 + 0.0001 * (i % 300) for i in range(len(business))]).cast(pa.decimal128(18, 6)),
-    }, schema=ecb.SCHEMA)
+    tbl = pa.table(
+        {
+            "currency": ["USD"] * len(business),
+            "rate_date": business,
+            "rate_per_eur": pa.array([1.10 + 0.0001 * (i % 300) for i in range(len(business))]).cast(
+                pa.decimal128(18, 6)
+            ),
+        },
+        schema=ecb.SCHEMA,
+    )
     write_partition(tbl, settings.raw_root / "ecb" / "rates", {"fetch_date": "2024-01-02"})
 
 
 def write_empty_esef(settings: Settings) -> None:
     from ingestion import esef
-    write_partition(pa.Table.from_pylist([], schema=esef.FILING_SCHEMA), settings.raw_root / "esef" / "filings",
-                    {"country": "DE"})
-    write_partition(pa.Table.from_pylist([], schema=esef.FACT_SCHEMA), settings.raw_root / "esef" / "facts",
-                    {"country": "DE", "filing": "none"})
+
+    write_partition(
+        pa.Table.from_pylist([], schema=esef.FILING_SCHEMA), settings.raw_root / "esef" / "filings", {"country": "DE"}
+    )
+    write_partition(
+        pa.Table.from_pylist([], schema=esef.FACT_SCHEMA),
+        settings.raw_root / "esef" / "facts",
+        {"country": "DE", "filing": "none"},
+    )
 
 
 def main() -> None:
@@ -275,8 +404,11 @@ def main() -> None:
     build_ecb(settings)
     write_empty_esef(settings)
     # empty relationship file with the right columns
-    write_partition(pa.table({c: pa.array([], pa.string()) for c in gleif.RR_COLUMNS.values()}),
-                    settings.raw_root / "gleif" / "relationships", {"variant": "full", "publish_date": "2024-01-02"})
+    write_partition(
+        pa.table({c: pa.array([], pa.string()) for c in gleif.RR_COLUMNS.values()}),
+        settings.raw_root / "gleif" / "relationships",
+        {"variant": "full", "publish_date": "2024-01-02"},
+    )
     print(f"fixture landing zone written to {out}")
 
 
