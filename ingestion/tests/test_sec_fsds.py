@@ -138,3 +138,21 @@ def test_column_alias_maps_a_triaged_rename(settings, tmp_path, monkeypatch):
     num = _rows(settings, "num")
     assert "ddate" in num.column_names and "date_end" not in num.column_names
     assert num.column("ddate").null_count == 0
+
+
+def test_quoted_values_with_tabs_and_line_breaks_are_parsed(settings, tmp_path):
+    """2022q4 num.txt quotes values that contain tabs and line breaks; a stray quote in an
+    unquoted file (the common case) stays part of the value."""
+    quoted = NUM + (
+        '0000012345-24-000001\tAssets\tus-gaap/2024\t20240630\t0\tUSD\t"Segment=A;\tB;\nC"\t\t99\t"see\tnote"\n'
+    )
+    sec_fsds.land_zip(make_fsds_zip(tmp_path / "q.zip", num=quoted), Q, settings, Manifest(settings.manifest_path))
+    num = _rows(settings, "num").to_pylist()
+    assert len(num) == 6
+    row = next(r for r in num if r["value"] == Decimal("99"))
+    assert row["segments"] == "Segment=A;\tB;\nC"
+    assert row["footnote"] == "see\tnote"
+
+    stray = NUM.replace("\tRevenues\tus-gaap/2024\t20230930", '\tRevenues"x\tus-gaap/2024\t20230930', 1)
+    sec_fsds.land_zip(make_fsds_zip(tmp_path / "s.zip", num=stray), Q, settings, Manifest(settings.manifest_path))
+    assert 'Revenues"x' in _rows(settings, "num").column("tag").to_pylist()

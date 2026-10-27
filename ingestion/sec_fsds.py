@@ -183,6 +183,22 @@ def newly_published(after: Quarter, session: PoliteSession, today: date | None =
 COLUMN_ALIASES: dict[str, dict[str, str]] = {table: {} for table in ("sub", "num", "tag", "pre")}
 
 
+def _parse_tsv(raw: bytes, header: list[str], quoted: bool) -> pa.Table:
+    # Read everything as text first, then cast: SEC files contain values like "" in int columns.
+    return pacsv.read_csv(
+        io.BytesIO(raw),
+        read_options=pacsv.ReadOptions(encoding="utf-8", block_size=1 << 26),
+        parse_options=pacsv.ParseOptions(
+            delimiter="\t", quote_char='"' if quoted else False, double_quote=quoted, newlines_in_values=quoted
+        ),
+        convert_options=pacsv.ConvertOptions(
+            column_types={c: pa.string() for c in header},
+            strings_can_be_null=True,
+            null_values=[""],
+        ),
+    )
+
+
 def read_table(raw: bytes, table: str) -> pa.Table:
     """Parse one tab-separated FSDS member with the explicit schema."""
     header = raw.split(b"\n", 1)[0].decode("utf-8", errors="replace").strip("\r").split("\t")
@@ -192,17 +208,14 @@ def read_table(raw: bytes, table: str) -> pa.Table:
         raise ContractError(f"{table}.txt is missing required columns: {sorted(missing)}")
 
     schema = SCHEMAS[table]
-    # Read everything as text first, then cast: SEC files contain values like "" in int columns.
-    tbl = pacsv.read_csv(
-        io.BytesIO(raw),
-        read_options=pacsv.ReadOptions(encoding="utf-8", block_size=1 << 26),
-        parse_options=pacsv.ParseOptions(delimiter="\t", quote_char=False, newlines_in_values=False),
-        convert_options=pacsv.ConvertOptions(
-            column_types={c: pa.string() for c in header},
-            strings_can_be_null=True,
-            null_values=[""],
-        ),
-    )
+    try:
+        # Most files: no quoting, so a stray " inside a label stays part of the value.
+        tbl = _parse_tsv(raw, header, quoted=False)
+    except pa.ArrowInvalid:
+        # Some quarters (e.g. 2022q4 num.txt) wrap values that contain tabs or line breaks in
+        # double quotes; parse those files with CSV quoting.
+        log.info("%s.txt has quoted values with tabs or line breaks; parsing with quoting", table)
+        tbl = _parse_tsv(raw, header, quoted=True)
     columns = {}
     for file_name in header:
         col = tbl.column(file_name)
