@@ -87,6 +87,8 @@ budget in this stack alerts at 80 % actual and 100 % forecast.
 
 ## Validation status
 
-`azure/` passes `terraform validate` against azurerm 4.80 and azuread 3.9. `fabric/` is
-formatted but was not validated here, because the provider registry was not reachable from the
-build environment; `terraform.yml` validates both stacks on every pull request.
+`azure/` passes `terraform validate` against azurerm 4.80 and azuread 3.9 locally; both stacks
+pass `fmt -check` and `validate` in the CI job *Terraform fmt and validate* (Terraform 1.9.8) on
+every pull request. `terraform.yml` (plan on pull requests, apply on merge) is skipped until the
+repository variables `AZURE_CLIENT_ID` and `TF_STATE_ACCOUNT` exist, because it needs the
+bootstrap above.

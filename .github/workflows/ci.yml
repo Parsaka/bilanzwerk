@@ -99,9 +99,15 @@ jobs:
       - name: Run the BPA rules on the TMDL model (fails on severity 3)
         shell: pwsh
         run: |
-          $out = & .\te2\TabularEditor.exe "powerbi\Bilanzwerk.SemanticModel\definition" -A "powerbi\bpa\rules.json" -G 2>&1
+          # TabularEditor.exe is a GUI-subsystem program: start it with redirected streams so the
+          # job waits for it and its output (the ::error lines for violations) reaches the log.
+          $p = Start-Process -FilePath .\te2\TabularEditor.exe -Wait -PassThru -NoNewWindow `
+            -ArgumentList '"powerbi\Bilanzwerk.SemanticModel\definition" -A "powerbi\bpa\rules.json" -G' `
+            -RedirectStandardOutput bpa.out -RedirectStandardError bpa.err
+          $out = @(Get-Content bpa.out) + @(Get-Content bpa.err)
           $out | Write-Output
-          if ($LASTEXITCODE -ne 0 -or ($out | Select-String -Pattern "^::error")) { exit 1 }
+          Write-Output "Tabular Editor exit code: $($p.ExitCode)"
+          if ($p.ExitCode -ne 0 -or ($out | Select-String -Pattern "^::error")) { exit 1 }
 
   terraform:
     name: Terraform fmt and validate

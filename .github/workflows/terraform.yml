@@ -39,6 +39,10 @@ env:
 
 jobs:
   terraform:
+    # Plan and apply need the Azure identity and the state storage from the bootstrap
+    # (infra/terraform/README.md). Until the repository variables exist the job is skipped;
+    # fmt and validate run without them in ci.yml.
+    if: vars.AZURE_CLIENT_ID != '' && vars.TF_STATE_ACCOUNT != ''
     runs-on: ubuntu-24.04
     environment: ${{ github.event_name == 'pull_request' && 'dev' || 'prod' }}
     steps:
