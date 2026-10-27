@@ -1,0 +1,120 @@
+/// Positionen: Bilanz, GuV, Cashflow mit Hierarchie.
+table dim_line_item
+	lineageTag: 869cc059-fad5-50f5-b790-3cca180d4e39
+	sourceLineageTag: [marts].[dim_line_item]
+
+	column line_item_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: line_item_key
+		lineageTag: 38648e72-22fb-563e-b3c5-868ee979fd5c
+		sourceLineageTag: line_item_key
+
+	column line_item_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: line_item_code
+		lineageTag: 0243f4a4-aeb8-53b8-a8e1-90ad51b598f9
+		sourceLineageTag: line_item_code
+
+	column statement_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: statement_code
+		lineageTag: 59eaf8eb-5f25-5bfa-82ef-c3a8742f1a45
+		sourceLineageTag: statement_code
+
+	column statement_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: statement_de
+		lineageTag: 57f94d1d-f3b8-58b5-be08-78f89e73dbb2
+		sourceLineageTag: statement_de
+
+	column statement_en
+		dataType: string
+		summarizeBy: none
+		sourceColumn: statement_en
+		lineageTag: 8e389a43-2d82-5db3-ada6-33d82c531d07
+		sourceLineageTag: statement_en
+
+	column group_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: group_code
+		lineageTag: 81a96e3d-5fd5-543d-a436-008f7595dd5c
+		sourceLineageTag: group_code
+
+	column group_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: group_de
+		lineageTag: 0481d3d5-c9c1-55d7-8fbd-ee5170a7e84e
+		sourceLineageTag: group_de
+
+	column group_en
+		dataType: string
+		summarizeBy: none
+		sourceColumn: group_en
+		lineageTag: eb3e7c72-8bb8-538d-979e-494faf044a02
+		sourceLineageTag: group_en
+
+	column label_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: label_de
+		lineageTag: d1583bb8-5f23-511b-9171-c9b36ed2a7f7
+		sourceLineageTag: label_de
+
+	column label_en
+		dataType: string
+		summarizeBy: none
+		sourceColumn: label_en
+		lineageTag: 72bebc35-962c-548a-8a4f-55f7ca322a56
+		sourceLineageTag: label_en
+
+	column period_type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: period_type
+		lineageTag: 95eb6c1b-a911-5f56-b913-31b8542486fa
+		sourceLineageTag: period_type
+
+	column is_monetary
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_monetary
+		lineageTag: 0d29580f-ac49-5775-84ba-b15a93b8e6db
+		sourceLineageTag: is_monetary
+
+	column is_core
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_core
+		lineageTag: eef2a63f-d61d-5ba6-9e85-0d68f79ba331
+		sourceLineageTag: is_core
+
+	column sort_order
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: sort_order
+		lineageTag: 8209251d-05ed-5f59-ab3a-43a535e8a1db
+		sourceLineageTag: sort_order
+
+	column owner
+		dataType: string
+		summarizeBy: none
+		sourceColumn: owner
+		lineageTag: a5d49c01-b4b9-5cde-95db-6c57fed80ebd
+		sourceLineageTag: owner
+
+	partition dim_line_item = entity
+		mode: directLake
+		source
+			entityName: dim_line_item
+			schemaName: marts
+			expressionSource: DatabaseQuery

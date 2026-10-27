@@ -1,0 +1,94 @@
+# The eleven report pages: one question per page, printed in the title (spec "Report pages").
+# tools/generate_report.py renders the PBIR scaffold (title, language switch, footer per page)
+# and powerbi/report-pages.md from this file; tools/generate_tmdl.py renders the bilingual
+# title measures. Main visuals are placed by hand in Power BI Desktop following the "visuals" list.
+
+source_line:
+  de: "Quelle: SEC EDGAR (Financial Statement Data Sets, Submissions), ESEF über filings.xbrl.org, GLEIF, EZB-Referenzkurse"
+  en: "Source: SEC EDGAR (Financial Statement Data Sets, submissions), ESEF via filings.xbrl.org, GLEIF, ECB reference rates"
+
+pages:
+  - id: antwort
+    de: {name: "Antwort", question: "Was haben wir herausgefunden?"}
+    en: {name: "Answer", question: "What did we find?"}
+    visuals:
+      - "Vier Hypothesen-Karten H1–H4: gehalten oder nicht, Kennzahl, 95%-Intervall (Quelle: analysis/answer.json, nicht von Hand)"
+      - "Vorlaufzeit-Diagramm Z'' gegen CCC (Monate vor dem Ereignis, Median und Interquartil)"
+      - "Summe Cash-Potenzial in Mrd. EUR ([Cash-Potenzial])"
+    measures: ["Cash-Potenzial", "Insolvenzen", "Unternehmen rot"]
+  - id: ueberblick
+    de: {name: "Unternehmensüberblick", question: "Wie steht dieses Unternehmen da?"}
+    en: {name: "Company overview", question: "How is this company doing?"}
+    visuals:
+      - "KPI-Karten mit Sektorperzentil ([KPI Wert], [Sektorperzentil])"
+      - "10-Jahres-Trendlinien Umsatz, EBIT-Marge, Eigenkapitalquote"
+      - "Risikoband (Ampel) aus [Risiko 12M]"
+      - "Einreichungshistorie (fact_event und Filings) als Zeitleiste"
+    measures: ["KPI Wert", "Sektorperzentil", "Risiko 12M", "Umsatz", "EBIT-Marge", "Eigenkapitalquote"]
+  - id: bilanz
+    de: {name: "Bilanzanalyse", question: "Ist die Bilanz gesund?"}
+    en: {name: "Balance sheet", question: "Is the balance sheet healthy?"}
+    visuals:
+      - "Aktiva- und Passiva-Struktur als gestapelte Balken über die Zeit (dim_line_item Hierarchie)"
+      - "Eigenkapitalquote und Verschuldungsgrad als Linien gegen den Sektormedian"
+    measures: ["Bestand", "Bilanzsumme", "Eigenkapitalquote", "Verschuldungsgrad"]
+  - id: guv
+    de: {name: "GuV und Margen", question: "Woher kommt der Gewinn?"}
+    en: {name: "Income statement", question: "Where does profit come from?"}
+    visuals:
+      - "Wasserfall Umsatz bis EBIT"
+      - "Margentrends (Brutto, EBIT) gegen den Sektor"
+    measures: ["Umsatz", "COGS", "EBIT", "Bruttomarge", "EBIT-Marge"]
+  - id: working_capital
+    de: {name: "Cashflow und Working Capital", question: "Wo ist Cash gebunden?"}
+    en: {name: "Cash flow and working capital", question: "Where is cash tied up?"}
+    visuals:
+      - "DSO, DIO, DPO, CCC über die Zeit gegen den Sektormedian"
+      - "Cash Conversion (CFO / EBIT)"
+    measures: ["DSO", "DIO", "DPO", "CCC", "CCC Sektor-Median", "Cash Conversion (CFO / EBIT)"]
+  - id: peer
+    de: {name: "Peer-Benchmark", question: "Wie stehen wir im Vergleich da?"}
+    en: {name: "Peer benchmark", question: "How do we compare?"}
+    visuals:
+      - "Streudiagramm zweier frei wählbarer Kennzahlen (Feldparameter KPI-Auswahl, zweimal)"
+      - "Sektorperzentile als Balken"
+      - "Rangliste (Tabelle) mit Sektorperzentil"
+    measures: ["KPI Wert", "Sektorperzentil"]
+  - id: fruehwarnung
+    de: {name: "Frühwarnsystem", question: "Welche Unternehmen brauchen jetzt Aufmerksamkeit?"}
+    en: {name: "Early warning", question: "Which companies need attention now?"}
+    visuals:
+      - "Ampeltabelle der Risikobänder (rot/gelb/grün nur hier)"
+      - "Treiber je Unternehmen aus SHAP (fact_risk_score.top_3_drivers, per OLS für Reporting verborgen)"
+      - "Veränderung zum Vorquartal"
+    measures: ["Risiko 12M", "Unternehmen rot", "Risiko Veränderung zum Vorquartal", "Rote Flaggen"]
+  - id: fallstudien
+    de: {name: "Fallstudien", question: "Wie sah die Warnung vor echten Insolvenzen aus?"}
+    en: {name: "Case studies", question: "What did the warning look like before real bankruptcies?"}
+    visuals:
+      - "Drei Unternehmens-Zeitleisten mit Kennzahlen, roten Flaggen und markiertem Ereignis (Auswahl nach dem Echtdatenlauf, bw-analysis case)"
+    measures: ["Z'' Score", "CCC", "Rote Flaggen", "Risiko 12M", "Insolvenzen"]
+  - id: wc_potenzial
+    de: {name: "Working-Capital-Potenzial", question: "Wie viel Cash ließe sich freisetzen?"}
+    en: {name: "Working-capital potential", question: "How much cash could be freed?"}
+    visuals:
+      - "Brücke nach Sektor in Mrd. EUR"
+      - "Top 20 Unternehmen"
+      - "Stretch-Szenario (oberes Quartil statt Median)"
+    measures: ["Cash-Potenzial", "Cash-Potenzial Stretch"]
+  - id: plan_ist
+    de: {name: "Plan-Ist", question: "Wie weit lag das Ist neben dem Plan?"}
+    en: {name: "Plan vs. actual", question: "How far did actuals miss plan?"}
+    visuals:
+      - "Abweichung nach Sektor und Unternehmen, absolut und in % (Berechnungsgruppe Szenario)"
+      - "Prognosefehler (MAPE)"
+    measures: ["Umsatz", "Prognosefehler MAPE"]
+  - id: datenqualitaet
+    de: {name: "Datenqualität", question: "Können wir den Zahlen trauen?"}
+    en: {name: "Data quality", question: "Can we trust the numbers?"}
+    visuals:
+      - "Scorecard je Regel und Lauf (fact_data_quality)"
+      - "LEI-Match-Quote, Restatement-Quote"
+      - "Stewardship-Warteschlange"
+      - "Service Levels aus docs/runbook.md: Frische 24 h, Bilanzprüfung ≥ 98 %, Refresh-Erfolg 99 %"
+    measures: ["DQ Pass-Rate", "Regeln verletzt", "LEI-Match-Quote", "Restatement-Quote", "Offene Stewardship-Fälle"]

@@ -1,0 +1,26 @@
+/// RLS-Zuordnung Benutzer zu Sektoren.
+table sector_team_users
+	isHidden
+	lineageTag: 13230743-3de5-59d2-bff8-0fece3e62103
+	sourceLineageTag: [reference].[sector_team_users]
+
+	column user_principal_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: user_principal_name
+		lineageTag: beda2445-1edb-57ed-9cea-106e53a38861
+		sourceLineageTag: user_principal_name
+
+	column sector_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sector_code
+		lineageTag: 69f7582e-7ea7-557a-8cb2-8c5d5b21ee59
+		sourceLineageTag: sector_code
+
+	partition sector_team_users = entity
+		mode: directLake
+		source
+			entityName: sector_team_users
+			schemaName: reference
+			expressionSource: DatabaseQuery

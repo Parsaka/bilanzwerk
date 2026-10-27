@@ -1,0 +1,107 @@
+/// Datenqualitäts-Scorecard je Lauf, Regel und Tabelle.
+table fact_data_quality
+	lineageTag: 894c6774-dab3-5588-86e9-b79f1115b549
+	sourceLineageTag: [marts].[fact_data_quality]
+
+	/// Bestandene Prüfungen geteilt durch geprüfte Zeilen im letzten Lauf.
+	measure 'DQ Pass-Rate' =
+			VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+			RETURN
+			    CALCULATE (
+			        DIVIDE ( SUM ( fact_data_quality[rows_checked] ) - SUM ( fact_data_quality[rows_failed] ), SUM ( fact_data_quality[rows_checked] ) ),
+			        fact_data_quality[run_at] = _lauf
+			    )
+		formatString: 0.0%
+		displayFolder: Datenqualität
+		lineageTag: d966f9d5-df36-5d71-890f-18c5da527f47
+
+	/// Anzahl Regeln mit Status fail im letzten Lauf.
+	measure 'Regeln verletzt' =
+			VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+			RETURN CALCULATE ( COUNTROWS ( fact_data_quality ), fact_data_quality[run_at] = _lauf, fact_data_quality[status] = "fail" )
+		formatString: #,0
+		displayFolder: Datenqualität
+		lineageTag: d91e33ba-a02b-513e-a949-7fc3981b3dc7
+
+	column run_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: run_id
+		lineageTag: 9b4cc455-526c-54ff-a613-d393451d72ac
+		sourceLineageTag: run_id
+
+	column run_at
+		dataType: dateTime
+		formatString: dd.MM.yyyy HH:mm
+		summarizeBy: none
+		sourceColumn: run_at
+		lineageTag: e44a7477-9d37-55d9-a0bf-66292bb26313
+		sourceLineageTag: run_at
+
+	column rule_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: rule_code
+		lineageTag: 4989be0b-d4c7-5c75-8c30-a60c34a01421
+		sourceLineageTag: rule_code
+
+	column dq_dimension
+		dataType: string
+		summarizeBy: none
+		sourceColumn: dq_dimension
+		lineageTag: ab9df581-7e9b-5ce8-8b98-52df0f71061c
+		sourceLineageTag: dq_dimension
+
+	column table_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: table_name
+		lineageTag: 9ca6d550-52f8-52ae-b0df-f10686189523
+		sourceLineageTag: table_name
+
+	column rows_checked
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: rows_checked
+		lineageTag: 9fb1aeda-708d-5569-be66-f4c4a43faded
+		sourceLineageTag: rows_checked
+
+	column rows_failed
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: rows_failed
+		lineageTag: 2cd42dfc-763f-5193-b37c-b1204a2a6ae3
+		sourceLineageTag: rows_failed
+
+	column pass_rate
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: pass_rate
+		lineageTag: 56288085-0828-505a-948c-0f3e02ecc63e
+		sourceLineageTag: pass_rate
+
+	column target_pass_rate
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: target_pass_rate
+		lineageTag: adbe1fc2-263f-5c2e-aef3-d8c6e4a0ed7d
+		sourceLineageTag: target_pass_rate
+
+	column status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: status
+		lineageTag: d53dfb82-2cf5-5478-a62e-a5b2afd6d8a9
+		sourceLineageTag: status
+
+	partition fact_data_quality = entity
+		mode: directLake
+		source
+			entityName: fact_data_quality
+			schemaName: marts
+			expressionSource: DatabaseQuery

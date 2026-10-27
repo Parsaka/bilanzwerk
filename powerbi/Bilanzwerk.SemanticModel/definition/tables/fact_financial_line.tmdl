@@ -1,0 +1,351 @@
+/// Finanzzeilen je Unternehmen, Periode, Position, Szenario und Version.
+table fact_financial_line
+	lineageTag: 1a5e4a62-1851-5a0e-86ed-ecc6e0aea6d6
+	sourceLineageTag: [marts].[fact_financial_line]
+
+	/// Summe in der gewählten Währung (Berechnungsgruppe Währung). Landeswährung nur bei genau einer Währung im Kontext.
+	measure '_Betrag Roh' =
+			VAR _waehrung = SELECTEDVALUE ( 'Währung'[Währung], "EUR" )
+			RETURN
+			    IF (
+			        _waehrung = "EUR",
+			        SUM ( fact_financial_line[amount_eur] ),
+			        IF ( HASONEVALUE ( dim_currency[currency_code] ), SUM ( fact_financial_line[amount_local] ) )
+			    )
+		formatString: #,0
+		displayFolder: _Basis
+		isHidden
+		lineageTag: 700ac674-3e11-5bbc-b7e1-52cf7a608280
+
+	/// Ohne Szenarioauswahl gilt Ist.
+	measure '_Betrag Szenario' =
+			IF (
+			    ISFILTERED ( dim_scenario[scenario_code] ),
+			    [_Betrag Roh],
+			    CALCULATE ( [_Betrag Roh], dim_scenario[scenario_code] = "IST" )
+			)
+		formatString: #,0
+		displayFolder: _Basis
+		isHidden
+		lineageTag: 18a72f08-47e0-5717-b304-2a7784dd198d
+
+	/// Basismessung aller Finanzzeilen. Ohne Auswahl gelten Szenario Ist und Version latest (nach Restatements); die Seite Datenqualität vergleicht mit first_reported.
+	measure Betrag =
+			IF (
+			    ISFILTERED ( fact_financial_line[version] ),
+			    [_Betrag Szenario],
+			    CALCULATE ( [_Betrag Szenario], fact_financial_line[version] = "latest" )
+			)
+		formatString: #,0
+		displayFolder: _Basis
+		isHidden
+		lineageTag: fd8401f4-842f-557d-b1a3-c058f2fe3f82
+
+	/// Bilanzwert zum letzten Periodenende jedes Unternehmens im Kontext (Stichtagswert, nicht summiert über Quartale).
+	measure Bestand =
+			SUMX (
+			    VALUES ( dim_company[company_id] ),
+			    VAR _letzter = CALCULATE ( MAX ( fact_financial_line[period_end_date] ) )
+			    RETURN CALCULATE ( [Betrag], dim_date[date_key] = _letzter )
+			)
+		formatString: #,0
+		displayFolder: _Basis
+		isHidden
+		lineageTag: 506b00bd-f83e-529a-b68a-b469e37ed5ea
+
+	/// Umsatzerlöse (Position REV), Summe der Quartale im Kontext.
+	measure Umsatz = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "REV" )
+		formatString: #,0,," Mio"
+		displayFolder: GuV
+		lineageTag: 85134ba5-84e9-54b1-b43b-30372ecccc31
+
+	/// Umsatzkosten (Position COGS).
+	measure COGS = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "COGS" )
+		formatString: #,0,," Mio"
+		displayFolder: GuV
+		lineageTag: 763108ac-cf6b-5650-bb0c-d646743ed90b
+
+	/// Betriebsergebnis (Position EBIT).
+	measure EBIT = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "EBIT" )
+		formatString: #,0,," Mio"
+		displayFolder: GuV
+		lineageTag: 82c9e066-d59e-56e3-b01d-1f57bdf8c6ae
+
+	/// Jahresergebnis der Anteilseigner (Position NI).
+	measure Jahresergebnis = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "NI" )
+		formatString: #,0,," Mio"
+		displayFolder: GuV
+		lineageTag: 5a11b8ff-2e1f-582f-bf93-c9a5eab03d9a
+
+	/// EBIT geteilt durch Umsatz.
+	measure 'EBIT-Marge' = DIVIDE ( [EBIT], [Umsatz] )
+		formatString: 0.0%
+		displayFolder: GuV
+		lineageTag: 1825728d-a19c-5780-b88c-8abe788dff23
+
+	/// (Umsatz minus Umsatzkosten) geteilt durch Umsatz.
+	measure Bruttomarge = DIVIDE ( [Umsatz] - [COGS], [Umsatz] )
+		formatString: 0.0%
+		displayFolder: GuV
+		lineageTag: 5fcbd67c-50f4-58db-923b-3ee46648e534
+
+	/// Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz).
+	measure 'Umsatz TTM' = CALCULATE ( [Umsatz], Zeitintelligenz[Zeit] = "TTM" )
+		formatString: #,0,," Mio"
+		displayFolder: GuV
+		lineageTag: 7076125f-4631-50b1-b652-674afa7a98db
+
+	/// Umsatzkosten der letzten zwölf Monate.
+	measure 'COGS TTM' = CALCULATE ( [COGS], Zeitintelligenz[Zeit] = "TTM" )
+		formatString: #,0,," Mio"
+		displayFolder: GuV
+		lineageTag: 166c44d8-2f57-5450-969c-8c96ba07c788
+
+	/// Bilanzsumme Aktiva zum Stichtag.
+	measure Bilanzsumme = CALCULATE ( [Bestand], dim_line_item[line_item_code] = "TA" )
+		formatString: #,0,," Mio"
+		displayFolder: Bilanz
+		lineageTag: 45594c39-0d84-5ad7-bbb3-60e49a8b73b3
+
+	/// Eigenkapital gesamt zum Stichtag.
+	measure Eigenkapital = CALCULATE ( [Bestand], dim_line_item[line_item_code] = "EQ" )
+		formatString: #,0,," Mio"
+		displayFolder: Bilanz
+		lineageTag: ebec05e1-da02-5117-b68c-b4f87f44d7c6
+
+	/// Verbindlichkeiten gesamt zum Stichtag.
+	measure Verbindlichkeiten = CALCULATE ( [Bestand], dim_line_item[line_item_code] = "TL" )
+		formatString: #,0,," Mio"
+		displayFolder: Bilanz
+		lineageTag: 8011fa11-3d8b-50d5-ba40-6bc765c6c5b2
+
+	/// Eigenkapital geteilt durch Bilanzsumme.
+	measure Eigenkapitalquote = DIVIDE ( [Eigenkapital], [Bilanzsumme] )
+		formatString: 0.0%
+		displayFolder: Bilanz
+		lineageTag: b1c9fbfe-bfed-5616-98a3-eae8f42222aa
+
+	/// Verbindlichkeiten geteilt durch Eigenkapital.
+	measure Verschuldungsgrad = DIVIDE ( [Verbindlichkeiten], [Eigenkapital] )
+		formatString: 0.00
+		displayFolder: Bilanz
+		lineageTag: 20df2f75-2f66-5b74-9003-e28c6b683d4d
+
+	/// Liquide Mittel zum Stichtag.
+	measure 'Liquide Mittel' = CALCULATE ( [Bestand], dim_line_item[line_item_code] = "CASH" )
+		formatString: #,0,," Mio"
+		displayFolder: Bilanz
+		lineageTag: d1c920e1-fa68-5891-80ec-a22dab02dc47
+
+	/// Cashflow aus laufender Geschäftstätigkeit.
+	measure 'Operativer Cashflow' = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "CFO" )
+		formatString: #,0,," Mio"
+		displayFolder: Cashflow
+		lineageTag: d753b705-b01f-59b0-abf0-77c85f5d9990
+
+	/// Operativer Cashflow geteilt durch EBIT.
+	measure 'Cash Conversion (CFO / EBIT)' = DIVIDE ( [Operativer Cashflow], [EBIT] )
+		formatString: 0.0%
+		displayFolder: Cashflow
+		lineageTag: 149f3d02-ff85-5413-9645-170adccd25f7
+
+	/// Durchschnitt der Forderungen aus Lieferungen und Leistungen über die Perioden im Kontext.
+	measure 'Forderungen Durchschnitt' =
+			AVERAGEX (
+			    VALUES ( dim_period[period_key] ),
+			    CALCULATE ( [Betrag], dim_line_item[line_item_code] = "AR" )
+			)
+		formatString: #,0,," Mio"
+		displayFolder: Working Capital
+		lineageTag: e30aaaec-1e63-5148-ba21-9b75a176b239
+
+	/// Durchschnitt der Vorräte.
+	measure 'Vorräte Durchschnitt' =
+			AVERAGEX (
+			    VALUES ( dim_period[period_key] ),
+			    CALCULATE ( [Betrag], dim_line_item[line_item_code] = "INV" )
+			)
+		formatString: #,0,," Mio"
+		displayFolder: Working Capital
+		lineageTag: d051dcc3-8c78-5d22-bf42-22bdfadd4158
+
+	/// Durchschnitt der Verbindlichkeiten aus Lieferungen und Leistungen.
+	measure 'Verbindlichkeiten LuL Durchschnitt' =
+			AVERAGEX (
+			    VALUES ( dim_period[period_key] ),
+			    CALCULATE ( [Betrag], dim_line_item[line_item_code] = "AP" )
+			)
+		formatString: #,0,," Mio"
+		displayFolder: Working Capital
+		lineageTag: 8869d3e1-c584-5346-bf34-af66c9cbd319
+
+	/// Days Sales Outstanding: Forderungen Durchschnitt / Umsatz TTM * 365.
+	measure DSO = DIVIDE ( [Forderungen Durchschnitt], [Umsatz TTM] ) * 365
+		formatString: 0.0
+		displayFolder: Working Capital
+		lineageTag: 4250bc30-2a96-502b-a01b-0e789fc058c0
+
+	/// Days Inventory Outstanding: Vorräte Durchschnitt / COGS TTM * 365.
+	measure DIO = DIVIDE ( [Vorräte Durchschnitt], [COGS TTM] ) * 365
+		formatString: 0.0
+		displayFolder: Working Capital
+		lineageTag: 64bb7d1b-8a22-5ebf-9090-2cb8d69b4785
+
+	/// Days Payables Outstanding: Verbindlichkeiten LuL Durchschnitt / COGS TTM * 365.
+	measure DPO = DIVIDE ( [Verbindlichkeiten LuL Durchschnitt], [COGS TTM] ) * 365
+		formatString: 0.0
+		displayFolder: Working Capital
+		lineageTag: 8e7f040f-95dc-5b3c-b5bb-1b5e3eeba7f6
+
+	/// Cash Conversion Cycle in Tagen: DSO + DIO - DPO.
+	measure CCC = [DSO] + [DIO] - [DPO]
+		formatString: 0.0
+		displayFolder: Working Capital
+		lineageTag: 29e85bc8-58ac-5c3e-af99-5d1282746427
+
+	/// Mittlerer absoluter prozentualer Fehler des Forecasts je Unternehmen und Quartal.
+	measure 'Prognosefehler MAPE' =
+			AVERAGEX (
+			    SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
+			    VAR _ist = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" )
+			    VAR _fc = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
+			    RETURN IF ( NOT ISBLANK ( _fc ) && _ist <> 0, ABS ( _ist - _fc ) / ABS ( _ist ) )
+			)
+		formatString: 0.0%
+		displayFolder: Plan-Ist
+		lineageTag: dde69af8-6f7b-5bbb-887c-2b5b6f37d0d7
+
+	column company_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_key
+		lineageTag: e76f73b5-130e-512b-b163-ea00eb77e1b3
+		sourceLineageTag: company_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: 4217b40c-2b07-5c7f-8541-8647c666cc14
+		sourceLineageTag: company_id
+
+	column period_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: period_key
+		lineageTag: 805b5bdd-4d4f-55e1-9735-edaed1e50eba
+		sourceLineageTag: period_key
+
+	column period_end_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		isHidden
+		summarizeBy: none
+		sourceColumn: period_end_date
+		lineageTag: f0be6552-2461-5b39-a3db-013f5372389d
+		sourceLineageTag: period_end_date
+
+	column line_item_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: line_item_key
+		lineageTag: e7ae400b-7b17-5c73-8ff6-c4b86e107ef8
+		sourceLineageTag: line_item_key
+
+	column scenario_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: scenario_key
+		lineageTag: f85a3f8a-ea7f-5842-8497-947e6e67f77a
+		sourceLineageTag: scenario_key
+
+	column version
+		dataType: string
+		summarizeBy: none
+		sourceColumn: version
+		lineageTag: 4c616384-3ea4-5bf0-b43a-2a406d6686e4
+		sourceLineageTag: version
+
+	column currency_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: currency_key
+		lineageTag: 8ef233a7-1025-5468-b643-9e59b231ceb4
+		sourceLineageTag: currency_key
+
+	column amount_local
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: amount_local
+		lineageTag: 02d02927-5146-52b1-81bd-3dd20d8af976
+		sourceLineageTag: amount_local
+
+	column amount_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: amount_eur
+		lineageTag: 1397c64b-2d78-5268-8df1-e0a770bc7c20
+		sourceLineageTag: amount_eur
+
+	column amount_ttm_local
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: amount_ttm_local
+		lineageTag: a1ec986d-3fe1-5696-84d2-63339b752b56
+		sourceLineageTag: amount_ttm_local
+
+	column amount_ttm_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: amount_ttm_eur
+		lineageTag: 51d6e636-a8a4-5ac3-9d91-fe73cf227af0
+		sourceLineageTag: amount_ttm_eur
+
+	column fx_rate
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: fx_rate
+		lineageTag: cff49dcb-aa40-5864-a2dd-1cc00e35dce3
+		sourceLineageTag: fx_rate
+
+	column derivation
+		dataType: string
+		summarizeBy: none
+		sourceColumn: derivation
+		lineageTag: 3cb61a2f-c4dd-5bc6-89f9-51e7c6e8bb55
+		sourceLineageTag: derivation
+
+	column source_filing
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: source_filing
+		lineageTag: debdef9e-1019-5ccf-828f-a2b96872458a
+		sourceLineageTag: source_filing
+
+	column available_at
+		dataType: dateTime
+		formatString: dd.MM.yyyy HH:mm
+		isHidden
+		summarizeBy: none
+		sourceColumn: available_at
+		lineageTag: fdc25ded-471a-5fac-b992-f43777caa1e1
+		sourceLineageTag: available_at
+
+	partition fact_financial_line = entity
+		mode: directLake
+		source
+			entityName: fact_financial_line
+			schemaName: marts
+			expressionSource: DatabaseQuery

@@ -1,0 +1,110 @@
+/// Insolvenz (8-K Item 1.03), Delisting, Deregistrierung, Fristverlängerung.
+table fact_event
+	lineageTag: b3d3b6cc-412d-50cc-94de-6366a1cea351
+	sourceLineageTag: [marts].[fact_event]
+
+	/// Anzahl Insolvenzereignisse (8-K Item 1.03).
+	measure Insolvenzen = CALCULATE ( COUNTROWS ( fact_event ), fact_event[event_type] = "BANKRUPTCY_8K_103" )
+		formatString: #,0
+		displayFolder: Kreditrisiko
+		lineageTag: 580f18d3-1506-588d-a095-ffa3b2c1f2d7
+
+	column event_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: event_key
+		lineageTag: 1a918a76-624b-5c00-b74e-51af8a239771
+		sourceLineageTag: event_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: 301203fa-a7df-5d0b-a030-02ed8d0c9e70
+		sourceLineageTag: company_id
+
+	column company_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_key
+		lineageTag: 41926382-5ccd-52a1-8f18-99893f07b6ff
+		sourceLineageTag: company_key
+
+	column event_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		isHidden
+		summarizeBy: none
+		sourceColumn: event_date
+		lineageTag: c54b6caf-95c2-5df4-9e86-07584bcab288
+		sourceLineageTag: event_date
+
+	column event_type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: event_type
+		lineageTag: 9236733c-c66c-59fc-ba9f-827d6def9a1c
+		sourceLineageTag: event_type
+
+	column is_main_label
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_main_label
+		lineageTag: d97c94d1-611a-53e8-8a1a-8c9a9fe3185a
+		sourceLineageTag: is_main_label
+
+	column is_distress_label
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_distress_label
+		lineageTag: d80519db-db47-51e8-a2b9-ac09c3ba18c1
+		sourceLineageTag: is_distress_label
+
+	column filing
+		dataType: string
+		summarizeBy: none
+		sourceColumn: filing
+		lineageTag: 9ae329c8-3060-564f-841c-f5b33bfbbed5
+		sourceLineageTag: filing
+
+	column form
+		dataType: string
+		summarizeBy: none
+		sourceColumn: form
+		lineageTag: 80925d95-bb06-5a3d-a050-e0fb87236e57
+		sourceLineageTag: form
+
+	column item_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: item_code
+		lineageTag: d01f349b-c92d-5b1d-bb35-11021f87a03a
+		sourceLineageTag: item_code
+
+	column all_items
+		dataType: string
+		summarizeBy: none
+		sourceColumn: all_items
+		lineageTag: 565946b7-8fad-57f8-a34a-5591ad9c1850
+		sourceLineageTag: all_items
+
+	column accepted_at
+		dataType: dateTime
+		formatString: dd.MM.yyyy HH:mm
+		isHidden
+		summarizeBy: none
+		sourceColumn: accepted_at
+		lineageTag: 69ce24e1-d1b8-59af-96b4-e8b2f947382a
+		sourceLineageTag: accepted_at
+
+	partition fact_event = entity
+		mode: directLake
+		source
+			entityName: fact_event
+			schemaName: marts
+			expressionSource: DatabaseQuery

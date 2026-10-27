@@ -1,4 +1,4 @@
--- The hash key convention (ADR-005) on fixed inputs, checked against values computed outside
+-- The hash key convention (ADR-004) on fixed inputs, checked against values computed outside
 -- the warehouse (Python hashlib): SHA-256 over upper-cased, trimmed parts joined by "||".
 -- Identical results on DuckDB and Fabric are what makes local and cloud keys interchangeable.
 with cases as (

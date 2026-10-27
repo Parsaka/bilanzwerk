@@ -1,0 +1,213 @@
+/// Golden record je Unternehmen (SCD Typ 2 auf Name und Sektor).
+table dim_company
+	lineageTag: 60b3252d-f6dc-5108-ae88-9e466e47d995
+	sourceLineageTag: [marts].[dim_company]
+
+	/// Anteil der aktuellen Unternehmen mit LEI.
+	measure 'LEI-Match-Quote' = DIVIDE ( CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, dim_company[is_lei_matched] = 1 ), CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1 ) )
+		formatString: 0.0%
+		displayFolder: Stammdaten
+		lineageTag: 254e40dc-6f5c-5895-8046-4c4c449220f8
+
+	column company_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_key
+		lineageTag: c47542a2-44cb-56ca-8bd5-79ca7b0e59c8
+		sourceLineageTag: company_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: 90848242-2393-5634-b9b8-b5b3d4ebfe0e
+		sourceLineageTag: company_id
+
+	column cik
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: cik
+		lineageTag: 87c701de-12d3-52a0-8012-66cadfd15f5d
+		sourceLineageTag: cik
+
+	column lei
+		dataType: string
+		summarizeBy: none
+		sourceColumn: lei
+		lineageTag: 03e03166-507a-567c-a82b-5f4592abd41a
+		sourceLineageTag: lei
+
+	column company_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: company_name
+		lineageTag: 00196b6e-641b-5e22-b768-b663edc73cbc
+		sourceLineageTag: company_name
+
+	column legal_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: legal_name
+		lineageTag: 9fd1c570-314c-56aa-9fdb-39c612cc2384
+		sourceLineageTag: legal_name
+
+	column sic
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: sic
+		lineageTag: 2daee76e-2a44-52bd-af8b-d268463e416b
+		sourceLineageTag: sic
+
+	column sector_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: sector_key
+		lineageTag: 3d1eb732-a9d4-5031-b7ef-c665b031f1cc
+		sourceLineageTag: sector_key
+
+	column country_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: country_code
+		lineageTag: fc3162a7-0827-5fda-9e1c-952317be7391
+		sourceLineageTag: country_code
+
+	column hq_city
+		dataType: string
+		summarizeBy: none
+		sourceColumn: hq_city
+		lineageTag: 9d276cc4-adb4-5829-ab27-4d82409d9dde
+		sourceLineageTag: hq_city
+
+	column hq_postal_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: hq_postal_code
+		lineageTag: 95d2f6e1-756c-5cf3-8859-f52e4d9aec07
+		sourceLineageTag: hq_postal_code
+
+	column legal_form_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: legal_form_code
+		lineageTag: d87142a0-4cea-56f5-b6ee-11616f27b840
+		sourceLineageTag: legal_form_code
+
+	column gleif_entity_status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: gleif_entity_status
+		lineageTag: 2d7e7131-3c48-5eee-adc4-f63b692e6e91
+		sourceLineageTag: gleif_entity_status
+
+	column gleif_registration_status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: gleif_registration_status
+		lineageTag: f308caea-c66c-5359-8d8c-210dd9b3134b
+		sourceLineageTag: gleif_registration_status
+
+	column company_status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: company_status
+		lineageTag: 7838c435-7929-52e0-b2f6-cff7f0c84287
+		sourceLineageTag: company_status
+
+	column match_source
+		dataType: string
+		summarizeBy: none
+		sourceColumn: match_source
+		lineageTag: c826bffc-bacd-5e97-9e7f-eef37701ea62
+		sourceLineageTag: match_source
+
+	column match_probability
+		dataType: double
+		formatString: #,0.00
+		isHidden
+		summarizeBy: none
+		sourceColumn: match_probability
+		lineageTag: a9f02d7b-57f5-5758-adda-c745d8e12882
+		sourceLineageTag: match_probability
+
+	column is_lei_matched
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_lei_matched
+		lineageTag: e3ff0a12-a4a3-55e4-a5bb-4f8e961a6235
+		sourceLineageTag: is_lei_matched
+
+	column n_ciks
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: n_ciks
+		lineageTag: 5212ec20-4102-5ff6-a771-17799d21e2f3
+		sourceLineageTag: n_ciks
+
+	column is_financial
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: is_financial
+		lineageTag: b917fdc6-cb21-58ee-85eb-248a310a7e0c
+		sourceLineageTag: is_financial
+
+	column version_number
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: version_number
+		lineageTag: 68f65b4c-9291-5861-8c69-883349f9e409
+		sourceLineageTag: version_number
+
+	column valid_from
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		isHidden
+		summarizeBy: none
+		sourceColumn: valid_from
+		lineageTag: 09251fe3-659c-5afd-b03a-277542c447e8
+		sourceLineageTag: valid_from
+
+	column valid_to
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		isHidden
+		summarizeBy: none
+		sourceColumn: valid_to
+		lineageTag: bf93dd9c-b650-5d35-ad61-a6f85455db03
+		sourceLineageTag: valid_to
+
+	column is_current
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_current
+		lineageTag: 1ff80019-363a-54c5-b121-8f8506cafb80
+		sourceLineageTag: is_current
+
+	column last_accepted_at
+		dataType: dateTime
+		formatString: dd.MM.yyyy HH:mm
+		isHidden
+		summarizeBy: none
+		sourceColumn: last_accepted_at
+		lineageTag: 9998baed-6ddd-591d-b8f5-f8dfdfdbae36
+		sourceLineageTag: last_accepted_at
+
+	partition dim_company = entity
+		mode: directLake
+		source
+			entityName: dim_company
+			schemaName: marts
+			expressionSource: DatabaseQuery

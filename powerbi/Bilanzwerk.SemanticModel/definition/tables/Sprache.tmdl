@@ -1,0 +1,94 @@
+/// Sprachauswahl der Berichtsseiten (Deutsch Standard, Englisch umschaltbar).
+/// Steuert die Messungen im Ordner Beschriftungen.
+table Sprache
+	lineageTag: 40e0d9ff-38c3-5761-afd1-f4aaff13a0f1
+
+	/// Seitentitel 01 (antwort), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 01' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Answer: What did we find?", "Antwort: Was haben wir herausgefunden?" )
+		displayFolder: Beschriftungen
+		lineageTag: 450699b0-b730-56cf-98a3-3843943ef167
+
+	/// Seitentitel 02 (ueberblick), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 02' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Company overview: How is this company doing?", "Unternehmensüberblick: Wie steht dieses Unternehmen da?" )
+		displayFolder: Beschriftungen
+		lineageTag: c1adde93-26ce-5dce-b3c9-5d05973c3e7a
+
+	/// Seitentitel 03 (bilanz), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 03' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Balance sheet: Is the balance sheet healthy?", "Bilanzanalyse: Ist die Bilanz gesund?" )
+		displayFolder: Beschriftungen
+		lineageTag: ba71760a-8645-5928-9a48-42c7e1c99daa
+
+	/// Seitentitel 04 (guv), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 04' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Income statement: Where does profit come from?", "GuV und Margen: Woher kommt der Gewinn?" )
+		displayFolder: Beschriftungen
+		lineageTag: 745aa5ba-5eef-5908-b981-f45c724a19e6
+
+	/// Seitentitel 05 (working_capital), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 05' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Cash flow and working capital: Where is cash tied up?", "Cashflow und Working Capital: Wo ist Cash gebunden?" )
+		displayFolder: Beschriftungen
+		lineageTag: a908541c-e4a9-5e68-a6b7-acf776a7d9c7
+
+	/// Seitentitel 06 (peer), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 06' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Peer benchmark: How do we compare?", "Peer-Benchmark: Wie stehen wir im Vergleich da?" )
+		displayFolder: Beschriftungen
+		lineageTag: 9990a1d1-b9d2-5f0c-bba9-6a43404cadb0
+
+	/// Seitentitel 07 (fruehwarnung), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 07' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Early warning: Which companies need attention now?", "Frühwarnsystem: Welche Unternehmen brauchen jetzt Aufmerksamkeit?" )
+		displayFolder: Beschriftungen
+		lineageTag: 41996dbc-2ca7-58fa-8941-01fc1d547c07
+
+	/// Seitentitel 08 (fallstudien), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 08' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Case studies: What did the warning look like before real bankruptcies?", "Fallstudien: Wie sah die Warnung vor echten Insolvenzen aus?" )
+		displayFolder: Beschriftungen
+		lineageTag: 13b1e487-808d-57e4-ad96-bcdae3df6881
+
+	/// Seitentitel 09 (wc_potenzial), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 09' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Working-capital potential: How much cash could be freed?", "Working-Capital-Potenzial: Wie viel Cash ließe sich freisetzen?" )
+		displayFolder: Beschriftungen
+		lineageTag: 599d0206-5635-5ba0-a50e-dc88344e8d56
+
+	/// Seitentitel 10 (plan_ist), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 10' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Plan vs. actual: How far did actuals miss plan?", "Plan-Ist: Wie weit lag das Ist neben dem Plan?" )
+		displayFolder: Beschriftungen
+		lineageTag: be5bd932-bcad-5f98-a1b1-fdd975cd5568
+
+	/// Seitentitel 11 (datenqualitaet), Deutsch oder Englisch je nach Sprachauswahl.
+	measure 'Titel 11' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Data quality: Can we trust the numbers?", "Datenqualität: Können wir den Zahlen trauen?" )
+		displayFolder: Beschriftungen
+		lineageTag: 456207c5-9ebb-5c87-aa4d-c15209e7490c
+
+	/// Fußzeile jeder Seite: Datenstand (letzter verfügbarer Wert im Modell) und Quellen.
+	measure 'Fußzeile' =
+			VAR _stand = CALCULATE ( MAX ( fact_financial_line[available_at] ), REMOVEFILTERS () )
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			RETURN
+			    IF ( _en, "Data cut-off: " & FORMAT ( _stand, "yyyy-MM-dd" ),
+			        "Datenstand: " & FORMAT ( _stand, "dd.MM.yyyy" ) )
+			        & " · " & IF ( _en, "Source: SEC EDGAR (Financial Statement Data Sets, submissions), ESEF via filings.xbrl.org, GLEIF, ECB reference rates", "Quelle: SEC EDGAR (Financial Statement Data Sets, Submissions), ESEF über filings.xbrl.org, GLEIF, EZB-Referenzkurse" )
+		displayFolder: Beschriftungen
+		lineageTag: b346a566-ac30-5756-805f-fe98ba1b0ff1
+
+	column Sprache
+		dataType: string
+		sortByColumn: Reihenfolge
+		summarizeBy: none
+		sourceColumn: [Sprache]
+		lineageTag: 19950210-d66f-547c-a800-ad6dabfdcb54
+
+	column Code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Code]
+		lineageTag: c6bd0b0f-226a-54aa-a1de-c10f3d58d394
+
+	column Reihenfolge
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Reihenfolge]
+		lineageTag: 7868a316-29f5-50f3-93a7-27d09fe641dd
+
+	partition Sprache = calculated
+		mode: import
+		source = DATATABLE ( "Sprache", STRING, "Code", STRING, "Reihenfolge", INTEGER, { { "Deutsch", "DE", 0 }, { "English", "EN", 1 } } )

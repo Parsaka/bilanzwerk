@@ -1,7 +1,7 @@
 {#-
   Data Vault hash keys and hash diffs.
 
-  Convention (ADR-005): SHA-256 over the upper-cased, trimmed business key parts joined by
+  Convention (ADR-004): SHA-256 over the upper-cased, trimmed business key parts joined by
   "||", rendered as 64 lower-case hex characters. NULL parts become the empty string so a
   hash is never NULL. The output is byte-identical on DuckDB and on the Fabric Warehouse
   (UTF-8 collation), so local and cloud loads produce the same keys.

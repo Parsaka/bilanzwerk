@@ -1,0 +1,216 @@
+/// Working-Capital-Potenzial gegen den Sektormedian in EUR.
+table fact_wc_opportunity
+	lineageTag: 6f293c44-b6cb-5e1c-88fe-5f102a1915a0
+	sourceLineageTag: [marts].[fact_wc_opportunity]
+
+	/// Freisetzbare Liquidität in EUR, wenn DSO und DIO auf den Sektormedian sinken und DPO auf ihn steigt.
+	measure 'Cash-Potenzial' = SUM ( fact_wc_opportunity[cash_opportunity_eur] )
+		formatString: #,0.0,,," Mrd"
+		displayFolder: Working Capital
+		lineageTag: d5c94d5f-44ea-57fa-8e44-63b30f2b4dc5
+
+	/// Wie Cash-Potenzial, Ziel ist das 25. Perzentil des Sektors (DPO: 75.).
+	measure 'Cash-Potenzial Stretch' = SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] )
+		formatString: #,0.0,,," Mrd"
+		displayFolder: Working Capital
+		lineageTag: 672abfe2-642e-5bf6-8926-f7861b682f93
+
+	column company_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_key
+		lineageTag: c9480e7b-f46b-5546-8ab7-99bbbfa8e67b
+		sourceLineageTag: company_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: 9564cb5c-9add-5333-b987-fd8bef113ae9
+		sourceLineageTag: company_id
+
+	column sector_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: sector_key
+		lineageTag: 677b3785-8615-579f-9387-5bd82a8ab370
+		sourceLineageTag: sector_key
+
+	column period_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: period_key
+		lineageTag: 3a0a3730-a9e0-5f29-85f7-8dab77263a46
+		sourceLineageTag: period_key
+
+	column period_end_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		isHidden
+		summarizeBy: none
+		sourceColumn: period_end_date
+		lineageTag: 4a879be1-53b0-5b84-aa41-9f726eeea08e
+		sourceLineageTag: period_end_date
+
+	column fiscal_year
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: fiscal_year
+		lineageTag: c526f3ac-01cb-55aa-8e72-e3d48b275ae5
+		sourceLineageTag: fiscal_year
+
+	column dso
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: dso
+		lineageTag: f4538ec1-27a1-529b-8f41-e10061f8daf7
+		sourceLineageTag: dso
+
+	column dio
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: dio
+		lineageTag: 1b33f913-74a6-5f39-b358-f241b330155f
+		sourceLineageTag: dio
+
+	column dpo
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: dpo
+		lineageTag: 993bcf3f-bb2a-5123-a5ad-fd3f5aa342de
+		sourceLineageTag: dpo
+
+	column ccc
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: ccc
+		lineageTag: d8696e78-71a1-5cec-aacf-5efb218c99ce
+		sourceLineageTag: ccc
+
+	column sector_median_dso
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: sector_median_dso
+		lineageTag: f08c68da-1116-5d1a-b0ec-52ca635fc9f2
+		sourceLineageTag: sector_median_dso
+
+	column sector_median_dio
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: sector_median_dio
+		lineageTag: 376cb842-a1ee-5c65-9975-11d73ea595f9
+		sourceLineageTag: sector_median_dio
+
+	column sector_median_dpo
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: sector_median_dpo
+		lineageTag: e1adac34-97ab-5949-af9c-7bbb128e12e5
+		sourceLineageTag: sector_median_dpo
+
+	column sector_peer_count
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: sector_peer_count
+		lineageTag: 32df9eed-ac64-5ed3-9119-a962bd2d9f57
+		sourceLineageTag: sector_peer_count
+
+	column excess_dso_days
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: excess_dso_days
+		lineageTag: 2c69da3a-61f2-5b55-9ee9-cbb37e1be4ad
+		sourceLineageTag: excess_dso_days
+
+	column excess_dio_days
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: excess_dio_days
+		lineageTag: f0d82d58-18ba-58ca-bc38-529dc72c3c8f
+		sourceLineageTag: excess_dio_days
+
+	column dpo_gap_days
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: dpo_gap_days
+		lineageTag: 8815e42b-c67f-5378-a340-67839bdef0a1
+		sourceLineageTag: dpo_gap_days
+
+	column revenue_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: revenue_eur
+		lineageTag: 99a3958d-8dd9-5246-b6fb-d80d5aa009ea
+		sourceLineageTag: revenue_eur
+
+	column cogs_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: cogs_eur
+		lineageTag: cbf899c4-28e7-555e-9cf8-47fb3655a0cc
+		sourceLineageTag: cogs_eur
+
+	column cash_from_dso_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: cash_from_dso_eur
+		lineageTag: a4dfccb9-1237-5d4c-be48-5e87147fc298
+		sourceLineageTag: cash_from_dso_eur
+
+	column cash_from_dio_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: cash_from_dio_eur
+		lineageTag: e8344929-1158-5f29-96e6-f0eef863ad98
+		sourceLineageTag: cash_from_dio_eur
+
+	column cash_from_dpo_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: cash_from_dpo_eur
+		lineageTag: d6686f6d-22fe-5045-a5b5-1444537ec342
+		sourceLineageTag: cash_from_dpo_eur
+
+	column cash_opportunity_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: cash_opportunity_eur
+		lineageTag: 1bb3536b-5cf9-5688-a5df-ab059222b565
+		sourceLineageTag: cash_opportunity_eur
+
+	column cash_opportunity_stretch_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: cash_opportunity_stretch_eur
+		lineageTag: 89daa1f1-d61a-52be-bd84-0595008b2bba
+		sourceLineageTag: cash_opportunity_stretch_eur
+
+	partition fact_wc_opportunity = entity
+		mode: directLake
+		source
+			entityName: fact_wc_opportunity
+			schemaName: marts
+			expressionSource: DatabaseQuery

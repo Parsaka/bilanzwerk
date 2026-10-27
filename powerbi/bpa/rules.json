@@ -1,0 +1,133 @@
+[
+  {
+    "ID": "BW_MEASURE_DESCRIPTION",
+    "Name": "[Bilanzwerk] Jede Messung hat eine Beschreibung",
+    "Category": "Maintenance",
+    "Description": "Messungen ohne Beschreibung fehlen im Glossar (Purview, dbt docs) und in den Tooltips.",
+    "Severity": 3,
+    "Scope": "Measure",
+    "Expression": "string.IsNullOrWhitespace(Description)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_MEASURE_FOLDER",
+    "Name": "[Bilanzwerk] Jede Messung liegt in einem Anzeigeordner",
+    "Category": "Maintenance",
+    "Description": "Anzeigeordner gliedern die Feldliste nach Fachgebiet (GuV, Bilanz, Working Capital, Risiko ...).",
+    "Severity": 3,
+    "Scope": "Measure",
+    "Expression": "string.IsNullOrWhitespace(DisplayFolder)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_MEASURE_FORMAT",
+    "Name": "[Bilanzwerk] Zahlenmessungen haben ein Format",
+    "Category": "Formatting",
+    "Description": "Messungen, die Zahlen liefern, brauchen einen Formatstring; Beschriftungen in der Tabelle Sprache sind Text.",
+    "Severity": 3,
+    "Scope": "Measure",
+    "Expression": "string.IsNullOrWhitespace(FormatString) and Table.Name <> \"Sprache\"",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_HIDE_FOREIGN_KEYS",
+    "Name": "[Bilanzwerk] Fremdschlüssel sind ausgeblendet",
+    "Category": "Formatting",
+    "Description": "Gefiltert wird über die Dimensionen, nicht über Schlüssel in den Fakten.",
+    "Severity": 3,
+    "Scope": "DataColumn",
+    "Expression": "UsedInRelationships.Any(FromColumn.Name == current.Name and FromTable.Name == current.Table.Name) and not IsHidden",
+    "FixExpression": "IsHidden = true",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_NO_CALCULATED_COLUMNS",
+    "Name": "[Bilanzwerk] Keine berechneten Spalten",
+    "Category": "Performance",
+    "Description": "Direct Lake unterstützt keine berechneten Spalten auf Lake-Tabellen; Logik gehört in dbt.",
+    "Severity": 3,
+    "Scope": "CalculatedColumn",
+    "Expression": "true",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_DATE_TABLE",
+    "Name": "[Bilanzwerk] dim_date ist als Datumstabelle markiert",
+    "Category": "DAX Expressions",
+    "Description": "Die Berechnungsgruppe Zeitintelligenz (DATEADD, DATESYTD) braucht eine markierte Datumstabelle.",
+    "Severity": 3,
+    "Scope": "Model",
+    "Expression": "not Tables.Any(Name == \"dim_date\" and DataCategory == \"Time\" and Columns.Any(IsKey))",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_NO_IFERROR",
+    "Name": "[Bilanzwerk] Kein IFERROR",
+    "Category": "Performance",
+    "Description": "IFERROR erzwingt Zellweise Auswertung; DIVIDE oder explizite Prüfungen verwenden.",
+    "Severity": 3,
+    "Scope": "Measure, CalculationItem",
+    "Expression": "RegEx.IsMatch(Expression, \"(?i)IFERROR\\\\s*\\\\(\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_USE_DIVIDE",
+    "Name": "[Bilanzwerk] DIVIDE statt Schrägstrich",
+    "Category": "DAX Expressions",
+    "Description": "DIVIDE fängt Division durch null ab und ist im Formel-Engine-Plan günstiger als IF/Schrägstrich.",
+    "Severity": 2,
+    "Scope": "Measure, CalculationItem",
+    "Expression": "RegEx.IsMatch(Expression, \"\\\\]\\\\s*\\\\/(?!\\\\/)(?!\\\\*)\") or RegEx.IsMatch(Expression, \"\\\\)\\\\s*\\\\/(?!\\\\/)(?!\\\\*)\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_NO_BIDIRECTIONAL",
+    "Name": "[Bilanzwerk] Keine beidseitigen Beziehungen",
+    "Category": "Performance",
+    "Description": "Sternschema mit einseitiger Filterrichtung (ADR-005).",
+    "Severity": 3,
+    "Scope": "Relationship",
+    "Expression": "CrossFilteringBehavior == CrossFilteringBehavior.BothDirections",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_NO_MANY_TO_MANY",
+    "Name": "[Bilanzwerk] Keine m:n-Beziehungen",
+    "Category": "Performance",
+    "Description": "Jede Dimension hat einen eindeutigen Schlüssel (dbt unique-Test); m:n deutet auf einen Modellfehler.",
+    "Severity": 3,
+    "Scope": "Relationship",
+    "Expression": "FromCardinality == \"Many\" and ToCardinality == \"Many\"",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_TABLE_DESCRIPTION",
+    "Name": "[Bilanzwerk] Sichtbare Tabellen haben eine Beschreibung",
+    "Category": "Maintenance",
+    "Description": "Die Beschreibung kommt aus model.yml und erscheint in der Feldliste.",
+    "Severity": 2,
+    "Scope": "Table, CalculationGroup",
+    "Expression": "not IsHidden and string.IsNullOrWhitespace(Description)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_RLS_ROLE",
+    "Name": "[Bilanzwerk] RLS-Rolle Sektor-Team filtert dim_sector",
+    "Category": "Security",
+    "Description": "Die Zeilenebene ist Teil des Prüfauftrags (Spezifikation, Abschnitt Sicherheit).",
+    "Severity": 3,
+    "Scope": "Model",
+    "Expression": "not Roles.Any(Name == \"Sektor-Team\" and TablePermissions.Any(Table.Name == \"dim_sector\" and not string.IsNullOrWhitespace(FilterExpression)))",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "BW_AVOID_SUMMARIZE_COLUMNS",
+    "Name": "[Bilanzwerk] SUMMARIZE ohne berechnete Spalten",
+    "Category": "DAX Expressions",
+    "Description": "Berechnete Spalten in SUMMARIZE liefern falsche Ergebnisse im Filterkontext; ADDCOLUMNS ( SUMMARIZE ( ... ) ) verwenden.",
+    "Severity": 2,
+    "Scope": "Measure, CalculationItem",
+    "Expression": "RegEx.IsMatch(Expression, \"(?is)SUMMARIZE\\\\s*\\\\([^()]*\\\"@\")",
+    "CompatibilityLevel": 1200
+  }
+]

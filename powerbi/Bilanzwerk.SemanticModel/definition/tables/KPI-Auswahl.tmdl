@@ -1,0 +1,48 @@
+/// Feldparameter für den Peer-Vergleich: wählt die Kennzahl auf Achsen und in Tabellen.
+table 'KPI-Auswahl'
+	lineageTag: 49c94dde-7cdc-5b13-8bbd-1d2df0d2eeb3
+
+	column 'KPI-Auswahl'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'KPI-Auswahl Reihenfolge'
+		lineageTag: f629afdc-d658-5649-a596-6fdf27340950
+
+		relatedColumnDetails
+			groupByColumn: 'KPI-Auswahl Felder'
+
+	column 'KPI-Auswahl Felder'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value2]
+		lineageTag: d39712dd-7459-5420-b98f-2b6902bfe837
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+	column 'KPI-Auswahl Reihenfolge'
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value3]
+		lineageTag: 1919cb54-5d24-52d4-9506-035bd7e80e98
+
+	partition 'KPI-Auswahl' = calculated
+		mode: import
+		source =
+				{
+				("DSO", NAMEOF('fact_financial_line'[DSO]), 0),
+				("DIO", NAMEOF('fact_financial_line'[DIO]), 1),
+				("DPO", NAMEOF('fact_financial_line'[DPO]), 2),
+				("CCC", NAMEOF('fact_financial_line'[CCC]), 3),
+				("EBIT-Marge", NAMEOF('fact_financial_line'[EBIT-Marge]), 4),
+				("Eigenkapitalquote", NAMEOF('fact_financial_line'[Eigenkapitalquote]), 5),
+				("Z'' Score", NAMEOF('fact_kpi'[Z'' Score]), 6),
+				("Bruttomarge", NAMEOF('fact_financial_line'[Bruttomarge]), 7),
+				("Verschuldungsgrad", NAMEOF('fact_financial_line'[Verschuldungsgrad]), 8)
+				}

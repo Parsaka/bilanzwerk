@@ -1,0 +1,39 @@
+/// Ist, Plan, Plan-Ist-Abweichung absolut und in Prozent, Forecast.
+table Szenario
+	lineageTag: 284bc8bf-704a-5542-bdd5-80a3895bbe7e
+
+	calculationGroup
+		precedence: 20
+
+		calculationItem Ist = CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = "IST" )
+			ordinal: 0
+
+		calculationItem Plan = CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = "PLAN" )
+			ordinal: 1
+
+		calculationItem 'Plan-Ist-Abweichung' = CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = "IST" ) - CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = "PLAN" )
+			ordinal: 2
+
+		calculationItem 'Plan-Ist-Abweichung %' = DIVIDE ( CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = "IST" ) - CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = "PLAN" ), ABS ( CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = "PLAN" ) ) )
+			ordinal: 3
+			formatStringDefinition = "0.0%"
+
+		calculationItem Forecast = CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = "FC" )
+			ordinal: 4
+
+	column Szenario
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+		lineageTag: 627df12b-5431-5eeb-8f4d-435da516834b
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: Ordinal
+		lineageTag: 5826b9ac-9681-5a73-bf30-d90aa5e43a58
+
+	partition Szenario = calculationGroup
+		mode: import

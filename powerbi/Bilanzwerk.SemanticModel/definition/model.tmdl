@@ -1,0 +1,32 @@
+model Model
+	culture: de-DE
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: de-DE
+
+ref table dim_company
+ref table dim_period
+ref table dim_date
+ref table dim_line_item
+ref table dim_kpi
+ref table dim_scenario
+ref table dim_sector
+ref table dim_currency
+ref table fact_financial_line
+ref table fact_kpi
+ref table fact_event
+ref table fact_wc_opportunity
+ref table fact_risk_score
+ref table fact_data_quality
+ref table fact_stewardship_queue
+ref table sector_team_users
+ref table Zeitintelligenz
+ref table Szenario
+ref table 'Währung'
+ref table 'KPI-Auswahl'
+ref table Sprache
+
+ref role 'Sektor-Team'
+ref role Reporting
+
+ref cultureInfo de-DE

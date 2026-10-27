@@ -1,0 +1,505 @@
+# Semantic model definition, rendered to TMDL by tools/generate_tmdl.py.
+# Columns come from docs/data-contracts (one source of truth with the marts); this file adds
+# relationships, measures, calculation groups, field parameters, RLS and OLS.
+
+name: Bilanzwerk
+culture: de-DE
+warehouse_schema: marts
+
+tables:
+  dim_company: {hidden_columns: [company_id, valid_from, valid_to, version_number, match_probability, n_ciks, last_accepted_at, is_financial], key: company_key, description: "Golden record je Unternehmen (SCD Typ 2 auf Name und Sektor)."}
+  dim_period: {hidden_columns: [company_id, first_filing, sec_fiscal_year, sec_fiscal_period, fye_month], key: period_key, description: "Geschäftsperioden je Unternehmen mit Veröffentlichungsverzug."}
+  dim_date: {key: date_key, mark_as_date: true, description: "Kalender für Stichtage, Ereignisse und Periodenenden."}
+  dim_line_item: {key: line_item_key, description: "Positionen: Bilanz, GuV, Cashflow mit Hierarchie."}
+  dim_kpi: {key: kpi_key, description: "Kennzahlen-Glossar: Formel, Einheit, Richtung, Schwellen, Owner."}
+  dim_scenario: {key: scenario_key, description: "Ist, Plan (im Januar eingefroren), Forecast."}
+  dim_sector: {key: sector_key, description: "11 Sektoren mit SIC-Bereichen und NACE-Abschnitten."}
+  dim_currency: {key: currency_key, description: "ISO-Währungen."}
+  fact_financial_line: {hidden_columns: [company_id, available_at, source_filing], description: "Finanzzeilen je Unternehmen, Periode, Position, Szenario und Version.", large: true}
+  fact_kpi: {hidden_columns: [company_id, available_at], description: "Kennzahlen mit Sektorperzentil, Veränderung und roter Flagge."}
+  fact_event: {hidden_columns: [company_id, event_key, accepted_at], description: "Insolvenz (8-K Item 1.03), Delisting, Deregistrierung, Fristverlängerung."}
+  fact_wc_opportunity: {hidden_columns: [company_id, sector_key], description: "Working-Capital-Potenzial gegen den Sektormedian in EUR."}
+  fact_risk_score: {hidden_columns: [company_id, risk_score_key, run_id], description: "Insolvenzwahrscheinlichkeit 12 Monate je Unternehmen, Stichtag und Modell."}
+  fact_data_quality: {hidden_columns: [run_id], description: "Datenqualitäts-Scorecard je Lauf, Regel und Tabelle."}
+  fact_stewardship_queue: {description: "Offene Stewardship-Fälle der Stammdaten (Kandidatenpaare zur Prüfung)."}
+  sector_team_users: {schema: reference, hidden: true, description: "RLS-Zuordnung Benutzer zu Sektoren.", columns: [{name: user_principal_name, type: string}, {name: sector_code, type: string}]}
+
+relationships:
+  - [fact_financial_line.company_key, dim_company.company_key]
+  - [fact_financial_line.period_key, dim_period.period_key]
+  - [fact_financial_line.period_end_date, dim_date.date_key]
+  - [fact_financial_line.line_item_key, dim_line_item.line_item_key]
+  - [fact_financial_line.scenario_key, dim_scenario.scenario_key]
+  - [fact_financial_line.currency_key, dim_currency.currency_key]
+  - [fact_kpi.company_key, dim_company.company_key]
+  - [fact_kpi.period_key, dim_period.period_key]
+  - [fact_kpi.period_end_date, dim_date.date_key]
+  - [fact_kpi.kpi_key, dim_kpi.kpi_key]
+  - [fact_event.company_key, dim_company.company_key]
+  - [fact_event.event_date, dim_date.date_key]
+  - [fact_wc_opportunity.company_key, dim_company.company_key]
+  - [fact_wc_opportunity.period_end_date, dim_date.date_key]
+  - [fact_risk_score.company_key, dim_company.company_key]
+  - [fact_risk_score.as_of_date, dim_date.date_key]
+  - [dim_company.sector_key, dim_sector.sector_key]
+
+measures:
+  - table: fact_financial_line
+    name: "_Betrag Roh"
+    folder: "_Basis"
+    format: "#,0"
+    hidden: true
+    description: "Summe in der gewählten Währung (Berechnungsgruppe Währung). Landeswährung nur bei genau einer Währung im Kontext."
+    expression: |
+      VAR _waehrung = SELECTEDVALUE ( 'Währung'[Währung], "EUR" )
+      RETURN
+          IF (
+              _waehrung = "EUR",
+              SUM ( fact_financial_line[amount_eur] ),
+              IF ( HASONEVALUE ( dim_currency[currency_code] ), SUM ( fact_financial_line[amount_local] ) )
+          )
+
+  - table: fact_financial_line
+    name: "_Betrag Szenario"
+    folder: "_Basis"
+    format: "#,0"
+    hidden: true
+    description: "Ohne Szenarioauswahl gilt Ist."
+    expression: |
+      IF (
+          ISFILTERED ( dim_scenario[scenario_code] ),
+          [_Betrag Roh],
+          CALCULATE ( [_Betrag Roh], dim_scenario[scenario_code] = "IST" )
+      )
+
+  - table: fact_financial_line
+    name: "Betrag"
+    folder: "_Basis"
+    format: "#,0"
+    hidden: true
+    description: "Basismessung aller Finanzzeilen. Ohne Auswahl gelten Szenario Ist und Version latest (nach Restatements); die Seite Datenqualität vergleicht mit first_reported."
+    expression: |
+      IF (
+          ISFILTERED ( fact_financial_line[version] ),
+          [_Betrag Szenario],
+          CALCULATE ( [_Betrag Szenario], fact_financial_line[version] = "latest" )
+      )
+
+  - table: fact_financial_line
+    name: "Bestand"
+    folder: "_Basis"
+    format: "#,0"
+    hidden: true
+    description: "Bilanzwert zum letzten Periodenende jedes Unternehmens im Kontext (Stichtagswert, nicht summiert über Quartale)."
+    expression: |
+      SUMX (
+          VALUES ( dim_company[company_id] ),
+          VAR _letzter = CALCULATE ( MAX ( fact_financial_line[period_end_date] ) )
+          RETURN CALCULATE ( [Betrag], dim_date[date_key] = _letzter )
+      )
+
+  - table: fact_financial_line
+    name: "Umsatz"
+    folder: "GuV"
+    format: "#,0,,\" Mio\""
+    description: "Umsatzerlöse (Position REV), Summe der Quartale im Kontext."
+    expression: |
+      CALCULATE ( [Betrag], dim_line_item[line_item_code] = "REV" )
+
+  - table: fact_financial_line
+    name: "COGS"
+    folder: "GuV"
+    format: "#,0,,\" Mio\""
+    description: "Umsatzkosten (Position COGS)."
+    expression: |
+      CALCULATE ( [Betrag], dim_line_item[line_item_code] = "COGS" )
+
+  - table: fact_financial_line
+    name: "EBIT"
+    folder: "GuV"
+    format: "#,0,,\" Mio\""
+    description: "Betriebsergebnis (Position EBIT)."
+    expression: |
+      CALCULATE ( [Betrag], dim_line_item[line_item_code] = "EBIT" )
+
+  - table: fact_financial_line
+    name: "Jahresergebnis"
+    folder: "GuV"
+    format: "#,0,,\" Mio\""
+    description: "Jahresergebnis der Anteilseigner (Position NI)."
+    expression: |
+      CALCULATE ( [Betrag], dim_line_item[line_item_code] = "NI" )
+
+  - table: fact_financial_line
+    name: "EBIT-Marge"
+    folder: "GuV"
+    format: "0.0%"
+    description: "EBIT geteilt durch Umsatz."
+    expression: |
+      DIVIDE ( [EBIT], [Umsatz] )
+
+  - table: fact_financial_line
+    name: "Bruttomarge"
+    folder: "GuV"
+    format: "0.0%"
+    description: "(Umsatz minus Umsatzkosten) geteilt durch Umsatz."
+    expression: |
+      DIVIDE ( [Umsatz] - [COGS], [Umsatz] )
+
+  - table: fact_financial_line
+    name: "Umsatz TTM"
+    folder: "GuV"
+    format: "#,0,,\" Mio\""
+    description: "Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz)."
+    expression: |
+      CALCULATE ( [Umsatz], Zeitintelligenz[Zeit] = "TTM" )
+
+  - table: fact_financial_line
+    name: "COGS TTM"
+    folder: "GuV"
+    format: "#,0,,\" Mio\""
+    description: "Umsatzkosten der letzten zwölf Monate."
+    expression: |
+      CALCULATE ( [COGS], Zeitintelligenz[Zeit] = "TTM" )
+
+  - table: fact_financial_line
+    name: "Bilanzsumme"
+    folder: "Bilanz"
+    format: "#,0,,\" Mio\""
+    description: "Bilanzsumme Aktiva zum Stichtag."
+    expression: |
+      CALCULATE ( [Bestand], dim_line_item[line_item_code] = "TA" )
+
+  - table: fact_financial_line
+    name: "Eigenkapital"
+    folder: "Bilanz"
+    format: "#,0,,\" Mio\""
+    description: "Eigenkapital gesamt zum Stichtag."
+    expression: |
+      CALCULATE ( [Bestand], dim_line_item[line_item_code] = "EQ" )
+
+  - table: fact_financial_line
+    name: "Verbindlichkeiten"
+    folder: "Bilanz"
+    format: "#,0,,\" Mio\""
+    description: "Verbindlichkeiten gesamt zum Stichtag."
+    expression: |
+      CALCULATE ( [Bestand], dim_line_item[line_item_code] = "TL" )
+
+  - table: fact_financial_line
+    name: "Eigenkapitalquote"
+    folder: "Bilanz"
+    format: "0.0%"
+    description: "Eigenkapital geteilt durch Bilanzsumme."
+    expression: |
+      DIVIDE ( [Eigenkapital], [Bilanzsumme] )
+
+  - table: fact_financial_line
+    name: "Verschuldungsgrad"
+    folder: "Bilanz"
+    format: "0.00"
+    description: "Verbindlichkeiten geteilt durch Eigenkapital."
+    expression: |
+      DIVIDE ( [Verbindlichkeiten], [Eigenkapital] )
+
+  - table: fact_financial_line
+    name: "Liquide Mittel"
+    folder: "Bilanz"
+    format: "#,0,,\" Mio\""
+    description: "Liquide Mittel zum Stichtag."
+    expression: |
+      CALCULATE ( [Bestand], dim_line_item[line_item_code] = "CASH" )
+
+  - table: fact_financial_line
+    name: "Operativer Cashflow"
+    folder: "Cashflow"
+    format: "#,0,,\" Mio\""
+    description: "Cashflow aus laufender Geschäftstätigkeit."
+    expression: |
+      CALCULATE ( [Betrag], dim_line_item[line_item_code] = "CFO" )
+
+  - table: fact_financial_line
+    name: "Cash Conversion (CFO / EBIT)"
+    folder: "Cashflow"
+    format: "0.0%"
+    description: "Operativer Cashflow geteilt durch EBIT."
+    expression: |
+      DIVIDE ( [Operativer Cashflow], [EBIT] )
+
+  - table: fact_financial_line
+    name: "Forderungen Durchschnitt"
+    folder: "Working Capital"
+    format: "#,0,,\" Mio\""
+    description: "Durchschnitt der Forderungen aus Lieferungen und Leistungen über die Perioden im Kontext."
+    expression: |
+      AVERAGEX (
+          VALUES ( dim_period[period_key] ),
+          CALCULATE ( [Betrag], dim_line_item[line_item_code] = "AR" )
+      )
+
+  - table: fact_financial_line
+    name: "Vorräte Durchschnitt"
+    folder: "Working Capital"
+    format: "#,0,,\" Mio\""
+    description: "Durchschnitt der Vorräte."
+    expression: |
+      AVERAGEX (
+          VALUES ( dim_period[period_key] ),
+          CALCULATE ( [Betrag], dim_line_item[line_item_code] = "INV" )
+      )
+
+  - table: fact_financial_line
+    name: "Verbindlichkeiten LuL Durchschnitt"
+    folder: "Working Capital"
+    format: "#,0,,\" Mio\""
+    description: "Durchschnitt der Verbindlichkeiten aus Lieferungen und Leistungen."
+    expression: |
+      AVERAGEX (
+          VALUES ( dim_period[period_key] ),
+          CALCULATE ( [Betrag], dim_line_item[line_item_code] = "AP" )
+      )
+
+  - table: fact_financial_line
+    name: "DSO"
+    folder: "Working Capital"
+    format: "0.0"
+    description: "Days Sales Outstanding: Forderungen Durchschnitt / Umsatz TTM * 365."
+    expression: |
+      DIVIDE ( [Forderungen Durchschnitt], [Umsatz TTM] ) * 365
+
+  - table: fact_financial_line
+    name: "DIO"
+    folder: "Working Capital"
+    format: "0.0"
+    description: "Days Inventory Outstanding: Vorräte Durchschnitt / COGS TTM * 365."
+    expression: |
+      DIVIDE ( [Vorräte Durchschnitt], [COGS TTM] ) * 365
+
+  - table: fact_financial_line
+    name: "DPO"
+    folder: "Working Capital"
+    format: "0.0"
+    description: "Days Payables Outstanding: Verbindlichkeiten LuL Durchschnitt / COGS TTM * 365."
+    expression: |
+      DIVIDE ( [Verbindlichkeiten LuL Durchschnitt], [COGS TTM] ) * 365
+
+  - table: fact_financial_line
+    name: "CCC"
+    folder: "Working Capital"
+    format: "0.0"
+    description: "Cash Conversion Cycle in Tagen: DSO + DIO - DPO."
+    expression: |
+      [DSO] + [DIO] - [DPO]
+
+  - table: fact_kpi
+    name: "CCC Sektor-Median"
+    folder: "Working Capital"
+    format: "0.0"
+    description: "Median des CCC über alle Unternehmen des Sektors im Kontext (aus fact_kpi, letzte Version)."
+    expression: |
+      CALCULATE (
+          MEDIANX ( VALUES ( dim_company[company_key] ), [KPI Wert] ),
+          REMOVEFILTERS ( dim_company ),
+          VALUES ( dim_sector[sector_key] ),
+          dim_kpi[kpi_code] = "CCC"
+      )
+
+  - table: fact_wc_opportunity
+    name: "Cash-Potenzial"
+    folder: "Working Capital"
+    format: "#,0.0,,,\" Mrd\""
+    description: "Freisetzbare Liquidität in EUR, wenn DSO und DIO auf den Sektormedian sinken und DPO auf ihn steigt."
+    expression: |
+      SUM ( fact_wc_opportunity[cash_opportunity_eur] )
+
+  - table: fact_wc_opportunity
+    name: "Cash-Potenzial Stretch"
+    folder: "Working Capital"
+    format: "#,0.0,,,\" Mrd\""
+    description: "Wie Cash-Potenzial, Ziel ist das 25. Perzentil des Sektors (DPO: 75.)."
+    expression: |
+      SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] )
+
+  - table: fact_kpi
+    name: "KPI Wert"
+    folder: "Kennzahlen"
+    format: "0.00"
+    description: "Durchschnittlicher Kennzahlenwert im Kontext (letzte Version, nach Restatements)."
+    expression: |
+      CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "latest" )
+
+  - table: fact_kpi
+    name: "KPI Wert erstveröffentlicht"
+    folder: "Kennzahlen"
+    format: "0.00"
+    description: "Kennzahlenwert aus den erstveröffentlichten Zahlen (Point-in-time, Grundlage des Modells)."
+    expression: |
+      CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "first_reported" )
+
+  - table: fact_kpi
+    name: "Sektorperzentil"
+    folder: "Kennzahlen"
+    format: "0%"
+    description: "Perzentil der Kennzahl innerhalb von Sektor und Jahr."
+    expression: |
+      CALCULATE ( AVERAGE ( fact_kpi[sector_percentile] ), fact_kpi[version] = "latest" )
+
+  - table: fact_kpi
+    name: "Rote Flaggen"
+    folder: "Kennzahlen"
+    format: "#,0"
+    description: "Anzahl roter Flaggen (Schwelle laut dim_kpi)."
+    expression: |
+      CALCULATE ( SUM ( fact_kpi[red_flag] ), fact_kpi[version] = "latest" )
+
+  - table: fact_kpi
+    name: "Z'' Score"
+    folder: "Kreditrisiko"
+    format: "0.00"
+    description: "Altman Z'' (1995) für Nicht-Produzenten. Unter 1,1 Distress-Zone, über 2,6 sichere Zone."
+    expression: |
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "ZPP" )
+
+  - table: fact_risk_score
+    name: "Risiko 12M"
+    folder: "Kreditrisiko"
+    format: "0.0%"
+    description: "Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten."
+    expression: |
+      AVERAGE ( fact_risk_score[probability_12m] )
+
+  - table: fact_risk_score
+    name: "Unternehmen rot"
+    folder: "Kreditrisiko"
+    format: "#,0"
+    description: "Anzahl Unternehmen im roten Risikoband."
+    expression: |
+      CALCULATE ( DISTINCTCOUNT ( fact_risk_score[company_key] ), fact_risk_score[risk_band] = "red" )
+
+  - table: fact_risk_score
+    name: "Risiko Veränderung zum Vorquartal"
+    folder: "Kreditrisiko"
+    format: "+0.0%;-0.0%"
+    description: "Risiko 12M minus Risiko 12M drei Monate früher."
+    expression: |
+      [Risiko 12M] - CALCULATE ( [Risiko 12M], DATEADD ( dim_date[date_key], -3, MONTH ) )
+
+  - table: fact_event
+    name: "Insolvenzen"
+    folder: "Kreditrisiko"
+    format: "#,0"
+    description: "Anzahl Insolvenzereignisse (8-K Item 1.03)."
+    expression: |
+      CALCULATE ( COUNTROWS ( fact_event ), fact_event[event_type] = "BANKRUPTCY_8K_103" )
+
+  - table: fact_financial_line
+    name: "Prognosefehler MAPE"
+    folder: "Plan-Ist"
+    format: "0.0%"
+    description: "Mittlerer absoluter prozentualer Fehler des Forecasts je Unternehmen und Quartal."
+    expression: |
+      AVERAGEX (
+          SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
+          VAR _ist = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" )
+          VAR _fc = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
+          RETURN IF ( NOT ISBLANK ( _fc ) && _ist <> 0, ABS ( _ist - _fc ) / ABS ( _ist ) )
+      )
+
+  - table: fact_data_quality
+    name: "DQ Pass-Rate"
+    folder: "Datenqualität"
+    format: "0.0%"
+    description: "Bestandene Prüfungen geteilt durch geprüfte Zeilen im letzten Lauf."
+    expression: |
+      VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+      RETURN
+          CALCULATE (
+              DIVIDE ( SUM ( fact_data_quality[rows_checked] ) - SUM ( fact_data_quality[rows_failed] ), SUM ( fact_data_quality[rows_checked] ) ),
+              fact_data_quality[run_at] = _lauf
+          )
+
+  - table: fact_data_quality
+    name: "Regeln verletzt"
+    folder: "Datenqualität"
+    format: "#,0"
+    description: "Anzahl Regeln mit Status fail im letzten Lauf."
+    expression: |
+      VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+      RETURN CALCULATE ( COUNTROWS ( fact_data_quality ), fact_data_quality[run_at] = _lauf, fact_data_quality[status] = "fail" )
+
+  - table: dim_company
+    name: "LEI-Match-Quote"
+    folder: "Stammdaten"
+    format: "0.0%"
+    description: "Anteil der aktuellen Unternehmen mit LEI."
+    expression: |
+      DIVIDE ( CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, dim_company[is_lei_matched] = 1 ), CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1 ) )
+
+  - table: fact_stewardship_queue
+    name: "Offene Stewardship-Fälle"
+    folder: "Stammdaten"
+    format: "#,0"
+    description: "Kandidatenpaare zwischen den Schwellen ohne Entscheidung."
+    expression: |
+      COUNTROWS ( fact_stewardship_queue )
+
+  - table: fact_kpi
+    name: "Restatement-Quote"
+    folder: "Datenqualität"
+    format: "0.0%"
+    description: "Anteil der Kennzahlenwerte, deren letzte Version von der Erstveröffentlichung abweicht."
+    expression: |
+      VAR _paare =
+          ADDCOLUMNS (
+              SUMMARIZE ( fact_kpi, fact_kpi[company_key], fact_kpi[period_key], fact_kpi[kpi_key] ),
+              "@erst", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "first_reported" ),
+              "@letzt", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "latest" )
+          )
+      RETURN DIVIDE ( COUNTROWS ( FILTER ( _paare, ABS ( [@erst] - [@letzt] ) > 0.005 * ABS ( [@erst] ) ) ), COUNTROWS ( _paare ) )
+
+calculation_groups:
+  - name: Zeitintelligenz
+    column: Zeit
+    precedence: 10
+    description: "Ist, Vorjahr, Abweichung zum Vorjahr, YTD, TTM."
+    items:
+      - [Ist, "SELECTEDMEASURE ()"]
+      - [Vorjahr, "CALCULATE ( SELECTEDMEASURE (), DATEADD ( dim_date[date_key], -1, YEAR ) )"]
+      - [Abweichung zum Vorjahr, "SELECTEDMEASURE () - CALCULATE ( SELECTEDMEASURE (), DATEADD ( dim_date[date_key], -1, YEAR ) )"]
+      - [Abweichung zum Vorjahr %, "DIVIDE ( SELECTEDMEASURE () - CALCULATE ( SELECTEDMEASURE (), DATEADD ( dim_date[date_key], -1, YEAR ) ), ABS ( CALCULATE ( SELECTEDMEASURE (), DATEADD ( dim_date[date_key], -1, YEAR ) ) ) )", "0.0%"]
+      - [YTD, "CALCULATE ( SELECTEDMEASURE (), DATESYTD ( dim_date[date_key] ) )"]
+      - [TTM, "CALCULATE ( SELECTEDMEASURE (), DATESINPERIOD ( dim_date[date_key], MAX ( dim_date[date_key] ), -12, MONTH ) )"]
+  - name: Szenario
+    column: Szenario
+    precedence: 20
+    description: "Ist, Plan, Plan-Ist-Abweichung absolut und in Prozent, Forecast."
+    items:
+      - [Ist, "CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = \"IST\" )"]
+      - [Plan, "CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = \"PLAN\" )"]
+      - [Plan-Ist-Abweichung, "CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = \"IST\" ) - CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = \"PLAN\" )"]
+      - [Plan-Ist-Abweichung %, "DIVIDE ( CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = \"IST\" ) - CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = \"PLAN\" ), ABS ( CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = \"PLAN\" ) ) )", "0.0%"]
+      - [Forecast, "CALCULATE ( SELECTEDMEASURE (), dim_scenario[scenario_code] = \"FC\" )"]
+  - name: Währung
+    column: Währung
+    precedence: 30
+    description: "EUR oder Landeswährung. Die Basismessung [Betrag] liest die Auswahl; Landeswährung nur bei einer Währung im Kontext."
+    items:
+      - [EUR, "SELECTEDMEASURE ()"]
+      - [Lokal, "SELECTEDMEASURE ()"]
+
+field_parameters:
+  - name: KPI-Auswahl
+    description: "Feldparameter für den Peer-Vergleich: wählt die Kennzahl auf Achsen und in Tabellen."
+    measures: [DSO, DIO, DPO, CCC, EBIT-Marge, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
+
+roles:
+  - name: Sektor-Team
+    description: "Zeilenebene: nur die Sektoren, die dem Benutzer in sector_team_users zugeordnet sind."
+    permission: read
+    filters:
+      dim_sector: "[sector_code] IN CALCULATETABLE ( VALUES ( sector_team_users[sector_code] ), sector_team_users[user_principal_name] = USERPRINCIPALNAME () )"
+  - name: Reporting
+    description: "Objektebene: die Modelltreiber (SHAP-Treiber) sind für Reporting-Nutzer unsichtbar."
+    permission: read
+    ols:
+      fact_risk_score: [top_3_drivers]

@@ -21,21 +21,27 @@ from {{ ref('int_period_values_golden') }}
 
 union all
 
+-- Plan and forecast rows exist once per version, so a version filter never hides them
 select
-    company_key,
-    company_id,
-    period_key,
-    period_end,
+    p.company_key,
+    p.company_id,
+    p.period_key,
+    p.period_end,
     'REV',
-    scenario_code,
-    '{{ var("version_first_reported") }}',
-    currency_code,
-    amount_local,
-    amount_local / nullif(fx_rate, 0),
+    p.scenario_code,
+    v.version,
+    p.currency_code,
+    p.amount_local,
+    p.amount_local / nullif(p.fx_rate, 0),
     cast(null as {{ bw_float() }}),
     cast(null as {{ bw_float() }}),
-    fx_rate,
+    p.fx_rate,
     'forecast',
     cast(null as {{ bw_string(100) }}),
-    freeze_at
-from {{ ref('int_revenue_plan') }}
+    p.freeze_at
+from {{ ref('int_revenue_plan') }} as p
+cross join (
+    select '{{ var("version_first_reported") }}' as version
+    union all
+    select '{{ var("version_latest") }}'
+) as v

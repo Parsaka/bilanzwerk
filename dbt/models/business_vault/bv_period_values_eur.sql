@@ -1,4 +1,4 @@
--- Currency conversion to EUR (ADR-009): closing rate at period end for balance sheet items
+-- Currency conversion to EUR (ADR-008): closing rate at period end for balance sheet items
 -- (instants), average rate over the period for income and cash flow items (durations).
 -- The local amount is kept next to the EUR amount.
 with v as (

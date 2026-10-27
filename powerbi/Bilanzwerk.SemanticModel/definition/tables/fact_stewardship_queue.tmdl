@@ -1,0 +1,89 @@
+/// Offene Stewardship-Fälle der Stammdaten (Kandidatenpaare zur Prüfung).
+table fact_stewardship_queue
+	lineageTag: 95f9bfc1-4ab1-5ddc-a2eb-f835dfb67346
+	sourceLineageTag: [marts].[fact_stewardship_queue]
+
+	/// Kandidatenpaare zwischen den Schwellen ohne Entscheidung.
+	measure 'Offene Stewardship-Fälle' = COUNTROWS ( fact_stewardship_queue )
+		formatString: #,0
+		displayFolder: Stammdaten
+		lineageTag: 023bba45-81b6-51d7-855a-e8d4b0b7819c
+
+	column source_company_bk_type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: source_company_bk_type
+		lineageTag: 8c73c6e6-70db-5919-aebb-0d9db00687be
+		sourceLineageTag: source_company_bk_type
+
+	column source_company_bk
+		dataType: string
+		summarizeBy: none
+		sourceColumn: source_company_bk
+		lineageTag: feab6153-8378-5c75-a52d-a7c3d1fe922e
+		sourceLineageTag: source_company_bk
+
+	column lei
+		dataType: string
+		summarizeBy: none
+		sourceColumn: lei
+		lineageTag: 1ddf6fdc-2cfe-5a2b-91ca-bc4cabc82630
+		sourceLineageTag: lei
+
+	column match_probability
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: match_probability
+		lineageTag: 589b1494-0c7c-5764-8c11-3eab1ca76f4c
+		sourceLineageTag: match_probability
+
+	column match_weight
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: match_weight
+		lineageTag: 8f031ad1-9dbd-52ec-8fa8-cb92a0ce1cfb
+		sourceLineageTag: match_weight
+
+	column model_version
+		dataType: string
+		summarizeBy: none
+		sourceColumn: model_version
+		lineageTag: 02ee3ed1-877e-58e7-b5b8-f93f0c62c692
+		sourceLineageTag: model_version
+
+	column sec_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sec_name
+		lineageTag: 6fe94267-da7a-5037-a11f-55807f23e240
+		sourceLineageTag: sec_name
+
+	column gleif_legal_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: gleif_legal_name
+		lineageTag: 8df6fe01-760a-533c-b241-2dc4b1bbeb39
+		sourceLineageTag: gleif_legal_name
+
+	column gleif_city
+		dataType: string
+		summarizeBy: none
+		sourceColumn: gleif_city
+		lineageTag: a70e9933-88a2-5e68-bc88-96e82bf273b0
+		sourceLineageTag: gleif_city
+
+	column gleif_country
+		dataType: string
+		summarizeBy: none
+		sourceColumn: gleif_country
+		lineageTag: 24ab8ebc-fa73-531f-88f5-81338d6858a5
+		sourceLineageTag: gleif_country
+
+	partition fact_stewardship_queue = entity
+		mode: directLake
+		source
+			entityName: fact_stewardship_queue
+			schemaName: marts
+			expressionSource: DatabaseQuery

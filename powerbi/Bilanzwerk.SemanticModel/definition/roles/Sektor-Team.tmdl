@@ -1,0 +1,5 @@
+/// Zeilenebene: nur die Sektoren, die dem Benutzer in sector_team_users zugeordnet sind.
+role 'Sektor-Team'
+	modelPermission: read
+
+	tablePermission dim_sector = [sector_code] IN CALCULATETABLE ( VALUES ( sector_team_users[sector_code] ), sector_team_users[user_principal_name] = USERPRINCIPALNAME () )
