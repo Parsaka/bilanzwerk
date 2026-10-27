@@ -28,12 +28,25 @@ typed as (
     where value is not null
 ),
 
--- One row per filing, concept, period and unit, the grain of hk_fact. The file's own key also
--- has the taxonomy version, so two versions that normalise to the same taxonomy (e.g. two
--- "other" taxonomies with the same tag) or a filing repeated in a later quarter file would give
--- two values for one fact in one batch. Keep the later quarter file, then the later version.
+hashed as (
+    select
+        {{ bw_hash_key(["adsh", "taxonomy", "tag", "period_end", "qtrs", "unit"]) }} as hk_fact,
+        {{ bw_hash_key(["adsh"]) }} as hk_filing,
+        {{ bw_hash_key(["taxonomy", "tag"]) }} as hk_concept,
+        typed.*
+    from typed
+),
+
+-- One row per hk_fact. The file's own key also has the taxonomy version and is case-sensitive,
+-- while hk_fact ignores case (custom tags that differ only in case) and maps versions to one
+-- taxonomy; a filing can also be repeated in a later quarter file. Any of these would give two
+-- values for one fact in one batch (seen in the real data). Keep the later quarter file, then
+-- the later version.
 deduplicated as (
     select
+        hk_fact,
+        hk_filing,
+        hk_concept,
         adsh,
         tag,
         version,
@@ -46,20 +59,17 @@ deduplicated as (
         source_quarter
     from (
         select
-            typed.*,
+            hashed.*,
             row_number() over (
-                partition by typed.adsh, typed.taxonomy, typed.tag, typed.period_end, typed.qtrs, typed.unit
-                order by typed.source_quarter desc, typed.version desc, typed.value desc
+                partition by hashed.hk_fact
+                order by hashed.source_quarter desc, hashed.version desc, hashed.tag desc, hashed.value desc
             ) as rn
-        from typed
+        from hashed
     ) as ranked
     where rn = 1
 )
 
 select
-    {{ bw_hash_key(["adsh", "taxonomy", "tag", "period_end", "qtrs", "unit"]) }} as hk_fact,
-    {{ bw_hash_key(["adsh"]) }} as hk_filing,
-    {{ bw_hash_key(["taxonomy", "tag"]) }} as hk_concept,
     deduplicated.*,
     {{ bw_hash_diff(["value", "footnote"]) }} as hd_fact_value,
     {{ bw_run_ts() }} as load_datetime,

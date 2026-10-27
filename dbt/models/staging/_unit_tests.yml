@@ -3,8 +3,8 @@ version: 2
 unit_tests:
   - name: fsds_num_one_row_per_fact
     description: >
-      Two taxonomy versions that normalise to the same taxonomy, and a filing repeated in a later
-      quarter file, give one row per hk_fact (seen in the real data: duplicate satellite keys).
+      Two taxonomy versions that normalise to the same taxonomy, a filing repeated in a later
+      quarter file, and custom tags that differ only in case give one row per hk_fact (seen in the real data: duplicate satellite keys).
     model: stg_sec_fsds__num
     overrides:
       vars:
@@ -21,7 +21,12 @@ unit_tests:
           select 'a2' as adsh, 'Revenues' as tag, 'us-gaap/2022' as version, date '2022-12-31' as ddate, 4 as qtrs, 'USD' as uom, cast(null as varchar) as segments, cast(null as varchar) as coreg, 5 as value, cast(null as varchar) as footnote, '2023q1' as quarter
           union all
           select 'a2' as adsh, 'Revenues' as tag, 'us-gaap/2022' as version, date '2022-12-31' as ddate, 4 as qtrs, 'USD' as uom, cast(null as varchar) as segments, cast(null as varchar) as coreg, 6 as value, cast('restated' as varchar) as footnote, '2023q2' as quarter
+          union all
+          select 'a3' as adsh, 'CustomTag' as tag, 'a3' as version, date '2022-12-31' as ddate, 0 as qtrs, 'USD' as uom, cast(null as varchar) as segments, cast(null as varchar) as coreg, 7 as value, cast(null as varchar) as footnote, '2023q1' as quarter
+          union all
+          select 'a3' as adsh, 'Customtag' as tag, 'a3' as version, date '2022-12-31' as ddate, 0 as qtrs, 'USD' as uom, cast(null as varchar) as segments, cast(null as varchar) as coreg, 8 as value, cast(null as varchar) as footnote, '2023q1' as quarter
     expect:
       rows:
         - {adsh: "a1", tag: "Assets", taxonomy: "other", version: "invest/2013", value: 100}
         - {adsh: "a2", tag: "Revenues", taxonomy: "us-gaap", version: "us-gaap/2022", value: 6}
+        - {adsh: "a3", tag: "Customtag", taxonomy: "custom", version: "a3", value: 8}

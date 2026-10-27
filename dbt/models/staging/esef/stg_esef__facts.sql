@@ -24,25 +24,34 @@ typed as (
     where concept like '%:%'
 ),
 
--- ESEF reports can tag the same amount twice (e.g. in two tables with different precision):
--- keep the most precise one per filing, concept, period and unit
+hashed as (
+    select
+        {{ bw_hash_key(["filing_bk", "taxonomy", "tag", "period_end", "qtrs", "unit"]) }} as hk_fact,
+        {{ bw_hash_key(["filing_bk"]) }} as hk_filing,
+        {{ bw_hash_key(["taxonomy", "tag"]) }} as hk_concept,
+        typed.*
+    from typed
+),
+
+-- ESEF reports can tag the same amount twice (e.g. in two tables with different precision), and
+-- two period ends can round to the same month end: keep the most precise one per hk_fact
 deduplicated as (
     select * from (
         select
-            typed.*,
+            hashed.*,
             row_number() over (
-                partition by typed.filing_bk, typed.taxonomy, typed.tag, typed.period_end, typed.qtrs, typed.unit
-                order by coalesce(typed.decimals, 99) desc, typed.value
+                partition by hashed.hk_fact
+                order by coalesce(hashed.decimals, 99) desc, hashed.value asc
             ) as rn
-        from typed
+        from hashed
     ) as ranked
     where rn = 1
 )
 
 select
-    {{ bw_hash_key(["filing_bk", "taxonomy", "tag", "period_end", "qtrs", "unit"]) }} as hk_fact,
-    {{ bw_hash_key(["filing_bk"]) }} as hk_filing,
-    {{ bw_hash_key(["taxonomy", "tag"]) }} as hk_concept,
+    hk_fact,
+    hk_filing,
+    hk_concept,
     filing_bk as adsh,
     filing_bk,
     taxonomy,
