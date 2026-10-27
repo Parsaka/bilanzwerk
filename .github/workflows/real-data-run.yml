@@ -92,6 +92,8 @@ jobs:
         working-directory: dbt
         run: |
           uv run dbt seed
+          # Unit tests of incremental models need the relations to exist (as in ci.yml).
+          uv run dbt run --empty
           uv run dbt build
       - name: MDM matching (Splink) and review sample
         run: |
