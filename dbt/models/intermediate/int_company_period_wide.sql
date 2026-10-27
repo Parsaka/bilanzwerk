@@ -13,11 +13,11 @@ select
     period_end,
     max(currency_code) as currency_code,
     {%- for li in instants %}
-    max(case when line_item_code = '{{ li }}' then cast(amount_local as {{ bw_float() }}) end) as {{ li | lower }},
+        max(case when line_item_code = '{{ li }}' then cast(amount_local as {{ bw_float() }}) end) as {{ li | lower }},
     {%- endfor %}
     {%- for li in flows %}
-    max(case when line_item_code = '{{ li }}' then cast(amount_ttm_local as {{ bw_float() }}) end) as {{ li | lower }}_ttm,
-    max(case when line_item_code = '{{ li }}' then amount_ttm_eur end) as {{ li | lower }}_ttm_eur,
+        max(case when line_item_code = '{{ li }}' then cast(amount_ttm_local as {{ bw_float() }}) end) as {{ li | lower }}_ttm,
+        max(case when line_item_code = '{{ li }}' then amount_ttm_eur end) as {{ li | lower }}_ttm_eur,
     {%- endfor %}
     max(available_at) as available_at
 from {{ ref('int_period_values_golden') }}

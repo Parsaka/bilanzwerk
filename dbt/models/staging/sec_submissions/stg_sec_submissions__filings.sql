@@ -9,7 +9,7 @@ with source as (
 latest as (
     select
         source.*,
-        row_number() over (partition by accession_number order by load_date desc) as rn
+        row_number() over (partition by source.accession_number order by source.load_date desc) as rn
     from source
 ),
 
@@ -33,16 +33,16 @@ select
     {{ bw_hash_key(["accession_number"]) }} as hk_filing,
     {{ bw_hash_key(["'CIK'", "cik"]) }} as hk_company,
     {{ bw_hash_key(["accession_number", "'CIK'", "cik"]) }} as hk_filing_company,
-    accession_number as filing_bk,
+    typed.accession_number as filing_bk,
     'CIK' as company_bk_type,
-    cast(cik as {{ bw_string(20) }}) as company_bk,
+    cast(typed.cik as {{ bw_string(20) }}) as company_bk,
     typed.*,
-    case when form in ('8-K', '8-K/A') and {{ bw_contains('items', '1.03') }} then 1 else 0 end as is_bankruptcy_8k,
-    case when form like '15%' then 1 else 0 end as is_form_15,
-    case when form like '25%' then 1 else 0 end as is_form_25,
-    case when form like 'NT 10-K%' or form like 'NT 10-Q%' or form like 'NT 20-F%' then 1 else 0 end as is_late_filing_notice,
+    case when typed.form in ('8-K', '8-K/A') and {{ bw_contains('items', '1.03') }} then 1 else 0 end as is_bankruptcy_8k,
+    case when typed.form like '15%' then 1 else 0 end as is_form_15,
+    case when typed.form like '25%' then 1 else 0 end as is_form_25,
+    case when typed.form like 'NT 10-K%' or typed.form like 'NT 10-Q%' or typed.form like 'NT 20-F%' then 1 else 0 end as is_late_filing_notice,
     {{ bw_hash_diff(["form", "filing_date", "items"]) }} as hd_event,
-    coalesce(accepted_at, cast(filing_date as {{ bw_timestamp() }})) as effective_from,
+    coalesce(typed.accepted_at, cast(typed.filing_date as {{ bw_timestamp() }})) as effective_from,
     {{ bw_run_ts() }} as load_datetime,
     cast('sec_submissions.filings' as {{ bw_string(50) }}) as record_source
 from typed

@@ -17,7 +17,8 @@ with fy as (
     from {{ ref('int_kpi_wide') }} as k
     inner join {{ ref('dim_period') }} as p
         on k.period_key = p.period_key
-    where k.version = '{{ var("version_latest") }}'
+    where
+        k.version = '{{ var("version_latest") }}'
         and k.is_financial = 0
         and p.is_fiscal_year_end = 1
         and k.dso between 0 and 730
@@ -35,19 +36,19 @@ with_benchmarks as (
         {{ bw_percentile_over('dso', 0.25, 'sector_key, fiscal_year') }} as sector_p25_dso,
         {{ bw_percentile_over('dio', 0.25, 'sector_key, fiscal_year') }} as sector_p25_dio,
         {{ bw_percentile_over('dpo', 0.75, 'sector_key, fiscal_year') }} as sector_p75_dpo,
-        count(*) over (partition by sector_key, fiscal_year) as sector_peer_count
+        count(*) over (partition by fy.sector_key, fy.fiscal_year) as sector_peer_count
     from fy
 ),
 
 gaps as (
     select
         b.*,
-        case when dso > sector_median_dso then dso - sector_median_dso else 0 end as excess_dso_days,
-        case when dio > sector_median_dio then dio - sector_median_dio else 0 end as excess_dio_days,
-        case when dpo < sector_median_dpo then sector_median_dpo - dpo else 0 end as dpo_gap_days,
-        case when dso > sector_p25_dso then dso - sector_p25_dso else 0 end as stretch_dso_days,
-        case when dio > sector_p25_dio then dio - sector_p25_dio else 0 end as stretch_dio_days,
-        case when dpo < sector_p75_dpo then sector_p75_dpo - dpo else 0 end as stretch_dpo_days
+        case when b.dso > b.sector_median_dso then b.dso - b.sector_median_dso else 0 end as excess_dso_days,
+        case when b.dio > b.sector_median_dio then b.dio - b.sector_median_dio else 0 end as excess_dio_days,
+        case when b.dpo < b.sector_median_dpo then b.sector_median_dpo - b.dpo else 0 end as dpo_gap_days,
+        case when b.dso > b.sector_p25_dso then b.dso - b.sector_p25_dso else 0 end as stretch_dso_days,
+        case when b.dio > b.sector_p25_dio then b.dio - b.sector_p25_dio else 0 end as stretch_dio_days,
+        case when b.dpo < b.sector_p75_dpo then b.sector_p75_dpo - b.dpo else 0 end as stretch_dpo_days
     from with_benchmarks as b
 )
 
@@ -75,10 +76,10 @@ select
     excess_dio_days * coalesce(cogs_ttm_eur, 0) / 365 as cash_from_dio_eur,
     dpo_gap_days * coalesce(cogs_ttm_eur, 0) / 365 as cash_from_dpo_eur,
     excess_dso_days * rev_ttm_eur / 365
-        + excess_dio_days * coalesce(cogs_ttm_eur, 0) / 365
-        + dpo_gap_days * coalesce(cogs_ttm_eur, 0) / 365 as cash_opportunity_eur,
+    + excess_dio_days * coalesce(cogs_ttm_eur, 0) / 365
+    + dpo_gap_days * coalesce(cogs_ttm_eur, 0) / 365 as cash_opportunity_eur,
     stretch_dso_days * rev_ttm_eur / 365
-        + stretch_dio_days * coalesce(cogs_ttm_eur, 0) / 365
-        + stretch_dpo_days * coalesce(cogs_ttm_eur, 0) / 365 as cash_opportunity_stretch_eur
+    + stretch_dio_days * coalesce(cogs_ttm_eur, 0) / 365
+    + stretch_dpo_days * coalesce(cogs_ttm_eur, 0) / 365 as cash_opportunity_stretch_eur
 from gaps
 where sector_peer_count >= {{ var('wc_min_sector_peers') }}

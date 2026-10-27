@@ -31,7 +31,8 @@ inner join {{ ref('link_filing_registrant') }} as reg
     on lf.hk_filing = reg.hk_filing
 inner join {{ ref('hub_company') }} as hc
     on reg.hk_company = hc.hk_company
-where con.taxonomy in ('us-gaap', 'ifrs-full')
+where
+    con.taxonomy in ('us-gaap', 'ifrs-full')
     and (
         f.form in ('10-K', '10-Q', '10-K/A', '10-Q/A', '10-KT', '10-KT/A', '20-F', '20-F/A', '40-F', '40-F/A', 'AFR')
     )

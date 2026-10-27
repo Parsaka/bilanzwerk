@@ -1,7 +1,9 @@
 -- One row per company and period end. Fiscal year and quarter follow the company's fiscal
 -- year end month (SEC "fye"), so prior-year comparatives get the same labels as filed periods.
 with periods as (
-    select distinct g.golden_company_id, v.period_end
+    select distinct
+        g.golden_company_id,
+        v.period_end
     from {{ ref('bv_period_values') }} as v
     inner join {{ ref('bv_company_golden') }} as g
         on v.hk_company = g.hk_company
@@ -9,7 +11,9 @@ with periods as (
 
 fye as (
     -- fiscal year end month: from the latest SEC statement, else the month of the annual report
-    select golden_company_id, max(fye_month) as fye_month
+    select
+        golden_company_id,
+        max(fye_month) as fye_month
     from (
         select
             g.golden_company_id,
@@ -22,7 +26,10 @@ fye as (
 
         union all
 
-        select g.golden_company_id, month(p.period_end), 1
+        select
+            g.golden_company_id,
+            month(p.period_end),
+            1
         from {{ ref('bv_company_periods') }} as p
         inner join {{ ref('bv_company_golden') }} as g
             on p.hk_company = g.hk_company
@@ -33,8 +40,15 @@ fye as (
 ),
 
 filed as (
-    select golden_company_id, period_end, fiscal_year as sec_fiscal_year, fiscal_period as sec_fiscal_period,
-        first_form, first_filing, first_accepted_at, filing_lag_days
+    select
+        golden_company_id,
+        period_end,
+        fiscal_year as sec_fiscal_year,
+        fiscal_period as sec_fiscal_period,
+        first_form,
+        first_filing,
+        first_accepted_at,
+        filing_lag_days
     from (
         select
             g.golden_company_id,
@@ -79,5 +93,6 @@ select
     case when f.first_filing is not null then 1 else 0 end as is_filed_period
 from labelled as l
 left join filed as f
-    on l.golden_company_id = f.golden_company_id
-    and l.period_end = f.period_end
+    on
+        l.golden_company_id = f.golden_company_id
+        and l.period_end = f.period_end

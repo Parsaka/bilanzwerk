@@ -6,9 +6,13 @@ with reported as (
         case when m.tag is not null then 1 else 0 end as is_mapped,
         count(*) as n_values
     from {{ ref('pit_fact_first_reported') }} as p
-    left join (select distinct taxonomy, tag from {{ ref('line_item_map') }}) as m
-        on p.taxonomy = m.taxonomy
-        and p.tag = m.tag
+    left join (select distinct
+        taxonomy,
+        tag
+    from {{ ref('line_item_map') }}) as m
+        on
+            p.taxonomy = m.taxonomy
+            and p.tag = m.tag
     group by p.taxonomy, case when m.tag is not null then 1 else 0 end
 )
 

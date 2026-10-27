@@ -1,0 +1,66 @@
+name: terraform
+
+# Changes under infra/: plan on pull requests (shown in the job summary), apply on merge after
+# approval of the prod environment. Azure stack first, then the Fabric stack with its outputs.
+on:
+  pull_request:
+    paths: [infra/**]
+  push:
+    branches: [main]
+    paths: [infra/**]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: read
+
+concurrency:
+  group: terraform
+  cancel-in-progress: false
+
+env:
+  ARM_USE_OIDC: "true"
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  FABRIC_USE_OIDC: "true"
+  FABRIC_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  FABRIC_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_capacity_admins: ${{ vars.TF_CAPACITY_ADMINS }}
+  TF_VAR_alert_email: ${{ vars.BW_ALERT_EMAIL }}
+  TF_VAR_sec_user_agent: ${{ vars.BW_USER_AGENT }}
+  TF_VAR_github_connection_id: ${{ vars.FABRIC_GITHUB_CONNECTION_ID }}
+  BACKEND: >-
+    -backend-config=resource_group_name=${{ vars.TF_STATE_RG }}
+    -backend-config=storage_account_name=${{ vars.TF_STATE_ACCOUNT }}
+    -backend-config=container_name=tfstate
+
+jobs:
+  terraform:
+    runs-on: ubuntu-24.04
+    environment: ${{ github.event_name == 'pull_request' && 'dev' || 'prod' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+      - name: Azure stack
+        working-directory: infra/terraform/azure
+        run: |
+          terraform init -input=false $BACKEND
+          terraform plan -input=false -out=tfplan -no-color | tee plan.txt
+          { echo '### Azure stack'; echo '```'; tail -n 60 plan.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ github.event_name }}" != "pull_request" ]; then terraform apply -input=false tfplan; fi
+      - name: Fabric stack
+        working-directory: infra/terraform/fabric
+        run: |
+          terraform init -input=false $BACKEND
+          terraform plan -input=false -out=tfplan -no-color \
+            -var "capacity_name=$(terraform -chdir=../azure output -raw fabric_capacity_name)" \
+            -var "deployer_object_id=$(terraform -chdir=../azure output -raw github_service_principal_object_id)" \
+            -var "group_object_ids=$(terraform -chdir=../azure output -json group_object_ids)" | tee plan.txt
+          { echo '### Fabric stack'; echo '```'; tail -n 60 plan.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ github.event_name }}" != "pull_request" ]; then terraform apply -input=false tfplan; fi

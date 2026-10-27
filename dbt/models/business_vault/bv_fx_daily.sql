@@ -10,7 +10,9 @@ currencies as (
 ),
 
 grid as (
-    select c.currency_code, s.date_day
+    select
+        c.currency_code,
+        s.date_day
     from currencies as c
     cross join spine as s
 ),
@@ -23,21 +25,22 @@ joined as (
         case when r.rate_per_eur is not null then 1 else 0 end as is_published
     from grid as g
     left join {{ ref('stg_ecb__rates') }} as r
-        on g.currency_code = r.currency_code
-        and g.date_day = r.rate_date
+        on
+            g.currency_code = r.currency_code
+            and g.date_day = r.rate_date
 ),
 
 filled as (
     select
         joined.*,
-        max(case when is_published = 1 then date_day end) over (
-            partition by currency_code order by date_day rows between unbounded preceding and current row
+        max(case when joined.is_published = 1 then joined.date_day end) over (
+            partition by joined.currency_code order by joined.date_day rows between unbounded preceding and current row
         ) as last_published_day,
-        sum(cast(coalesce(rate_per_eur, 0) as {{ bw_float() }})) over (
-            partition by currency_code order by date_day rows between unbounded preceding and current row
+        sum(cast(coalesce(joined.rate_per_eur, 0) as {{ bw_float() }})) over (
+            partition by joined.currency_code order by joined.date_day rows between unbounded preceding and current row
         ) as cum_rate_sum,
-        sum(is_published) over (
-            partition by currency_code order by date_day rows between unbounded preceding and current row
+        sum(joined.is_published) over (
+            partition by joined.currency_code order by joined.date_day rows between unbounded preceding and current row
         ) as cum_published_days
     from joined
 )
@@ -50,8 +53,9 @@ select
     f.cum_published_days
 from filled as f
 left join {{ ref('stg_ecb__rates') }} as r
-    on f.currency_code = r.currency_code
-    and f.last_published_day = r.rate_date
+    on
+        f.currency_code = r.currency_code
+        and f.last_published_day = r.rate_date
 
 union all
 

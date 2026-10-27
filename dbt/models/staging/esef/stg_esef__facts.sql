@@ -31,8 +31,8 @@ deduplicated as (
         select
             typed.*,
             row_number() over (
-                partition by filing_bk, taxonomy, tag, period_end, qtrs, unit
-                order by coalesce(decimals, 99) desc, value
+                partition by typed.filing_bk, typed.taxonomy, typed.tag, typed.period_end, typed.qtrs, typed.unit
+                order by coalesce(typed.decimals, 99) desc, typed.value
             ) as rn
         from typed
     ) as ranked
@@ -44,7 +44,14 @@ select
     {{ bw_hash_key(["filing_bk"]) }} as hk_filing,
     {{ bw_hash_key(["taxonomy", "tag"]) }} as hk_concept,
     filing_bk as adsh,
-    filing_bk, taxonomy, tag, period_end, qtrs, unit, value, footnote,
+    filing_bk,
+    taxonomy,
+    tag,
+    period_end,
+    qtrs,
+    unit,
+    value,
+    footnote,
     {{ bw_hash_diff(["value", "footnote"]) }} as hd_fact_value,
     {{ bw_run_ts() }} as load_datetime,
     cast('esef.facts' as {{ bw_string(50) }}) as record_source

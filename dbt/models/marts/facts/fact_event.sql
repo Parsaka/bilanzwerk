@@ -49,7 +49,8 @@ select
     w.accepted_at
 from with_company as w
 left join {{ ref('dim_company') }} as c
-    on w.company_id = c.company_id
-    and w.filing_date >= c.valid_from
-    and w.filing_date < c.valid_to
+    on
+        w.company_id = c.company_id
+        and w.filing_date >= c.valid_from
+        and w.filing_date < c.valid_to
 where w.rn = 1

@@ -6,7 +6,7 @@ with source as (
 latest as (
     select
         source.*,
-        row_number() over (partition by currency, rate_date order by fetch_date desc) as rn
+        row_number() over (partition by source.currency, source.rate_date order by source.fetch_date desc) as rn
     from source
 )
 

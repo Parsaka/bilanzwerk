@@ -13,9 +13,11 @@ select
     r.run_id
 from {{ ref('stg_analysis__risk_scores') }} as r
 inner join {{ ref('bv_company_golden') }} as g
-    on g.company_bk_type = 'CIK'
-    and g.cik = r.cik
+    on
+        g.company_bk_type = 'CIK'
+        and r.cik = g.cik
 left join {{ ref('dim_company') }} as c
-    on g.golden_company_id = c.company_id
-    and r.as_of_date >= c.valid_from
-    and r.as_of_date < c.valid_to
+    on
+        g.golden_company_id = c.company_id
+        and r.as_of_date >= c.valid_from
+        and r.as_of_date < c.valid_to

@@ -15,6 +15,11 @@ output "key_vault_name" {
   value = azurerm_key_vault.this.name
 }
 
+output "key_vault_uri" {
+  description = "GitHub repository variable BW_KEY_VAULT_URI (pipelines read the SEC User-Agent from it)."
+  value       = azurerm_key_vault.this.vault_uri
+}
+
 output "github_client_id" {
   description = "GitHub repository variable AZURE_CLIENT_ID (not a secret)."
   value       = azuread_application.github.client_id

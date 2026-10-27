@@ -17,7 +17,8 @@ with filings as (
         on f.hk_filing = reg.hk_filing
     inner join {{ ref('hub_filing') }} as hf
         on f.hk_filing = hf.hk_filing
-    where f.form in ('10-K', '10-Q', '10-KT', '20-F', '40-F', 'AFR')
+    where
+        f.form in ('10-K', '10-Q', '10-KT', '20-F', '40-F', 'AFR')
         and f.period_end is not null
 )
 

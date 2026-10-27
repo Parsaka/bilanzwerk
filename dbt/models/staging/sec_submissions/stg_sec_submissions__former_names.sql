@@ -1,6 +1,11 @@
 -- Name history per CIK, used for SCD Type 2 names in dim_company.
 with source as (
-    select distinct cik, name, valid_from, valid_to from {{ source('sec_submissions', 'former_names') }}
+    select distinct
+        cik,
+        name,
+        valid_from,
+        valid_to
+    from {{ source('sec_submissions', 'former_names') }}
 )
 
 select

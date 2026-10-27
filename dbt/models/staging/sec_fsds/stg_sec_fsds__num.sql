@@ -2,8 +2,7 @@
 -- Text in "taxonomy" is normalised so FSDS ("ifrs/2023") and ESEF ("ifrs-full") agree.
 with source as (
     select * from {{ source('sec_fsds', 'num') }}
-    where segments is null
-        and coreg is null {{ bw_quarter_filter() }}
+    where segments is null and coreg is null {{ bw_quarter_filter() }}
 ),
 
 typed as (

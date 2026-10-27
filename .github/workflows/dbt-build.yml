@@ -1,0 +1,85 @@
+name: dbt-build
+
+# Merge to main: publish the Fabric items to dev, dbt build against the dev warehouse, dbt docs to
+# GitHub Pages; then, after approval of the prod environment, publish to prod and run the
+# transform pipeline there (ADR-009 with amendment).
+on:
+  push:
+    branches: [main]
+    paths: [dbt/**, fabric/**, powerbi/**, ingestion/**, mdm/**, analysis/**, scripts/fabric_*, pyproject.toml, uv.lock]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: fabric-capacity
+  cancel-in-progress: false
+
+env:
+  AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  BW_RESOURCE_GROUP: ${{ vars.BW_RESOURCE_GROUP }}
+  BW_CAPACITY_NAME: ${{ vars.BW_CAPACITY_NAME }}
+  BW_KEY_VAULT_URI: ${{ vars.BW_KEY_VAULT_URI }}
+  BW_ALERT_EMAIL: ${{ vars.BW_ALERT_EMAIL }}
+
+jobs:
+  dev:
+    runs-on: ubuntu-24.04
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-fabric
+      - name: Publish items to the dev workspace
+        run: uv run python scripts/fabric_publish.py --stage dev --workspace-id "${{ vars.FABRIC_WORKSPACE_ID_DEV }}"
+      - name: dbt build against the dev warehouse
+        working-directory: dbt
+        env:
+          DBT_PROFILES_DIR: .
+          BW_DBT_TARGET: dev
+          BW_FABRIC_SQL_ENDPOINT: ${{ vars.FABRIC_SQL_ENDPOINT_DEV }}
+          BW_FABRIC_AUTH: CLI
+          BW_HAS_MDM: "true"
+          BW_HAS_RISK_SCORES: "true"
+        run: |
+          uv run dbt build
+          uv run dbt docs generate
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dbt/target
+      - name: Pause the Fabric capacity
+        if: always()
+        run: scripts/fabric_capacity.sh pause
+
+  docs:
+    needs: dev
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  prod:
+    needs: dev
+    runs-on: ubuntu-24.04
+    environment: prod          # required reviewer: nothing reaches prod without an approval
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-fabric
+      - name: Publish items to the prod workspace
+        run: uv run python scripts/fabric_publish.py --stage prod --workspace-id "${{ vars.FABRIC_WORKSPACE_ID_PROD }}"
+      - name: Transform in prod (dbt build, semantic model refresh, data quality alert)
+        run: uv run python scripts/fabric_run.py run --workspace-id "${{ vars.FABRIC_WORKSPACE_ID_PROD }}" pl_transform
+      - name: Job summary
+        run: uv run python scripts/fabric_run.py summary --workspace-id "${{ vars.FABRIC_WORKSPACE_ID_PROD }}"
+      - name: Pause the Fabric capacity
+        if: always()
+        run: scripts/fabric_capacity.sh pause

@@ -32,6 +32,16 @@ def cmd_sec_fsds(
     typer.echo(result)
 
 
+@app.command("sec-fsds-check")
+def cmd_sec_fsds_check(after: Annotated[str, typer.Option(help="last loaded quarter, e.g. 2026q2")]) -> None:
+    """Print the quarters published after --after, one per line (nothing when none)."""
+    from ingestion.common.http import PoliteSession
+
+    settings = get_settings()
+    for quarter in sec_fsds.newly_published(sec_fsds.Quarter.parse(after), PoliteSession(settings)):
+        typer.echo(quarter.label)
+
+
 @app.command("sec-submissions")
 def cmd_sec_submissions() -> None:
     typer.echo(sec_submissions.run(get_settings()))

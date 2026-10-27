@@ -83,9 +83,25 @@ flowchart TB
 | `dbt/` | Staging, raw vault, business vault, marts, seeds, macros, unit and singular tests |
 | `mdm/` | Splink matching, review sampler, evaluation |
 | `analysis/` | Labels, features, models, backtest, lead time, answer, MLflow |
-| `fabric/` | Data Factory pipeline definitions, notebooks |
-| `powerbi/` | PBIP project (TMDL semantic model), BPA rules, DAX notes |
-| `excel/` | Management report build script and VBA module (`.bas`) |
-| `tableau/` | Dashboard specification and extract instructions |
+| `fabric/` | Data Factory pipelines (per source, transform, master) and notebooks in Fabric Git format |
+| `powerbi/` | PBIP project (generated TMDL semantic model, report scaffold), generators, BPA rules, checks |
+| `excel/` | Cockpit builder (openpyxl), Windows finalisation script, VBA module (`.bas`) |
+| `tableau/` | Dashboard specification; extract export in `scripts/export_tableau.py` |
 | `infra/terraform/` | Azure and Fabric resources |
 | `docs/` | ADRs, runbook, data contracts, data classification, accuracy check |
+
+## Operations
+
+```mermaid
+flowchart LR
+    PR[Pull request] --> CI[ci.yml<br/>ruff, pytest, SQLFluff,<br/>dbt on fixture, contracts,<br/>PBIP checks, BPA, terraform validate]
+    CI --> M[merge to main]
+    M --> D[dbt-build.yml: publish to dev,<br/>dbt build dev, dbt docs]
+    D -->|approval| P[publish to prod,<br/>pl_transform]
+    S1[daily-load.yml] --> R[resume capacity<br/>run pipelines<br/>job summary<br/>pause]
+    S2[quarterly-load.yml<br/>new SEC quarter?] --> R
+    S3[capacity-pause.yml] --> X[pause]
+```
+
+Publishing uses fabric-cicd: the same items go to dev and prod, only the stage values differ
+(ADR-009, amendment). The capacity runs only while a workflow needs it.

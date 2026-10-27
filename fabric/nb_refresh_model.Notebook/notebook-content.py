@@ -25,15 +25,14 @@ semantic_model = "Bilanzwerk"
 # Direct Lake: a refresh reframes the model on the new Delta versions of the warehouse tables.
 # Found by name in the workspace this notebook runs in, so dev and prod need no IDs.
 import json
+import time
 
 import notebookutils
-import sempy.fabric as fabric
+from sempy import fabric
 
 request_id = fabric.refresh_dataset(semantic_model, refresh_type="full")
 status = fabric.get_refresh_execution_details(semantic_model, request_id)
 while status.status in ("Unknown", "NotStarted", "InProgress"):
-    import time
-
     time.sleep(15)
     status = fabric.get_refresh_execution_details(semantic_model, request_id)
 if status.status != "Completed":

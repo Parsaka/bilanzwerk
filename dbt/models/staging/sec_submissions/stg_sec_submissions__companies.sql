@@ -6,7 +6,7 @@ with source as (
 latest as (
     select
         source.*,
-        row_number() over (partition by cik order by load_date desc) as rn
+        row_number() over (partition by source.cik order by source.load_date desc) as rn
     from source
 )
 
@@ -20,8 +20,8 @@ select
     cast(sic as {{ dbt.type_int() }}) as sic,
     cast(sic_description as {{ bw_string(200) }}) as sic_description,
     {%- if target.type == 'duckdb' %}
-    cast(array_to_string(tickers, ',') as {{ bw_string(200) }}) as tickers,
-    cast(array_to_string(exchanges, ',') as {{ bw_string(200) }}) as exchanges,
+        cast(array_to_string(tickers, ',') as {{ bw_string(200) }}) as tickers,
+        cast(array_to_string(exchanges, ',') as {{ bw_string(200) }}) as exchanges,
     {%- else %}
     cast(tickers as {{ bw_string(200) }}) as tickers,
     cast(exchanges as {{ bw_string(200) }}) as exchanges,

@@ -6,26 +6,40 @@
 --   4. Splink match above the upper threshold (mdm/)
 -- The golden id is the hash key of the LEI when a match exists, otherwise of the CIK.
 with sec as (
-    select hk_company, company_bk as cik
+    select
+        hk_company,
+        company_bk as cik
     from {{ ref('hub_company') }}
     where company_bk_type = 'CIK'
 ),
 
 steward as (
-    select source_company_bk, lei, decision
+    select
+        source_company_bk,
+        lei,
+        decision
     from {{ ref('stewardship_decisions') }}
     where source_company_bk_type = 'CIK'
 ),
 
 candidates as (
-    select s.source_company_bk as cik, s.lei, 1 as precedence, 'steward' as match_source,
+    select
+        s.source_company_bk as cik,
+        s.lei,
+        1 as precedence,
+        'steward' as match_source,
         cast(1.0 as {{ bw_float() }}) as match_probability
     from steward as s
     where s.decision = 'match'
 
     union all
 
-    select h.company_bk, p.lei, 3, 'sec_profile', cast(1.0 as {{ bw_float() }})
+    select
+        h.company_bk,
+        p.lei,
+        3,
+        'sec_profile',
+        cast(1.0 as {{ bw_float() }})
     from {{ bw_sat_current('sat_company_sec_profile', 'hk_company') }} as p
     inner join {{ ref('hub_company') }} as h
         on p.hk_company = h.hk_company
@@ -33,7 +47,12 @@ candidates as (
 
     union all
 
-    select m.source_company_bk, m.lei, 4, 'splink', m.match_probability
+    select
+        m.source_company_bk,
+        m.lei,
+        4,
+        'splink',
+        m.match_probability
     from {{ ref('stg_mdm__company_matches') }} as m
     where m.source_company_bk_type = 'CIK' and m.match_status = 'match'
 ),
@@ -48,11 +67,15 @@ allowed as (
 ),
 
 best as (
-    select cik, lei, match_source, match_probability
+    select
+        cik,
+        lei,
+        match_source,
+        match_probability
     from (
         select
             allowed.*,
-            row_number() over (partition by cik order by precedence, match_probability desc, lei) as rn
+            row_number() over (partition by allowed.cik order by allowed.precedence asc, allowed.match_probability desc, allowed.lei asc) as rn
         from allowed
     ) as ranked
     where rn = 1
@@ -78,7 +101,9 @@ sec_golden as (
 
 lei_companies as (
     -- ESEF issuers (they file under their LEI) and every LEI matched to an SEC filer
-    select distinct h.hk_company, h.company_bk as lei
+    select distinct
+        h.hk_company,
+        h.company_bk as lei
     from {{ ref('hub_company') }} as h
     inner join {{ ref('link_filing_registrant') }} as r
         on h.hk_company = r.hk_company
@@ -86,7 +111,9 @@ lei_companies as (
 
     union
 
-    select {{ bw_hash_key(["'LEI'", "lei"]) }}, lei
+    select
+        {{ bw_hash_key(["'LEI'", "lei"]) }} as hk_company,
+        lei
     from best
 )
 
@@ -96,11 +123,11 @@ union all
 
 select
     l.hk_company,
-    'LEI',
+    'LEI' as company_bk_type,
+    l.lei as company_bk,
+    cast(null as {{ dbt.type_bigint() }}) as cik,
     l.lei,
-    cast(null as {{ dbt.type_bigint() }}),
-    l.lei,
-    l.hk_company,
-    'lei_native',
-    cast(1.0 as {{ bw_float() }})
+    l.hk_company as golden_company_id,
+    'lei_native' as match_source,
+    cast(1.0 as {{ bw_float() }}) as match_probability
 from lei_companies as l

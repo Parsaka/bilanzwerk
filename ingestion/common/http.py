@@ -55,6 +55,11 @@ class PoliteSession:
         response.raise_for_status()
         return response
 
+    def head(self, url: str) -> requests.Response:
+        """HEAD without raising on 4xx: callers ask whether a file exists."""
+        self._pace()
+        return self._session.head(url, timeout=60, allow_redirects=True)
+
     def download(self, url: str, target: Path) -> tuple[str, int]:
         """Stream a file to disk. Returns (sha256, bytes). Writes atomically via a temp file."""
         target.parent.mkdir(parents=True, exist_ok=True)

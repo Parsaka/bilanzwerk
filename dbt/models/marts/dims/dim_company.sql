@@ -29,15 +29,22 @@ former_names as (
     inner join golden as g
         on fn.hk_company = g.hk_company
     inner join (
-        select golden_company_id, sic, country_ba,
+        select
+            golden_company_id,
+            sic,
+            country_ba,
             row_number() over (partition by golden_company_id order by effective_from) as rn
         from sec_history
     ) as first_sic
-        on g.golden_company_id = first_sic.golden_company_id
-        and first_sic.rn = 1
-    where fn.valid_from is not null
-        and fn.valid_from < (select min(cast(h.effective_from as date)) from sec_history as h
-                             where h.golden_company_id = g.golden_company_id)
+        on
+            g.golden_company_id = first_sic.golden_company_id
+            and first_sic.rn = 1
+    where
+        fn.valid_from is not null
+        and fn.valid_from < (
+            select min(cast(h.effective_from as date)) from sec_history as h
+            where h.golden_company_id = g.golden_company_id
+        )
 ),
 
 esef_history as (
@@ -51,7 +58,8 @@ esef_history as (
     from golden as g
     inner join {{ bw_sat_current('sat_company_gleif', 'hk_company') }} as gl
         on g.hk_company = gl.hk_company
-    where g.company_bk_type = 'LEI'
+    where
+        g.company_bk_type = 'LEI'
         and not exists (
             select 1 from golden as g2
             where g2.golden_company_id = g.golden_company_id and g2.company_bk_type = 'CIK'
@@ -79,7 +87,7 @@ changes as (
     select
         w.*,
         lag({{ bw_hash_diff(['company_name', 'sector_code']) }}) over (
-            partition by golden_company_id order by effective_from
+            partition by w.golden_company_id order by w.effective_from
         ) as previous_hash,
         {{ bw_hash_diff(['company_name', 'sector_code']) }} as current_hash
     from with_sector as w
@@ -100,9 +108,9 @@ versions as (
 scd as (
     select
         v.*,
-        case when version_number = 1 then cast('1900-01-01' as date) else cast(effective_from as date) end as valid_from,
+        case when v.version_number = 1 then cast('1900-01-01' as date) else cast(v.effective_from as date) end as valid_from,
         coalesce(
-            cast(lead(effective_from) over (partition by golden_company_id order by effective_from) as date),
+            cast(lead(v.effective_from) over (partition by v.golden_company_id order by v.effective_from) as date),
             cast('9999-12-31' as date)
         ) as valid_to
     from versions as v
@@ -122,7 +130,9 @@ ids as (
 ),
 
 gleif as (
-    select g.golden_company_id, gl.*
+    select
+        g.golden_company_id,
+        gl.*
     from golden as g
     inner join {{ bw_sat_current('sat_company_gleif', 'hk_company') }} as gl
         on g.hk_company = gl.hk_company
@@ -130,7 +140,9 @@ gleif as (
 ),
 
 last_filing as (
-    select g.golden_company_id, max(f.accepted_at) as last_accepted_at
+    select
+        g.golden_company_id,
+        max(f.accepted_at) as last_accepted_at
     from golden as g
     inner join {{ ref('link_filing_registrant') }} as r
         on g.hk_company = r.hk_company
@@ -155,7 +167,8 @@ select
     gleif.entity_status as gleif_entity_status,
     gleif.registration_status as gleif_registration_status,
     case
-        when coalesce(gleif.registration_status, 'LAPSED') in ('LAPSED', 'RETIRED', 'ANNULLED')
+        when
+            coalesce(gleif.registration_status, 'LAPSED') in ('LAPSED', 'RETIRED', 'ANNULLED')
             and (lf.last_accepted_at is null or lf.last_accepted_at < {{ dbt.dateadd('month', -18, bw_run_ts()) }})
             then 'inactive'
         else 'active'

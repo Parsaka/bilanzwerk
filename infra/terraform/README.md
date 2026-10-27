@@ -59,11 +59,23 @@ terraform apply \
 
 ## GitHub repository settings
 
-Variables (not secrets; OIDC needs no stored secret): `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
-`AZURE_SUBSCRIPTION_ID`, `TF_STATE_RG`, `TF_STATE_ACCOUNT`, `FABRIC_WORKSPACE_ID_DEV`,
-`FABRIC_WORKSPACE_ID_PROD`, `FABRIC_DEPLOYMENT_PIPELINE_ID`, `FABRIC_SQL_ENDPOINT_DEV`,
-`FABRIC_MASTER_PIPELINE_ID`, `BW_USER_AGENT`. Environments `dev` and `prod`; `prod` with a
-required reviewer, so `terraform apply` and the promotion to prod wait for approval.
+Repository variables (no secrets: OIDC needs none). Most come from `terraform output`:
+
+| Variable | Value |
+|---|---|
+| `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` | outputs `github_client_id`, `tenant_id` |
+| `AZURE_SUBSCRIPTION_ID` | the subscription |
+| `BW_RESOURCE_GROUP`, `BW_CAPACITY_NAME`, `BW_STORAGE_ACCOUNT` | outputs `resource_group_name`, `fabric_capacity_name`, `storage_account_name` |
+| `BW_KEY_VAULT_URI` | output `key_vault_uri` |
+| `BW_ALERT_EMAIL`, `BW_USER_AGENT` | alert recipient; SEC User-Agent (name and e-mail) |
+| `FABRIC_WORKSPACE_ID_DEV`, `FABRIC_WORKSPACE_ID_PROD` | Fabric stack output `workspace_ids` |
+| `FABRIC_SQL_ENDPOINT_DEV` | SQL connection string of `wh_bilanzwerk` in dev (warehouse settings) |
+| `FABRIC_GITHUB_CONNECTION_ID` | optional, for Git integration of dev |
+| `TF_STATE_RG`, `TF_STATE_ACCOUNT`, `TF_CAPACITY_ADMINS` | state storage from the bootstrap; admins as a JSON list |
+
+Environments: `dev` (pull-request plans, dev deployment) and `prod` with a required reviewer,
+so `terraform apply`, the promotion to prod and the scheduled prod loads wait for approval or run
+under the protected environment. `github-pages` for the dbt docs.
 
 ## Cost
 

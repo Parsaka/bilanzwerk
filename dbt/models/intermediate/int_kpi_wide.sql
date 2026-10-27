@@ -15,9 +15,10 @@ with w as (
         case when prev.available_at > cur.available_at then prev.available_at else cur.available_at end as available_at_all
     from {{ ref('int_company_period_wide') }} as cur
     left join {{ ref('int_company_period_wide') }} as prev
-        on cur.version = prev.version
-        and cur.company_id = prev.company_id
-        and prev.period_end = {{ bw_month_end(dbt.dateadd('month', -12, 'cur.period_end')) }}
+        on
+            cur.version = prev.version
+            and cur.company_id = prev.company_id
+            and prev.period_end = {{ bw_month_end(dbt.dateadd('month', -12, 'cur.period_end')) }}
 ),
 
 ratios as (
@@ -32,15 +33,16 @@ ratios as (
         {{ bw_div('ni_ttm + coalesce(da_ttm, 0)', 'tl_f') }} as ffo_tl,
         {{ bw_div('(coalesce(ar_open, ar) + ar) / 2', 'rev_ttm') }} * 365 as dso,
         case
-            when inv is null and ar is not null and cogs_ttm_f is not null then 0
+            when w.inv is null and w.ar is not null and w.cogs_ttm_f is not null then 0
             else {{ bw_div('(coalesce(inv_open, inv) + inv) / 2', 'cogs_ttm_f') }} * 365
         end as dio,
         {{ bw_div('(coalesce(ap_open, ap) + ap) / 2', 'cogs_ttm_f') }} * 365 as dpo,
         {{ bw_div('tca', 'tcl') }} as current_ratio,
         {{ bw_div('tca - coalesce(inv, 0)', 'tcl') }} as quick_ratio,
-        case when cfo_ttm < 0 then {{ bw_div('cash', '-cfo_ttm / 12') }} end as cash_runway_m,
-        case when ebit_ttm_f + coalesce(da_ttm, 0) > 0
-            then {{ bw_div('coalesce(std, 0) + coalesce(ltd, 0)', 'ebit_ttm_f + coalesce(da_ttm, 0)') }}
+        case when w.cfo_ttm < 0 then {{ bw_div('cash', '-cfo_ttm / 12') }} end as cash_runway_m,
+        case
+            when w.ebit_ttm_f + coalesce(w.da_ttm, 0) > 0
+                then {{ bw_div('coalesce(std, 0) + coalesce(ltd, 0)', 'ebit_ttm_f + coalesce(da_ttm, 0)') }}
         end as debt_ebitda,
         {{ bw_div('ebit_ttm_f', 'intexp_ttm') }} as interest_coverage,
         {{ bw_div('eq_f', 'ta') }} as equity_ratio,
@@ -53,6 +55,6 @@ ratios as (
 
 select
     ratios.*,
-    6.56 * wc_ta + 3.26 * re_ta + 6.72 * ebit_ta + 1.05 * eq_tl as zpp,
-    dso + dio - dpo as ccc
+    6.56 * ratios.wc_ta + 3.26 * ratios.re_ta + 6.72 * ratios.ebit_ta + 1.05 * ratios.eq_tl as zpp,
+    ratios.dso + ratios.dio - ratios.dpo as ccc
 from ratios

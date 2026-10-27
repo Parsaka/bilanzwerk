@@ -8,12 +8,22 @@ with items as (
 ),
 
 durations as (
-    select * from items where period_type = 'duration'
+    select * from items
+    where period_type = 'duration'
 ),
 
 direct_quarter as (
-    select version, hk_company, line_item_code, period_end, unit, value, source_filing, available_at,
-        1 as derivation_rank, 'reported' as derivation
+    select
+        version,
+        hk_company,
+        line_item_code,
+        period_end,
+        unit,
+        value,
+        source_filing,
+        available_at,
+        1 as derivation_rank,
+        'reported' as derivation
     from durations
     where qtrs = 1
 ),
@@ -32,12 +42,13 @@ derived_quarter as (
         'derived_ytd' as derivation
     from durations as cur
     inner join durations as prev
-        on cur.version = prev.version
-        and cur.hk_company = prev.hk_company
-        and cur.line_item_code = prev.line_item_code
-        and cur.unit = prev.unit
-        and prev.qtrs = cur.qtrs - 1
-        and prev.period_end = {{ bw_month_end(dbt.dateadd('month', -3, 'cur.period_end')) }}
+        on
+            cur.version = prev.version
+            and cur.hk_company = prev.hk_company
+            and cur.line_item_code = prev.line_item_code
+            and cur.unit = prev.unit
+            and prev.qtrs = cur.qtrs - 1
+            and prev.period_end = {{ bw_month_end(dbt.dateadd('month', -3, 'cur.period_end')) }}
     where cur.qtrs between 2 and 4
 ),
 
@@ -46,8 +57,8 @@ single_quarter as (
         select
             q.*,
             row_number() over (
-                partition by version, hk_company, line_item_code, period_end
-                order by derivation_rank
+                partition by q.version, q.hk_company, q.line_item_code, q.period_end
+                order by q.derivation_rank
             ) as rn
         from (
             select * from direct_quarter
@@ -59,7 +70,14 @@ single_quarter as (
 ),
 
 annual as (
-    select version, hk_company, line_item_code, period_end, unit, value, available_at
+    select
+        version,
+        hk_company,
+        line_item_code,
+        period_end,
+        unit,
+        value,
+        available_at
     from durations
     where qtrs = 4
 ),
@@ -74,17 +92,20 @@ ttm_from_quarters as (
         q0.available_at
     from single_quarter as q0
     inner join single_quarter as q1
-        on q0.version = q1.version and q0.hk_company = q1.hk_company
-        and q0.line_item_code = q1.line_item_code and q0.unit = q1.unit
-        and q1.period_end = {{ bw_month_end(dbt.dateadd('month', -3, 'q0.period_end')) }}
+        on
+            q0.version = q1.version and q0.hk_company = q1.hk_company
+            and q0.line_item_code = q1.line_item_code and q0.unit = q1.unit
+            and q1.period_end = {{ bw_month_end(dbt.dateadd('month', -3, 'q0.period_end')) }}
     inner join single_quarter as q2
-        on q0.version = q2.version and q0.hk_company = q2.hk_company
-        and q0.line_item_code = q2.line_item_code and q0.unit = q2.unit
-        and q2.period_end = {{ bw_month_end(dbt.dateadd('month', -6, 'q0.period_end')) }}
+        on
+            q0.version = q2.version and q0.hk_company = q2.hk_company
+            and q0.line_item_code = q2.line_item_code and q0.unit = q2.unit
+            and q2.period_end = {{ bw_month_end(dbt.dateadd('month', -6, 'q0.period_end')) }}
     inner join single_quarter as q3
-        on q0.version = q3.version and q0.hk_company = q3.hk_company
-        and q0.line_item_code = q3.line_item_code and q0.unit = q3.unit
-        and q3.period_end = {{ bw_month_end(dbt.dateadd('month', -9, 'q0.period_end')) }}
+        on
+            q0.version = q3.version and q0.hk_company = q3.hk_company
+            and q0.line_item_code = q3.line_item_code and q0.unit = q3.unit
+            and q3.period_end = {{ bw_month_end(dbt.dateadd('month', -9, 'q0.period_end')) }}
 ),
 
 duration_values as (
@@ -102,22 +123,34 @@ duration_values as (
         q.available_at
     from single_quarter as q
     left join annual as a
-        on q.version = a.version and q.hk_company = a.hk_company
-        and q.line_item_code = a.line_item_code and q.period_end = a.period_end and q.unit = a.unit
+        on
+            q.version = a.version and q.hk_company = a.hk_company
+            and q.line_item_code = a.line_item_code and q.period_end = a.period_end and q.unit = a.unit
     left join ttm_from_quarters as t
-        on q.version = t.version and q.hk_company = t.hk_company
-        and q.line_item_code = t.line_item_code and q.period_end = t.period_end
+        on
+            q.version = t.version and q.hk_company = t.hk_company
+            and q.line_item_code = t.line_item_code and q.period_end = t.period_end
 
     union all
 
     -- annual-only reporters (20-F, 40-F, ESEF): the year is known, the quarter is not
     select
-        a.version, a.hk_company, a.line_item_code, 'duration', a.period_end, a.unit,
-        cast(null as decimal(38, 6)), a.value, 'annual_only', cast(null as {{ bw_string(100) }}), a.available_at
+        a.version,
+        a.hk_company,
+        a.line_item_code,
+        'duration',
+        a.period_end,
+        a.unit,
+        cast(null as decimal(38, 6)),
+        a.value,
+        'annual_only',
+        cast(null as {{ bw_string(100) }}),
+        a.available_at
     from annual as a
     where not exists (
         select 1 from single_quarter as q
-        where q.version = a.version and q.hk_company = a.hk_company
+        where
+            q.version = a.version and q.hk_company = a.hk_company
             and q.line_item_code = a.line_item_code and q.period_end = a.period_end
     )
 )

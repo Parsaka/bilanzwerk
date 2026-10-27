@@ -8,8 +8,12 @@ with ranges as (
 ),
 
 nace as (
-    select sector_code, {{ dbt.listagg('nace_section', "', '") }} as nace_sections
-    from (select distinct sector_code, nace_section from {{ ref('sector_map') }}) as d
+    select
+        sector_code, {{ dbt.listagg('nace_section', "', '") }} as nace_sections
+    from (select distinct
+        sector_code,
+        nace_section
+    from {{ ref('sector_map') }}) as d
     group by sector_code
 )
 

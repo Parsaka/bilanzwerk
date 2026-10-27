@@ -10,7 +10,7 @@ import pytest
 
 from ingestion import sec_fsds
 from ingestion.common.manifest import Manifest
-from ingestion.tests.conftest import NUM, make_fsds_zip
+from ingestion.tests.conftest import NUM, SUB, make_fsds_zip
 
 Q = sec_fsds.Quarter(2024, 3)
 
@@ -93,3 +93,48 @@ def test_missing_optional_column_is_added_as_null(settings, tmp_path):
     num = _rows(settings, "num")
     assert "segments" in num.column_names
     assert num.column("segments").null_count == num.num_rows
+
+
+def test_newly_published_stops_at_the_first_missing_quarter():
+    from datetime import date
+
+    from ingestion.sec_fsds import Quarter, newly_published
+
+    published = ("2026q1", "2026q2")
+
+    class FakeSession:
+        def head(self, url):
+            class R:
+                status_code = 200 if any(q in url for q in published) else 404
+
+            return R()
+
+    today = date(2026, 10, 27)  # last completed quarter: 2026q3, not yet published
+    assert [q.label for q in newly_published(Quarter(2025, 4), FakeSession(), today=today)] == ["2026q1", "2026q2"]
+    assert newly_published(Quarter(2026, 2), FakeSession(), today=today) == []
+
+
+def test_contract_break_leaves_the_landed_quarter_untouched(settings, tmp_path):
+    """sub.txt is fine (and changed), num.txt breaks the contract: no table of the quarter changes."""
+    manifest = Manifest(settings.manifest_path)
+    sec_fsds.land_zip(make_fsds_zip(tmp_path / "good.zip"), Q, settings, manifest)
+    names_before = _rows(settings, "sub").column("name").to_pylist()
+    bad = make_fsds_zip(
+        tmp_path / "bad.zip",
+        num=NUM.replace("\tddate\t", "\tdate_end\t", 1),
+        sub=SUB.replace("APPLE INC", "APPLE INC RENAMED"),
+    )
+    with pytest.raises(sec_fsds.ContractError):
+        sec_fsds.land_zip(bad, Q, settings, manifest)
+    assert _rows(settings, "sub").column("name").to_pylist() == names_before
+    assert "APPLE INC RENAMED" not in names_before
+    assert _rows(settings, "num").num_rows == 5
+
+
+def test_column_alias_maps_a_triaged_rename(settings, tmp_path, monkeypatch):
+    monkeypatch.setitem(sec_fsds.COLUMN_ALIASES, "num", {"date_end": "ddate"})
+    renamed = make_fsds_zip(tmp_path / "x.zip", num=NUM.replace("\tddate\t", "\tdate_end\t", 1))
+    sec_fsds.land_zip(renamed, Q, settings, Manifest(settings.manifest_path))
+    num = _rows(settings, "num")
+    assert "ddate" in num.column_names and "date_end" not in num.column_names
+    assert num.column("ddate").null_count == 0

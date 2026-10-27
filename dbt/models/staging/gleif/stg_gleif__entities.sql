@@ -7,8 +7,8 @@ latest as (
     select
         source.*,
         row_number() over (
-            partition by lei
-            order by publish_date desc, case when variant = 'delta' then 0 else 1 end, last_update_date desc
+            partition by source.lei
+            order by source.publish_date desc, case when source.variant = 'delta' then 0 else 1 end, source.last_update_date desc
         ) as rn
     from source
 )

@@ -33,14 +33,18 @@ select
     v.available_at
 from v
 left join fx as close_fx
-    on v.unit = close_fx.currency_code
-    and v.period_end = close_fx.date_day
+    on
+        v.unit = close_fx.currency_code
+        and v.period_end = close_fx.date_day
 left join fx as q_end
-    on v.unit = q_end.currency_code
-    and v.period_end = q_end.date_day
+    on
+        v.unit = q_end.currency_code
+        and v.period_end = q_end.date_day
 left join fx as q_start
-    on v.unit = q_start.currency_code
-    and q_start.date_day = {{ bw_month_end(dbt.dateadd('month', -3, 'v.period_end')) }}
+    on
+        v.unit = q_start.currency_code
+        and q_start.date_day = {{ bw_month_end(dbt.dateadd('month', -3, 'v.period_end')) }}
 left join fx as y_start
-    on v.unit = y_start.currency_code
-    and y_start.date_day = {{ bw_month_end(dbt.dateadd('month', -12, 'v.period_end')) }}
+    on
+        v.unit = y_start.currency_code
+        and y_start.date_day = {{ bw_month_end(dbt.dateadd('month', -12, 'v.period_end')) }}

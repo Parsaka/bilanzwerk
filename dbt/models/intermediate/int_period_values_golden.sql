@@ -24,6 +24,7 @@ from {{ ref('bv_period_values_eur') }} as v
 inner join {{ ref('bv_company_golden') }} as g
     on v.hk_company = g.hk_company
 inner join {{ ref('dim_company') }} as c
-    on g.golden_company_id = c.company_id
-    and v.period_end >= c.valid_from
-    and v.period_end < c.valid_to
+    on
+        g.golden_company_id = c.company_id
+        and v.period_end >= c.valid_from
+        and v.period_end < c.valid_to

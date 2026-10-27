@@ -13,11 +13,13 @@ select
     gl.hq_country as gleif_country
 from {{ ref('stg_mdm__company_matches') }} as m
 left join {{ ref('stewardship_decisions') }} as d
-    on m.source_company_bk = d.source_company_bk
-    and m.lei = d.lei
+    on
+        m.source_company_bk = d.source_company_bk
+        and m.lei = d.lei
 left join {{ bw_sat_current('sat_company_sec_profile', 'hk_company') }} as sp
     on sp.hk_company = {{ bw_hash_key(["'CIK'", 'm.source_company_bk']) }}
 left join {{ bw_sat_current('sat_company_gleif', 'hk_company') }} as gl
-    on gl.lei = m.lei
-where m.match_status = 'review'
+    on m.lei = gl.lei
+where
+    m.match_status = 'review'
     and d.decision is null

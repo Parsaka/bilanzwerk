@@ -2,10 +2,14 @@
 -- line item, the lowest priority number that the company reported wins. Both point-in-time
 -- versions are mapped; "version" becomes part of the fact grain.
 with versions as (
-    select '{{ var("version_first_reported") }}' as version, p.*
+    select
+        '{{ var("version_first_reported") }}' as version,
+        p.*
     from {{ ref('pit_fact_first_reported') }} as p
     union all
-    select '{{ var("version_latest") }}' as version, p.*
+    select
+        '{{ var("version_latest") }}' as version,
+        p.*
     from {{ ref('pit_fact_latest') }} as p
 ),
 
@@ -29,8 +33,9 @@ mapped as (
         v.available_at
     from versions as v
     inner join {{ ref('line_item_map') }} as m
-        on v.taxonomy = m.taxonomy
-        and v.tag = m.tag
+        on
+            v.taxonomy = m.taxonomy
+            and v.tag = m.tag
     inner join {{ ref('line_items') }} as li
         on m.line_item_code = li.line_item_code
     where
@@ -41,19 +46,33 @@ mapped as (
 valid_units as (
     select mapped.*
     from mapped
-    where (is_monetary = 1 and unit in (select currency_code from {{ ref('currencies') }}))
-        or (is_monetary = 0 and unit = 'shares')
+    where
+        (mapped.is_monetary = 1 and mapped.unit in (select c.currency_code from {{ ref('currencies') }} as c))
+        or (mapped.is_monetary = 0 and mapped.unit = 'shares')
 )
 
 select
-    version, hk_company, company_bk_type, company_bk, line_item_code, period_type,
-    taxonomy, tag, priority, period_end, qtrs, unit, value, source_filing, available_at
+    version,
+    hk_company,
+    company_bk_type,
+    company_bk,
+    line_item_code,
+    period_type,
+    taxonomy,
+    tag,
+    priority,
+    period_end,
+    qtrs,
+    unit,
+    value,
+    source_filing,
+    available_at
 from (
     select
         valid_units.*,
         row_number() over (
-            partition by version, hk_company, line_item_code, period_end, qtrs
-            order by priority, case when unit = 'USD' then 0 when unit = 'EUR' then 1 else 2 end, unit
+            partition by valid_units.version, valid_units.hk_company, valid_units.line_item_code, valid_units.period_end, valid_units.qtrs
+            order by valid_units.priority, case when valid_units.unit = 'USD' then 0 when valid_units.unit = 'EUR' then 1 else 2 end, valid_units.unit
         ) as rn
     from valid_units
 ) as ranked

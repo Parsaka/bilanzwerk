@@ -35,7 +35,7 @@ typed as (
 ranked as (
     select
         typed.*,
-        row_number() over (partition by taxonomy, tag, source_quarter order by version desc) as rn
+        row_number() over (partition by typed.taxonomy, typed.tag, typed.source_quarter order by typed.version desc) as rn
     from typed
 )
 

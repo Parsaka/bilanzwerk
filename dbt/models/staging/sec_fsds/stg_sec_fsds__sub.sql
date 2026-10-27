@@ -33,12 +33,12 @@ select
     {{ bw_hash_key(["'CIK'", "cik"]) }} as hk_company,
     {{ bw_hash_key(["adsh", "'CIK'", "cik"]) }} as hk_filing_company,
     'CIK' as company_bk_type,
-    cast(cik as {{ bw_string(20) }}) as company_bk,
-    adsh as filing_bk,
+    cast(renamed.cik as {{ bw_string(20) }}) as company_bk,
+    renamed.adsh as filing_bk,
     renamed.*,
     {{ bw_hash_diff(["form", "period_end", "fiscal_year", "fiscal_period", "filed_date", "accepted_at", "is_amended_later"]) }} as hd_filing,
     {{ bw_hash_diff(["company_name", "sic", "country_ba", "state_ba", "city_ba", "zip_ba", "fiscal_year_end_mmdd"]) }} as hd_company_sec,
-    accepted_at as effective_from,
+    renamed.accepted_at as effective_from,
     {{ bw_run_ts() }} as load_datetime,
     cast('sec_fsds.sub' as {{ bw_string(50) }}) as record_source
 from renamed

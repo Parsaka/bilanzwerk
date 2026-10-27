@@ -44,6 +44,8 @@ packages = ["ingestion", "mdm", "analysis"]
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+# Fabric notebooks use IPython magics and runtime globals (spark, notebookutils); checked by fabric/tests.
+extend-exclude = ["fabric/*.Notebook"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "PL", "RUF"]

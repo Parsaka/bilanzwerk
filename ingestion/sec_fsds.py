@@ -158,10 +158,36 @@ def list_quarters(start: Quarter | None = None, end: Quarter | None = None, toda
     return out
 
 
+def next_quarter(quarter: Quarter) -> Quarter:
+    return Quarter(quarter.year, quarter.q + 1) if quarter.q < 4 else Quarter(quarter.year + 1, 1)
+
+
+def newly_published(after: Quarter, session: PoliteSession, today: date | None = None) -> list[Quarter]:
+    """Completed quarters after `after` whose zip the SEC has published (HEAD 200), oldest first.
+
+    Used by the quarterly workflow to start a load only when there is something new; it stops at
+    the first quarter that is not there yet.
+    """
+    out = []
+    for quarter in list_quarters(next_quarter(after), today=today):
+        response = session.head(BASE_URL.format(quarter=quarter.label))
+        if response.status_code != 200:
+            break
+        out.append(quarter)
+    return out
+
+
+# Renamed columns the loader accepts, per table: {name in the file: name in the contract}.
+# Empty on purpose. An entry is added only after a contract break was triaged as a pure rename
+# (same meaning, same values), together with a test; see docs/incident-drill.md.
+COLUMN_ALIASES: dict[str, dict[str, str]] = {table: {} for table in ("sub", "num", "tag", "pre")}
+
+
 def read_table(raw: bytes, table: str) -> pa.Table:
     """Parse one tab-separated FSDS member with the explicit schema."""
     header = raw.split(b"\n", 1)[0].decode("utf-8", errors="replace").strip("\r").split("\t")
-    missing = REQUIRED[table] - set(header)
+    aliases = COLUMN_ALIASES.get(table, {})
+    missing = REQUIRED[table] - {aliases.get(c, c) for c in header}
     if missing:
         raise ContractError(f"{table}.txt is missing required columns: {sorted(missing)}")
 
@@ -178,8 +204,9 @@ def read_table(raw: bytes, table: str) -> pa.Table:
         ),
     )
     columns = {}
-    for name in header:
-        col = tbl.column(name)
+    for file_name in header:
+        col = tbl.column(file_name)
+        name = aliases.get(file_name, file_name)
         target = schema.get(name, TEXT)
         if name in DATE_COLUMNS.get(table, []):
             columns[name] = pc.strptime(col, format="%Y%m%d", unit="s", error_is_null=True).cast(pa.date32())
@@ -227,8 +254,10 @@ def land_zip(
     try:
         zf = verify_zip(path)
         members = {n.lower(): n for n in zf.namelist()}
-        for table in SCHEMAS:
-            tbl = read_table(zf.read(members[f"{table}.txt"]), table)
+        # Parse and check every table before writing any: a contract break in num.txt must not
+        # leave a new sub partition next to the old num partition of the same quarter.
+        tables = {table: read_table(zf.read(members[f"{table}.txt"]), table) for table in SCHEMAS}
+        for table, tbl in tables.items():
             write_partition(tbl, settings.raw_root / SOURCE / table, {"quarter": quarter.label})
             counts[table] = tbl.num_rows
     except Exception as exc:
