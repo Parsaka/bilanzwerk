@@ -78,3 +78,17 @@ def test_visual_bound_to_missing_measure_is_an_error(project):
     visual = next((root / "Bilanzwerk.Report" / "definition" / "pages").glob("p01_*/visuals/titel/visual.json"))
     visual.write_text(visual.read_text(encoding="utf-8").replace("Titel 01", "Titel 99"), encoding="utf-8")
     assert any("Sprache[Titel 99] not in the model" in e for e in errors(check))
+
+
+def test_bpa_rule_expressions_parse_in_tabular_editor():
+    """Tabular Editor's expression parser takes string literals verbatim: a doubled backslash
+    reaches the regex as two characters, and a backslash-escaped quote ends the string."""
+    import json
+    import re
+
+    rules = json.loads((TOOLS.parent / "bpa" / "rules.json").read_text(encoding="utf-8"))
+    for rule in rules:
+        expr = rule["Expression"]
+        assert "\\\\" not in expr and '\\"' not in expr, rule["ID"]
+        for literal in re.findall(r'RegEx\.IsMatch\(Expression, "([^"]*)"\)', expr):
+            re.compile(literal)

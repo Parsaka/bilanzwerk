@@ -67,7 +67,7 @@
     "Description": "IFERROR erzwingt Zellweise Auswertung; DIVIDE oder explizite Prüfungen verwenden.",
     "Severity": 3,
     "Scope": "Measure, CalculationItem",
-    "Expression": "RegEx.IsMatch(Expression, \"(?i)IFERROR\\\\s*\\\\(\")",
+    "Expression": "RegEx.IsMatch(Expression, \"(?i)IFERROR\\s*\\(\")",
     "CompatibilityLevel": 1200
   },
   {
@@ -77,7 +77,7 @@
     "Description": "DIVIDE fängt Division durch null ab und ist im Formel-Engine-Plan günstiger als IF/Schrägstrich.",
     "Severity": 2,
     "Scope": "Measure, CalculationItem",
-    "Expression": "RegEx.IsMatch(Expression, \"\\\\]\\\\s*\\\\/(?!\\\\/)(?!\\\\*)\") or RegEx.IsMatch(Expression, \"\\\\)\\\\s*\\\\/(?!\\\\/)(?!\\\\*)\")",
+    "Expression": "RegEx.IsMatch(Expression, \"[\\])]\\s*/(?![/*])\")",
     "CompatibilityLevel": 1200
   },
   {
@@ -127,7 +127,7 @@
     "Description": "Berechnete Spalten in SUMMARIZE liefern falsche Ergebnisse im Filterkontext; ADDCOLUMNS ( SUMMARIZE ( ... ) ) verwenden.",
     "Severity": 2,
     "Scope": "Measure, CalculationItem",
-    "Expression": "RegEx.IsMatch(Expression, \"(?is)SUMMARIZE\\\\s*\\\\([^()]*\\\"@\")",
+    "Expression": "RegEx.IsMatch(Expression, \"(?is)SUMMARIZE\\s*\\([^()]*\\x22@\")",
     "CompatibilityLevel": 1200
   }
 ]

@@ -420,7 +420,7 @@ measures:
           SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
           VAR _ist = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" )
           VAR _fc = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
-          RETURN IF ( NOT ISBLANK ( _fc ) && _ist <> 0, ABS ( _ist - _fc ) / ABS ( _ist ) )
+          RETURN IF ( NOT ISBLANK ( _fc ), DIVIDE ( ABS ( _ist - _fc ), ABS ( _ist ) ) )
       )
 
   - table: fact_financial_line
