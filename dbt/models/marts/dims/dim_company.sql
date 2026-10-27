@@ -160,9 +160,9 @@ gleif as (
             row_number() over (
                 partition by g.golden_company_id
                 order by
-                    case when gl.registration_status = 'ISSUED' then 0 else 1 end,
+                    case when gl.registration_status = 'ISSUED' then 0 else 1 end asc,
                     gl.last_update_date desc,
-                    gl.hk_company
+                    gl.hk_company asc
             ) as lei_rn
         from golden as g
         inner join {{ bw_sat_current('sat_company_gleif', 'hk_company') }} as gl
