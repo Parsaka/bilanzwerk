@@ -1,72 +1,12 @@
--- Quarter derivation. Many cash-flow and income lines are reported year-to-date. Single
--- quarters are derived by subtraction (Q2 = H1 - Q1, Q3 = 9M - H1, Q4 = FY - 9M), and
--- trailing-twelve-month (TTM) values come from the annual figure or the sum of four quarters.
--- FSDS rounds period ends to month ends (ESEF is rounded the same way in staging), so the
--- previous YTD period ends exactly three month ends earlier.
+-- Quarter and trailing-twelve-month (TTM) values per line item. Single quarters come from
+-- bv_single_quarter (reported or derived from year-to-date values); TTM comes from the annual
+-- figure or the sum of four consecutive quarters.
 with items as (
     select * from {{ ref('bv_line_item_values') }}
 ),
 
-durations as (
-    select * from items
-    where period_type = 'duration'
-),
-
-direct_quarter as (
-    select
-        version,
-        hk_company,
-        line_item_code,
-        period_end,
-        unit,
-        value,
-        source_filing,
-        available_at,
-        1 as derivation_rank,
-        'reported' as derivation
-    from durations
-    where qtrs = 1
-),
-
-derived_quarter as (
-    select
-        cur.version,
-        cur.hk_company,
-        cur.line_item_code,
-        cur.period_end,
-        cur.unit,
-        cur.value - prev.value as value,
-        cur.source_filing,
-        case when prev.available_at > cur.available_at then prev.available_at else cur.available_at end as available_at,
-        2 as derivation_rank,
-        'derived_ytd' as derivation
-    from durations as cur
-    inner join durations as prev
-        on
-            cur.version = prev.version
-            and cur.hk_company = prev.hk_company
-            and cur.line_item_code = prev.line_item_code
-            and cur.unit = prev.unit
-            and prev.qtrs = cur.qtrs - 1
-            and prev.period_end = {{ bw_month_end(dbt.dateadd('month', -3, 'cur.period_end')) }}
-    where cur.qtrs between 2 and 4
-),
-
 single_quarter as (
-    select * from (
-        select
-            q.*,
-            row_number() over (
-                partition by q.version, q.hk_company, q.line_item_code, q.period_end
-                order by q.derivation_rank
-            ) as rn
-        from (
-            select * from direct_quarter
-            union all
-            select * from derived_quarter
-        ) as q
-    ) as ranked
-    where rn = 1
+    select * from {{ ref('bv_single_quarter') }}
 ),
 
 annual as (
@@ -78,34 +18,40 @@ annual as (
         unit,
         value,
         available_at
-    from durations
-    where qtrs = 4
+    from items
+    where period_type = 'duration' and qtrs = 4
+),
+
+-- four consecutive quarters: the three previous rows end exactly 3, 6 and 9 month ends earlier
+quarter_windows as (
+    select
+        version,
+        hk_company,
+        line_item_code,
+        unit,
+        period_end,
+        sum(value) over (
+            partition by version, hk_company, line_item_code, unit order by period_end
+            rows between 3 preceding and current row
+        ) as value_4q,
+        lag(period_end, 1) over (partition by version, hk_company, line_item_code, unit order by period_end) as period_end_1,
+        lag(period_end, 2) over (partition by version, hk_company, line_item_code, unit order by period_end) as period_end_2,
+        lag(period_end, 3) over (partition by version, hk_company, line_item_code, unit order by period_end) as period_end_3
+    from single_quarter
 ),
 
 ttm_from_quarters as (
     select
-        q0.version,
-        q0.hk_company,
-        q0.line_item_code,
-        q0.period_end,
-        q0.value + q1.value + q2.value + q3.value as value,
-        q0.available_at
-    from single_quarter as q0
-    inner join single_quarter as q1
-        on
-            q0.version = q1.version and q0.hk_company = q1.hk_company
-            and q0.line_item_code = q1.line_item_code and q0.unit = q1.unit
-            and q1.period_end = {{ bw_month_end(dbt.dateadd('month', -3, 'q0.period_end')) }}
-    inner join single_quarter as q2
-        on
-            q0.version = q2.version and q0.hk_company = q2.hk_company
-            and q0.line_item_code = q2.line_item_code and q0.unit = q2.unit
-            and q2.period_end = {{ bw_month_end(dbt.dateadd('month', -6, 'q0.period_end')) }}
-    inner join single_quarter as q3
-        on
-            q0.version = q3.version and q0.hk_company = q3.hk_company
-            and q0.line_item_code = q3.line_item_code and q0.unit = q3.unit
-            and q3.period_end = {{ bw_month_end(dbt.dateadd('month', -9, 'q0.period_end')) }}
+        version,
+        hk_company,
+        line_item_code,
+        period_end,
+        value_4q as value
+    from quarter_windows
+    where
+        period_end_1 = {{ bw_month_end(dbt.dateadd('month', -3, 'period_end')) }}
+        and period_end_2 = {{ bw_month_end(dbt.dateadd('month', -6, 'period_end')) }}
+        and period_end_3 = {{ bw_month_end(dbt.dateadd('month', -9, 'period_end')) }}
 ),
 
 duration_values as (

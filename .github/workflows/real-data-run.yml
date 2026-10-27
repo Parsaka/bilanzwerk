@@ -29,7 +29,7 @@ concurrency:
 env:
   BW_DATA_ROOT: ${{ github.workspace }}/data
   BW_USER_AGENT: ${{ vars.BW_USER_AGENT || 'Parsa Kamali parsa.kamali.data@gmail.com' }}
-  BW_DUCKDB_MEMORY: 10GB
+  BW_DUCKDB_MEMORY: 12GB
   BW_DBT_THREADS: "2"
   DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
   UV_PYTHON: "3.12"

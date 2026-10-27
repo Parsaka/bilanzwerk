@@ -17,6 +17,10 @@ models:
     tests:
       - unique_combination: {columns: ['version', 'hk_company', 'line_item_code', 'period_end', 'qtrs']}
 
+  - name: bv_single_quarter
+    tests:
+      - unique_combination: {columns: ['version', 'hk_company', 'line_item_code', 'period_end']}
+
   - name: bv_period_values
     tests:
       - unique_combination: {columns: ['version', 'hk_company', 'line_item_code', 'period_end']}
