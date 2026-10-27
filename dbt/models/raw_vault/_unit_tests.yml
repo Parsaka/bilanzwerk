@@ -1,0 +1,76 @@
+version: 2
+
+# Data Vault macro tests (spec, test pyramid level 2):
+#   same input gives the same hash; a changed attribute gives a new satellite row;
+#   an unchanged attribute gives no new row, in one batch and across incremental runs.
+
+unit_tests:
+  - name: sat_writes_row_only_on_change_within_batch
+    description: Three filings, the name changes once -> two satellite rows.
+    model: sat_company_sec
+    overrides:
+      macros:
+        is_incremental: false
+    given:
+      - input: ref('stg_sec_fsds__sub')
+        rows:
+          - {hk_company: "c1", hd_company_sec: "h_old", company_name: "OLD NAME INC", sic: 3571, effective_from: "2020-02-01 10:00:00", load_datetime: "2024-01-01 00:00:00", record_source: "sec_fsds.sub"}
+          - {hk_company: "c1", hd_company_sec: "h_old", company_name: "OLD NAME INC", sic: 3571, effective_from: "2020-05-01 10:00:00", load_datetime: "2024-01-01 00:00:00", record_source: "sec_fsds.sub"}
+          - {hk_company: "c1", hd_company_sec: "h_new", company_name: "NEW NAME INC", sic: 3571, effective_from: "2020-08-01 10:00:00", load_datetime: "2024-01-01 00:00:00", record_source: "sec_fsds.sub"}
+    expect:
+      rows:
+        - {hk_company: "c1", hd_company_sec: "h_old", company_name: "OLD NAME INC", effective_from: "2020-02-01 10:00:00"}
+        - {hk_company: "c1", hd_company_sec: "h_new", company_name: "NEW NAME INC", effective_from: "2020-08-01 10:00:00"}
+
+  - name: sat_incremental_rerun_inserts_nothing
+    description: The same staged row again on an incremental run -> no new row.
+    model: sat_company_sec
+    overrides:
+      macros:
+        is_incremental: true
+    given:
+      - input: ref('stg_sec_fsds__sub')
+        rows:
+          - {hk_company: "c1", hd_company_sec: "h_old", company_name: "OLD NAME INC", effective_from: "2020-02-01 10:00:00", load_datetime: "2024-02-01 00:00:00", record_source: "sec_fsds.sub"}
+      - input: this
+        rows:
+          - {hk_company: "c1", hd_company_sec: "h_old", company_name: "OLD NAME INC", effective_from: "2020-02-01 10:00:00", load_datetime: "2024-01-01 00:00:00", record_source: "sec_fsds.sub"}
+    expect:
+      rows: []
+
+  - name: sat_incremental_changed_attribute_inserts_row
+    description: A later filing with a changed attribute -> exactly one new row; an unchanged later filing -> none.
+    model: sat_company_sec
+    overrides:
+      macros:
+        is_incremental: true
+    given:
+      - input: ref('stg_sec_fsds__sub')
+        rows:
+          - {hk_company: "c1", hd_company_sec: "h_old", company_name: "OLD NAME INC", effective_from: "2020-05-01 10:00:00", load_datetime: "2024-02-01 00:00:00", record_source: "sec_fsds.sub"}
+          - {hk_company: "c2", hd_company_sec: "h_b2", company_name: "B NEW", effective_from: "2020-05-01 10:00:00", load_datetime: "2024-02-01 00:00:00", record_source: "sec_fsds.sub"}
+      - input: this
+        rows:
+          - {hk_company: "c1", hd_company_sec: "h_old", company_name: "OLD NAME INC", effective_from: "2020-02-01 10:00:00", load_datetime: "2024-01-01 00:00:00", record_source: "sec_fsds.sub"}
+          - {hk_company: "c2", hd_company_sec: "h_b1", company_name: "B OLD", effective_from: "2020-02-01 10:00:00", load_datetime: "2024-01-01 00:00:00", record_source: "sec_fsds.sub"}
+    expect:
+      rows:
+        - {hk_company: "c2", hd_company_sec: "h_b2", company_name: "B NEW", effective_from: "2020-05-01 10:00:00"}
+
+  - name: hub_keeps_first_load_and_skips_existing_keys
+    model: hub_concept
+    overrides:
+      macros:
+        is_incremental: true
+    given:
+      - input: ref('stg_all__concepts')
+        rows:
+          - {hk_concept: "k1", taxonomy: "us-gaap", tag: "Revenues", load_datetime: "2024-02-01 00:00:00", record_source: "sec_fsds.num"}
+          - {hk_concept: "k2", taxonomy: "us-gaap", tag: "Assets", load_datetime: "2024-02-01 00:00:00", record_source: "sec_fsds.num"}
+          - {hk_concept: "k2", taxonomy: "us-gaap", tag: "Assets", load_datetime: "2024-02-01 00:00:00", record_source: "sec_fsds.tag"}
+      - input: this
+        rows:
+          - {hk_concept: "k1", taxonomy: "us-gaap", tag: "Revenues", load_datetime: "2024-01-01 00:00:00", record_source: "sec_fsds.num"}
+    expect:
+      rows:
+        - {hk_concept: "k2", taxonomy: "us-gaap", tag: "Assets", record_source: "sec_fsds.num"}

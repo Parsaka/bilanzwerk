@@ -1,0 +1,36 @@
+sic_from,sic_to,sector_code,sector_de,sector_en,nace_section,is_financial
+100,999,S01,Rohstoffe und Landwirtschaft,Agriculture and materials extraction,A,0
+1000,1299,S01,Rohstoffe und Landwirtschaft,Agriculture and materials extraction,B,0
+1300,1399,S02,Energie,Energy,B,0
+1400,1499,S01,Rohstoffe und Landwirtschaft,Agriculture and materials extraction,B,0
+1500,1799,S07,Industrie und Bau,Industrials and construction,F,0
+2000,2399,S03,Konsumgüter,Consumer goods,C,0
+2400,2499,S04,Grundstoffe und Chemie,Basic materials and chemicals,C,0
+2500,2599,S03,Konsumgüter,Consumer goods,C,0
+2600,2699,S04,Grundstoffe und Chemie,Basic materials and chemicals,C,0
+2700,2799,S03,Konsumgüter,Consumer goods,C,0
+2800,2829,S04,Grundstoffe und Chemie,Basic materials and chemicals,C,0
+2830,2839,S05,Gesundheit,Health care,C,0
+2840,2899,S04,Grundstoffe und Chemie,Basic materials and chemicals,C,0
+2900,2999,S02,Energie,Energy,C,0
+3000,3099,S04,Grundstoffe und Chemie,Basic materials and chemicals,C,0
+3100,3199,S03,Konsumgüter,Consumer goods,C,0
+3200,3399,S04,Grundstoffe und Chemie,Basic materials and chemicals,C,0
+3400,3569,S07,Industrie und Bau,Industrials and construction,C,0
+3570,3579,S06,Technologie und Telekommunikation,Technology and telecommunications,C,0
+3580,3599,S07,Industrie und Bau,Industrials and construction,C,0
+3600,3699,S06,Technologie und Telekommunikation,Technology and telecommunications,C,0
+3700,3839,S07,Industrie und Bau,Industrials and construction,C,0
+3840,3851,S05,Gesundheit,Health care,C,0
+3852,3899,S07,Industrie und Bau,Industrials and construction,C,0
+3900,3999,S03,Konsumgüter,Consumer goods,C,0
+4000,4799,S08,Transport und Versorger,Transport and utilities,H,0
+4800,4899,S06,Technologie und Telekommunikation,Technology and telecommunications,J,0
+4900,4999,S08,Transport und Versorger,Transport and utilities,D,0
+5000,5999,S09,Handel,Wholesale and retail,G,0
+6000,6799,S11,Finanzen und Immobilien,Financials and real estate,K,1
+7000,7369,S10,Dienstleistungen,Services,N,0
+7370,7379,S06,Technologie und Telekommunikation,Technology and telecommunications,J,0
+7380,7999,S10,Dienstleistungen,Services,N,0
+8000,8099,S05,Gesundheit,Health care,Q,0
+8100,9999,S10,Dienstleistungen,Services,M,0

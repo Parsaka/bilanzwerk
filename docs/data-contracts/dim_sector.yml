@@ -1,0 +1,24 @@
+table: dim_sector
+schema: marts
+owner: Controlling
+grain: one row per sector
+freshness: changes only with a seed change (pull request)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: sector_key
+  type: string
+- name: sector_code
+  type: string
+- name: sector_de
+  type: string
+- name: sector_en
+  type: string
+- name: sort_order
+  type: integer
+- name: is_financial
+  type: integer
+- name: sic_ranges
+  type: string
+- name: nace_sections
+  type: string

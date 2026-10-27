@@ -1,0 +1,26 @@
+kpi_code,name_de,name_en,area,formula,unit,direction,threshold_green,threshold_red,owner,source_line_items,description_de
+ZPP,Altman Z'' (1995),Altman Z'' (1995),Kreditrisiko,6.56*WC/TA + 3.26*RE/TA + 6.72*EBIT/TA + 1.05*EQ/TL,score,higher_is_better,2.6,1.1,Credit,TCA;TCL;RE;EBIT;TA;EQ;TL,Z''-Score für Nicht-Produzenten ohne Börsenkurse. Unter 1.1 Distress-Zone über 2.6 sichere Zone.
+WC_TA,Working Capital / Bilanzsumme,Working capital / total assets,Kreditrisiko,(TCA - TCL) / TA,ratio,higher_is_better,,,Credit,TCA;TCL;TA,Erste Komponente des Z''-Scores.
+RE_TA,Gewinnrücklagen / Bilanzsumme,Retained earnings / total assets,Kreditrisiko,RE / TA,ratio,higher_is_better,,,Credit,RE;TA,Zweite Komponente des Z''-Scores.
+EBIT_TA,EBIT / Bilanzsumme,EBIT / total assets,Kreditrisiko,EBIT_TTM / TA,ratio,higher_is_better,,,Credit,EBIT;TA,Dritte Komponente des Z''-Scores (EBIT der letzten zwölf Monate).
+EQ_TL,Eigenkapital / Verbindlichkeiten,Book equity / total liabilities,Kreditrisiko,EQ / TL,ratio,higher_is_better,,,Credit,EQ;TL,Vierte Komponente des Z''-Scores.
+NI_TA,Jahresergebnis / Bilanzsumme,Net income / total assets,Kreditrisiko,NI_TTM / TA,ratio,higher_is_better,,,Credit,NI;TA,Ohlson-Kennzahl ohne Börsenkurse.
+CL_CA,Kurzfr. Verbindlichkeiten / Umlaufvermögen,Current liabilities / current assets,Kreditrisiko,TCL / TCA,ratio,higher_is_worse,,,Credit,TCL;TCA,Ohlson-Kennzahl ohne Börsenkurse.
+FFO_TL,Funds from Operations / Verbindlichkeiten,Funds from operations / total liabilities,Kreditrisiko,(NI_TTM + DA_TTM) / TL,ratio,higher_is_better,,,Credit,NI;DA;TL,Ohlson-Kennzahl ohne Börsenkurse.
+DSO,Days Sales Outstanding,Days sales outstanding,Working Capital,avg(AR) / REV_TTM * 365,days,higher_is_worse,,,Controlling,AR;REV,Forderungsreichweite in Tagen mit Durchschnitt aus Anfangs- und Endbestand.
+DIO,Days Inventory Outstanding,Days inventory outstanding,Working Capital,avg(INV) / COGS_TTM * 365,days,higher_is_worse,,,Controlling,INV;COGS,Vorratsreichweite in Tagen.
+DPO,Days Payables Outstanding,Days payables outstanding,Working Capital,avg(AP) / COGS_TTM * 365,days,higher_is_better,,,Controlling,AP;COGS,Lieferantenziel in Tagen.
+CCC,Cash Conversion Cycle,Cash conversion cycle,Working Capital,DSO + DIO - DPO,days,higher_is_worse,,,Controlling,AR;INV;AP;REV;COGS,Kapitalbindungsdauer in Tagen. Rote Flagge über dem 80. Perzentil des Sektors und steigend.
+CURRENT_RATIO,Liquidität 3. Grades,Current ratio,Liquidität,TCA / TCL,ratio,higher_is_better,1.5,1.0,Credit,TCA;TCL,Umlaufvermögen geteilt durch kurzfristige Verbindlichkeiten.
+QUICK_RATIO,Liquidität 2. Grades,Quick ratio,Liquidität,(TCA - INV) / TCL,ratio,higher_is_better,1.0,0.7,Credit,TCA;INV;TCL,Umlaufvermögen ohne Vorräte geteilt durch kurzfristige Verbindlichkeiten.
+CASH_RUNWAY_M,Cash-Reichweite (Monate),Cash runway (months),Liquidität,CASH / (-CFO_TTM / 12) when CFO_TTM < 0,months,higher_is_better,24,12,Credit,CASH;CFO,Monate bis die liquiden Mittel bei negativem operativem Cashflow aufgebraucht sind.
+DEBT_EBITDA,Nettoverschuldung / EBITDA,Debt / EBITDA,Verschuldung,(STD + LTD) / (EBIT_TTM + DA_TTM),ratio,higher_is_worse,3.0,5.0,Credit,STD;LTD;EBIT;DA,Finanzverbindlichkeiten geteilt durch EBITDA der letzten zwölf Monate.
+INTEREST_COVERAGE,Zinsdeckungsgrad,Interest coverage,Verschuldung,EBIT_TTM / INTEXP_TTM,ratio,higher_is_better,3.0,1.5,Credit,EBIT;INTEXP,EBIT geteilt durch Zinsaufwand.
+EQUITY_RATIO,Eigenkapitalquote,Equity ratio,Verschuldung,EQ / TA,ratio,higher_is_better,0.3,0.1,Credit,EQ;TA,Eigenkapital geteilt durch Bilanzsumme.
+REV_GROWTH,Umsatzwachstum (Vorjahr),Revenue growth (YoY),Profitabilität,REV_TTM / REV_TTM(-4Q) - 1,ratio,higher_is_better,,,Controlling,REV,Wachstum des TTM-Umsatzes gegenüber dem Vorjahresquartal.
+EBIT_MARGIN,EBIT-Marge,EBIT margin,Profitabilität,EBIT_TTM / REV_TTM,ratio,higher_is_better,0.08,0.0,Controlling,EBIT;REV,Betriebsergebnis geteilt durch Umsatz.
+GROSS_MARGIN,Bruttomarge,Gross margin,Profitabilität,(REV_TTM - COGS_TTM) / REV_TTM,ratio,higher_is_better,,,Controlling,REV;COGS,Bruttoergebnis geteilt durch Umsatz.
+CFO_MARGIN,Cashflow-Marge,Operating cash flow margin,Profitabilität,CFO_TTM / REV_TTM,ratio,higher_is_better,,,Controlling,CFO;REV,Operativer Cashflow geteilt durch Umsatz.
+FILING_LAG_D,Veröffentlichungsverzug (Tage),Filing lag (days),Datensignale,accepted date - period end,days,higher_is_worse,45,90,Data,,Tage zwischen Periodenende und Annahme des Abschlusses durch die SEC.
+LATE_FILING,Fristverlängerung (NT 10-K/Q),Late filing notice (NT 10-K/Q),Datensignale,count of NT filings in the last 12 months,count,higher_is_worse,0,1,Data,,Anzahl der Fristverlängerungsanträge in den letzten zwölf Monaten.
+RESTATEMENT_COUNT,Anzahl Korrekturen,Restatement count,Datensignale,count of line items whose latest value differs from the first reported value,count,higher_is_worse,0,3,Data,,Anzahl der später geänderten Werte in den letzten zwölf Monaten.

@@ -1,0 +1,38 @@
+table: dim_line_item
+schema: marts
+owner: Reporting
+grain: one row per target line item (seed line_items)
+freshness: changes only with a seed change (pull request)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: line_item_key
+  type: string
+- name: line_item_code
+  type: string
+- name: statement_code
+  type: string
+- name: statement_de
+  type: string
+- name: statement_en
+  type: string
+- name: group_code
+  type: string
+- name: group_de
+  type: string
+- name: group_en
+  type: string
+- name: label_de
+  type: string
+- name: label_en
+  type: string
+- name: period_type
+  type: string
+- name: is_monetary
+  type: integer
+- name: is_core
+  type: integer
+- name: sort_order
+  type: integer
+- name: owner
+  type: string

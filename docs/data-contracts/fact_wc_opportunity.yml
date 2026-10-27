@@ -1,0 +1,56 @@
+table: fact_wc_opportunity
+schema: marts
+owner: Controlling
+grain: one row per company and fiscal year end period
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: company_key
+  type: string
+- name: company_id
+  type: string
+- name: sector_key
+  type: string
+- name: period_key
+  type: string
+- name: period_end_date
+  type: date
+- name: fiscal_year
+  type: integer
+- name: dso
+  type: float
+- name: dio
+  type: float
+- name: dpo
+  type: float
+- name: ccc
+  type: float
+- name: sector_median_dso
+  type: float
+- name: sector_median_dio
+  type: float
+- name: sector_median_dpo
+  type: float
+- name: sector_peer_count
+  type: integer
+- name: excess_dso_days
+  type: float
+- name: excess_dio_days
+  type: float
+- name: dpo_gap_days
+  type: float
+- name: revenue_eur
+  type: float
+- name: cogs_eur
+  type: float
+- name: cash_from_dso_eur
+  type: float
+- name: cash_from_dio_eur
+  type: float
+- name: cash_from_dpo_eur
+  type: float
+- name: cash_opportunity_eur
+  type: float
+- name: cash_opportunity_stretch_eur
+  type: float

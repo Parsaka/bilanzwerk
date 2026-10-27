@@ -1,0 +1,40 @@
+table: extract_tableau_wc_opportunity
+schema: marts
+owner: Controlling
+grain: one row per company and fiscal year (flat extract for Tableau)
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: company_name
+  type: string
+- name: cik
+  type: integer
+- name: lei
+  type: string
+- name: sector_de
+  type: string
+- name: sector_en
+  type: string
+- name: fiscal_year
+  type: integer
+- name: dso
+  type: float
+- name: dio
+  type: float
+- name: dpo
+  type: float
+- name: ccc
+  type: float
+- name: sector_median_dso
+  type: float
+- name: sector_median_dio
+  type: float
+- name: sector_median_dpo
+  type: float
+- name: revenue_eur
+  type: float
+- name: cash_opportunity_eur
+  type: float
+- name: cash_opportunity_stretch_eur
+  type: float

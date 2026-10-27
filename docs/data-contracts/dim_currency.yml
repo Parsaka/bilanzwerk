@@ -1,0 +1,14 @@
+table: dim_currency
+schema: marts
+owner: Reporting
+grain: one row per ISO currency code (plus 'shares')
+freshness: changes only with a seed change (pull request)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: currency_key
+  type: string
+- name: currency_code
+  type: string
+- name: currency_name
+  type: string

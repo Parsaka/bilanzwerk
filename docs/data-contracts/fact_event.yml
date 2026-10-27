@@ -1,0 +1,32 @@
+table: fact_event
+schema: marts
+owner: Credit Risk
+grain: one row per company, event date and event type
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: event_key
+  type: string
+- name: company_id
+  type: string
+- name: company_key
+  type: string
+- name: event_date
+  type: date
+- name: event_type
+  type: string
+- name: is_main_label
+  type: integer
+- name: is_distress_label
+  type: integer
+- name: filing
+  type: string
+- name: form
+  type: string
+- name: item_code
+  type: string
+- name: all_items
+  type: string
+- name: accepted_at
+  type: timestamp

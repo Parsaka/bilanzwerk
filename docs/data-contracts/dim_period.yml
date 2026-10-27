@@ -1,0 +1,42 @@
+table: dim_period
+schema: marts
+owner: Reporting
+grain: one row per company and period end
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: period_key
+  type: string
+- name: company_id
+  type: string
+- name: period_end_date
+  type: date
+- name: fiscal_year
+  type: integer
+- name: fiscal_quarter
+  type: integer
+- name: fiscal_period_label
+  type: string
+- name: is_fiscal_year_end
+  type: integer
+- name: fye_month
+  type: integer
+- name: calendar_year
+  type: integer
+- name: calendar_quarter
+  type: integer
+- name: sec_fiscal_year
+  type: integer
+- name: sec_fiscal_period
+  type: string
+- name: first_form
+  type: string
+- name: first_filing
+  type: string
+- name: first_accepted_at
+  type: timestamp
+- name: filing_lag_days
+  type: integer
+- name: is_filed_period
+  type: integer

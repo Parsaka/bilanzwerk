@@ -1,0 +1,20 @@
+-- Probability of bankruptcy within 12 months per company, as-of date and model, written back
+-- by the early-warning model (analysis/), with the three strongest drivers.
+select
+    {{ bw_hash_key(['g.golden_company_id', 'r.as_of_date', 'r.model_name']) }} as risk_score_key,
+    c.company_key,
+    g.golden_company_id as company_id,
+    r.as_of_date,
+    r.model_name,
+    r.probability_12m,
+    r.risk_band,
+    r.top_3_drivers,
+    r.run_id
+from {{ ref('stg_analysis__risk_scores') }} as r
+inner join {{ ref('bv_company_golden') }} as g
+    on g.company_bk_type = 'CIK'
+    and g.cik = r.cik
+left join {{ ref('dim_company') }} as c
+    on g.golden_company_id = c.company_id
+    and r.as_of_date >= c.valid_from
+    and r.as_of_date < c.valid_to

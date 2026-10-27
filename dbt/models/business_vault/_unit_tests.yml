@@ -1,0 +1,31 @@
+version: 2
+
+unit_tests:
+  - name: first_reported_ignores_later_repeats_and_restatements
+    description: A 10-K repeats last year's revenue with a restated value; point-in-time keeps the first.
+    model: pit_fact_first_reported
+    given:
+      - input: ref('bv_fact_versions')
+        rows:
+          - {hk_company: "c1", taxonomy: "us-gaap", tag: "Revenues", period_end: "2022-12-31", qtrs: 4, unit: "USD", value: 100, filing_bk: "A1", accepted_at: "2023-02-20 16:00:00"}
+          - {hk_company: "c1", taxonomy: "us-gaap", tag: "Revenues", period_end: "2022-12-31", qtrs: 4, unit: "USD", value: 103, filing_bk: "A2", accepted_at: "2024-02-21 16:00:00"}
+    expect:
+      rows:
+        - {hk_company: "c1", period_end: "2022-12-31", value: 100, source_filing: "A1", available_at: "2023-02-20 16:00:00"}
+
+  - name: quarter_derivation_from_year_to_date
+    description: Q1 reported, H1 and 9M and FY year-to-date -> Q2, Q3, Q4 by subtraction, TTM from FY.
+    model: bv_period_values
+    given:
+      - input: ref('bv_line_item_values')
+        rows:
+          - {version: "first_reported", hk_company: "c1", line_item_code: "CFO", period_type: "duration", period_end: "2023-03-31", qtrs: 1, unit: "USD", value: 10, source_filing: "Q1", available_at: "2023-05-01 00:00:00"}
+          - {version: "first_reported", hk_company: "c1", line_item_code: "CFO", period_type: "duration", period_end: "2023-06-30", qtrs: 2, unit: "USD", value: 25, source_filing: "Q2", available_at: "2023-08-01 00:00:00"}
+          - {version: "first_reported", hk_company: "c1", line_item_code: "CFO", period_type: "duration", period_end: "2023-09-30", qtrs: 3, unit: "USD", value: 45, source_filing: "Q3", available_at: "2023-11-01 00:00:00"}
+          - {version: "first_reported", hk_company: "c1", line_item_code: "CFO", period_type: "duration", period_end: "2023-12-31", qtrs: 4, unit: "USD", value: 70, source_filing: "FY", available_at: "2024-02-20 00:00:00"}
+    expect:
+      rows:
+        - {period_end: "2023-03-31", amount: 10, amount_ttm: null, derivation: "reported"}
+        - {period_end: "2023-06-30", amount: 15, amount_ttm: null, derivation: "derived_ytd"}
+        - {period_end: "2023-09-30", amount: 20, amount_ttm: null, derivation: "derived_ytd"}
+        - {period_end: "2023-12-31", amount: 25, amount_ttm: 70, derivation: "derived_ytd"}
