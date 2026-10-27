@@ -27,6 +27,7 @@ analysis = [
     "mlflow-skinny>=2.16",
     "matplotlib>=3.9",
 ]
+deploy = ["fabric-cicd>=0.1.20", "azure-identity>=1.19", "azure-storage-file-datalake>=12.18", "requests>=2.32", "pyodbc>=5.1"]
 dev = ["pytest>=8.3", "pytest-cov>=5", "ruff>=0.6", "sqlfluff>=3.2", "sqlfluff-templater-dbt>=3.2", "responses>=0.25", "openpyxl>=3.1"]
 
 [project.scripts]
@@ -53,5 +54,5 @@ ignore = ["PLC0415", "PLR0913", "PLR0917", "PLR2004", "PLR0912", "PLR0915"]
 "excel/*.py" = ["RUF001"]
 
 [tool.pytest.ini_options]
-testpaths = ["ingestion/tests", "mdm/tests", "analysis/tests", "powerbi/tests"]
+testpaths = ["ingestion/tests", "mdm/tests", "analysis/tests", "powerbi/tests", "fabric/tests"]
 addopts = "-q"

@@ -21,3 +21,18 @@
 
 The Fabric capacity is paused whenever nobody works (cost); the pause schedule and the monthly
 cost go into the README.
+
+## Amendment (2026-10-27): promotion with fabric-cicd instead of a deployment pipeline
+
+The spec names the Fabric deployment pipeline for the promotion to prod. Building the items
+showed two stage-specific values that a deployment pipeline does not rewrite without manual
+deployment rules per item: the Direct Lake endpoint of the semantic model and the pipeline
+parameters (Key Vault, alert address, stage). Instead, `scripts/fabric_publish.py` publishes the
+same Git content to each workspace with Microsoft's `fabric-cicd` library and replaces those
+values at publish time; the notebooks find their lakehouse, warehouse and semantic model by name
+in the workspace they run in. Promotion to prod is the same command under the GitHub `prod`
+environment, which requires an approval. Git integration of the dev workspace stays available for
+editing in the Fabric UI.
+
+Consequences: one code path for dev and prod, no IDs in Git, every prod change traceable to a
+commit and an approval. The Fabric deployment pipeline UI (compare stages) is not used.

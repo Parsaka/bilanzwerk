@@ -11,7 +11,7 @@
   Sign-in to Power BI and the Fabric Warehouse happens in the Excel dialogs on first refresh.
 
 .EXAMPLE
-  .\excel\finalize_workbook.ps1 -Workspace "Bilanzwerk" -SqlEndpoint "xxxx.datawarehouse.fabric.microsoft.com" -Warehouse "bilanzwerk_wh"
+  .\excel\finalize_workbook.ps1 -Workspace "Bilanzwerk" -SqlEndpoint "xxxx.datawarehouse.fabric.microsoft.com" -Warehouse "wh_bilanzwerk"
 #>
 param(
     [Parameter(Mandatory = $true)] [string] $Workspace,

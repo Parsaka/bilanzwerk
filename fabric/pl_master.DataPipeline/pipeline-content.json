@@ -1,0 +1,218 @@
+{
+  "properties": {
+    "description": "Quarterly and on demand: load all sources (FSDS for one quarter or every missing one), then pl_transform.",
+    "activities": [
+      {
+        "name": "Load sec_fsds",
+        "type": "ExecutePipeline",
+        "dependsOn": [],
+        "policy": {
+          "secureInput": false
+        },
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "9c13b1b6-daf2-5c60-b6b3-bbf738a7bca4",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true,
+          "parameters": {
+            "KeyVaultUri": {
+              "value": "@pipeline().parameters.KeyVaultUri",
+              "type": "Expression"
+            },
+            "AlertEmail": {
+              "value": "@pipeline().parameters.AlertEmail",
+              "type": "Expression"
+            },
+            "Quarter": {
+              "value": "@pipeline().parameters.Quarter",
+              "type": "Expression"
+            }
+          }
+        }
+      },
+      {
+        "name": "Load sec_submissions",
+        "type": "ExecutePipeline",
+        "dependsOn": [],
+        "policy": {
+          "secureInput": false
+        },
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "c7cb9be6-b060-5a86-bc33-9e50e8957acd",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true,
+          "parameters": {
+            "KeyVaultUri": {
+              "value": "@pipeline().parameters.KeyVaultUri",
+              "type": "Expression"
+            },
+            "AlertEmail": {
+              "value": "@pipeline().parameters.AlertEmail",
+              "type": "Expression"
+            }
+          }
+        }
+      },
+      {
+        "name": "Load esef",
+        "type": "ExecutePipeline",
+        "dependsOn": [],
+        "policy": {
+          "secureInput": false
+        },
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "62fe747b-6994-5b86-ba90-c8905e8a18b2",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true,
+          "parameters": {
+            "KeyVaultUri": {
+              "value": "@pipeline().parameters.KeyVaultUri",
+              "type": "Expression"
+            },
+            "AlertEmail": {
+              "value": "@pipeline().parameters.AlertEmail",
+              "type": "Expression"
+            }
+          }
+        }
+      },
+      {
+        "name": "Load gleif",
+        "type": "ExecutePipeline",
+        "dependsOn": [],
+        "policy": {
+          "secureInput": false
+        },
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "c827a6c9-71a6-5e92-b6e8-5b0d33ffebcf",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true,
+          "parameters": {
+            "KeyVaultUri": {
+              "value": "@pipeline().parameters.KeyVaultUri",
+              "type": "Expression"
+            },
+            "AlertEmail": {
+              "value": "@pipeline().parameters.AlertEmail",
+              "type": "Expression"
+            }
+          }
+        }
+      },
+      {
+        "name": "Load ecb",
+        "type": "ExecutePipeline",
+        "dependsOn": [],
+        "policy": {
+          "secureInput": false
+        },
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "5df68a07-79dd-5bfb-8514-e115b6102c1b",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true,
+          "parameters": {
+            "KeyVaultUri": {
+              "value": "@pipeline().parameters.KeyVaultUri",
+              "type": "Expression"
+            },
+            "AlertEmail": {
+              "value": "@pipeline().parameters.AlertEmail",
+              "type": "Expression"
+            }
+          }
+        }
+      },
+      {
+        "name": "Transform",
+        "type": "ExecutePipeline",
+        "dependsOn": [
+          {
+            "activity": "Load sec_fsds",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "Load sec_submissions",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "Load esef",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "Load gleif",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "Load ecb",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "secureInput": false
+        },
+        "typeProperties": {
+          "pipeline": {
+            "referenceName": "187ca15b-cf29-510b-97ea-fb0342a2da3e",
+            "type": "PipelineReference"
+          },
+          "waitOnCompletion": true,
+          "parameters": {
+            "AlertEmail": {
+              "value": "@pipeline().parameters.AlertEmail",
+              "type": "Expression"
+            },
+            "Stage": {
+              "value": "@pipeline().parameters.Stage",
+              "type": "Expression"
+            },
+            "DqTarget": {
+              "value": "@pipeline().parameters.DqTarget",
+              "type": "Expression"
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "KeyVaultUri": {
+        "type": "string",
+        "defaultValue": "#{KEY_VAULT_URI}#"
+      },
+      "AlertEmail": {
+        "type": "string",
+        "defaultValue": "#{ALERT_EMAIL}#"
+      },
+      "Quarter": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "DqTarget": {
+        "type": "float",
+        "defaultValue": 0.98
+      },
+      "Stage": {
+        "type": "string",
+        "defaultValue": "#{STAGE}#"
+      }
+    }
+  }
+}

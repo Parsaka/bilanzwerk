@@ -153,16 +153,40 @@ def _csv_url(block: dict) -> str:
     return block["csv"]["url"]
 
 
+# Delta windows GLEIF publishes, smallest first. A run picks the smallest window that still
+# covers the time since the last loaded publication, so missed days (paused capacity, outage)
+# are caught up; overlaps are harmless because staging keeps the newest record per LEI.
+DELTA_WINDOWS = [(1, "LastDay"), (7, "LastWeek"), (31, "LastMonth")]
+
+
+def choose_variant(last_loaded: date | None, publish_date: date, full: bool = False) -> str:
+    """'full' or the name of the delta window that covers last_loaded .. publish_date."""
+    if full or last_loaded is None:
+        return "full"
+    gap = (publish_date - last_loaded).days
+    for days, name in DELTA_WINDOWS:
+        if gap <= days:
+            return name
+    return "full"
+
+
+def last_loaded_publish_date(manifest: Manifest) -> date | None:
+    periods = [r[2] for r in manifest.rows(SOURCE) if r[2] and r[9] == STATUS_LOADED]
+    return max((date.fromisoformat(p[:10]) for p in periods), default=None)
+
+
 def run(settings: Settings, full: bool = False, session: PoliteSession | None = None) -> dict[str, int]:
-    """full=True loads the full golden copy (first run); otherwise the last-day delta."""
+    """full=True loads the full golden copy; otherwise the delta window since the last load."""
     session = session or PoliteSession(settings)
     manifest = Manifest(settings.manifest_path)
     meta = session.get(PUBLISHES_URL).json()["data"]
     publish_date = (meta.get("publish_date") or date.today().isoformat())[:10]
-    variant = "full" if full or not manifest.loaded_files(SOURCE) else "delta"
+    window = choose_variant(last_loaded_publish_date(manifest), date.fromisoformat(publish_date), full)
+    variant = "full" if window == "full" else "delta"
+    log.info("GLEIF publication %s: loading %s", publish_date, window)
     out = {}
     for kind in ("lei2", "rr"):
-        block = meta[kind]["full_file"] if variant == "full" else meta[kind]["delta_files"]["LastDay"]
+        block = meta[kind]["full_file"] if variant == "full" else meta[kind]["delta_files"][window]
         url = _csv_url(block)
         target = settings.download_root / SOURCE / f"{kind}_{variant}_{publish_date}.csv.zip"
         if not target.exists():

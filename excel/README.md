@@ -23,7 +23,7 @@ uv run python excel/build_workbook.py      # cells, formulas, formats, print set
 
 ```powershell
 # Windows with Excel: connection, Power Query, PivotTable and slicers, VBA module -> .xlsm
-.\excel\finalize_workbook.ps1 -Workspace "Bilanzwerk" -SqlEndpoint "<endpoint>.datawarehouse.fabric.microsoft.com" -Warehouse "bilanzwerk_wh"
+.\excel\finalize_workbook.ps1 -Workspace "Bilanzwerk" -SqlEndpoint "<endpoint>.datawarehouse.fabric.microsoft.com" -Warehouse "wh_bilanzwerk"
 ```
 
 The split is deliberate: everything that is plain cell content is generated and reviewed as

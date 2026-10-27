@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_load_source",
+    "description": "Runs one loader of the ingestion package (download, verify, land as Parquet, manifest)."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "36ff8a9f-7001-5c78-bba7-7e5b70bfac38"
+  }
+}

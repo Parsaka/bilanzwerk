@@ -28,3 +28,17 @@ def test_land_keeps_allowlist_only_and_is_idempotent(settings, tmp_path):
     assert "Jane Doe" not in str(tbl.to_pylist())
     # missing optional columns (other_name_2..5, legal_form, ...) are present as nulls
     assert row["other_name_5"] is None and "legal_form_code" in tbl.column_names
+
+
+def test_delta_window_covers_the_gap_since_the_last_load():
+    from datetime import date
+
+    from ingestion.gleif import choose_variant
+
+    pub = date(2026, 10, 27)
+    assert choose_variant(None, pub) == "full"
+    assert choose_variant(date(2026, 10, 26), pub) == "LastDay"
+    assert choose_variant(date(2026, 10, 22), pub) == "LastWeek"  # capacity paused for five days
+    assert choose_variant(date(2026, 10, 1), pub) == "LastMonth"
+    assert choose_variant(date(2026, 8, 1), pub) == "full"
+    assert choose_variant(date(2026, 10, 26), pub, full=True) == "full"

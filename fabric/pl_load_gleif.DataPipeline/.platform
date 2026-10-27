@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "pl_load_gleif",
+    "description": "Load GLEIF golden copy and deltas (daily)."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "c827a6c9-71a6-5e92-b6e8-5b0d33ffebcf"
+  }
+}

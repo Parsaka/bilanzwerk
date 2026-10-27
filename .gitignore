@@ -24,7 +24,8 @@ dbt/logs/
 logs/
 
 # terraform
-infra/terraform/.terraform/
+**/.terraform/
+infra/terraform/*/backend.hcl
 *.tfstate
 *.tfstate.*
 *.tfvars
