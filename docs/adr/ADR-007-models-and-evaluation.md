@@ -46,3 +46,11 @@ the reports and the Excel cockpit show (dbt var `risk_champion_model`, default M
 controller can follow its drivers). Switching to M3 is a one-line change in a pull request, and
 only when the pooled backtest shows a PR-AUC gain whose bootstrap interval excludes zero. The
 decision and the numbers behind it go into this ADR when it happens.
+
+**Decision (28.10.2026): the reports show M3.** Real-data run
+[40684230866](https://github.com/Parsaka/bilanzwerk/actions/runs/40684230866), pooled backtest
+2014–2025 (156 566 observations, 1 403 events): PR-AUC M3 0.066, M2 0.026; difference +0.040,
+95 % bootstrap interval +0.028 to +0.055 (1 000 resamples over companies, `champion_check` in
+`answer.json`). M2 is also below M1 (H2 not held), so its drivers would explain a weaker model.
+M3's drivers per company come from SHAP (`top_3_drivers`); M2 stays in `fact_risk_score` as the
+explainable challenger.

@@ -34,7 +34,7 @@ vars:
   # Companies without a sector mapping (dim_company falls back to it); no sector benchmark
   unassigned_sector_code: "S99"
   # Model whose scores the reports show (ADR-007); the challenger stays in fact_risk_score
-  risk_champion_model: "M2_logit_z_wc"
+  risk_champion_model: "M3_lightgbm_all"
 
 models:
   bilanzwerk:

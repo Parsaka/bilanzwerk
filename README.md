@@ -9,36 +9,36 @@
 
 ## Die Antwort / The answer
 
-> Ergebnis des vollständigen Laufs auf den echten Daten (SEC FSDS 2009q2–2026q3, 1 655
+> Ergebnis des vollständigen Laufs auf den echten Daten (SEC FSDS 2009q2–2026q3, 1 661
 > Insolvenzen nach 8-K Item 1.03, rollierender Backtest 2014–2025, 1 000 Bootstrap-Ziehungen
 > über Unternehmen). Die Hypothesen wurden vorher festgelegt:
 > [ADR-001](docs/adr/ADR-001-hypotheses.md) (27.10.2026).
-> Lauf: [Actions 40666881232](https://github.com/Parsaka/bilanzwerk/actions/runs/40666881232),
+> Lauf: [Actions 40684230866](https://github.com/Parsaka/bilanzwerk/actions/runs/40684230866),
 > Zahlen: Branch `real-data-results`, `results/analysis/answer.json`.
 >
 > **H1 nicht bestätigt:** Das CCC-Signal wurde im Median 0,0 Monate vor der Insolvenz rot, das
-> Z''-Signal 6,2 Monate; Differenz −6,2 Monate (95%-KI −7,3 bis −4,6).
+> Z''-Signal 6,0 Monate; Differenz −6,0 Monate (95%-KI −7,4 bis −4,6).
 > **H2 nicht bestätigt:** PR-AUC M2 minus M1 = −0,004 (95%-KI −0,007 bis −0,001).
-> **H3 bestätigt:** PR-AUC sektorrelativ minus absolut = +0,009 (95%-KI +0,006 bis +0,013).
-> **H4 bestätigt:** Working-Capital-Potenzial gesamt 1 297 Mrd. EUR; größter Hebel Technologie
+> **H3 bestätigt:** PR-AUC sektorrelativ minus absolut = +0,009 (95%-KI +0,006 bis +0,012).
+> **H4 bestätigt:** Working-Capital-Potenzial gesamt 1 295 Mrd. EUR; größter Hebel Technologie
 > und Telekommunikation mit 328 Mrd. EUR.
 >
 > **English:** the full run on real data. H1 not held: the CCC flag turned red a median 0.0
-> months before bankruptcy, Z'' 6.2 months (difference −6.2, 95 % CI −7.3 to −4.6). H2 not held:
+> months before bankruptcy, Z'' 6.0 months (difference −6.0, 95 % CI −7.4 to −4.6). H2 not held:
 > adding working capital to Z'' lowers PR-AUC by 0.004 (CI −0.007 to −0.001). H3 held:
-> sector-relative KPIs add 0.009 PR-AUC (CI 0.006 to 0.013). H4 held: EUR 1,297 bn of working
+> sector-relative KPIs add 0.009 PR-AUC (CI 0.006 to 0.012). H4 held: EUR 1,295 bn of working
 > capital, EUR 328 bn of it in technology and telecoms.
 
 | | Hypothese | Ergebnis | Zahl | 95%-KI |
 |---|---|---|---|---|
-| H1 | Working Capital (CCC) warnt früher als Altman Z'' | nicht bestätigt | −6,2 Monate | −7,3 bis −4,6 |
+| H1 | Working Capital (CCC) warnt früher als Altman Z'' | nicht bestätigt | −6,0 Monate | −7,4 bis −4,6 |
 | H2 | Z''-Kennzahlen + Working Capital schlagen Z'' allein (PR-AUC) | nicht bestätigt | −0,004 | −0,007 bis −0,001 |
-| H3 | Sektorrelative Kennzahlen schlagen absolute | bestätigt | +0,009 | +0,006 bis +0,013 |
-| H4 | Working-Capital-Potenzial je Sektor ist wesentlich (Mrd. EUR) | bestätigt | 1 297 | – (Summe, kein Schätzer) |
+| H3 | Sektorrelative Kennzahlen schlagen absolute | bestätigt | +0,009 | +0,006 bis +0,012 |
+| H4 | Working-Capital-Potenzial je Sektor ist wesentlich (Mrd. EUR) | bestätigt | 1 295 | – (Summe, kein Schätzer) |
 
-**Wie man H1 lesen muss.** Von 630 Insolvenzen mit Kennzahlen hatten nur 26 (4 %) je eine rote
-CCC-Flagge, aber 398 (63 %) eine rote Z''-Flagge. Wo die CCC-Flagge kam, kam sie im Median
-4,6 Monate vorher (Z'': 11,4). Die CCC braucht DSO, DIO und DPO zugleich; ob die
+**Wie man H1 lesen muss.** Von 630 Insolvenzen mit Kennzahlen hatten nur 27 (4 %) je eine rote
+CCC-Flagge, aber 399 (63 %) eine rote Z''-Flagge. Wo die CCC-Flagge kam, kam sie im Median
+4,7 Monate vorher (Z'': 11,4). Die CCC braucht DSO, DIO und DPO zugleich; ob die
 seltenen Flaggen an fehlenden Größen liegen, ist noch nicht ausgewertet. Für die Watchlist
 heißt der Befund: Z'' warnt früher und öfter, die CCC-Flagge in ihrer jetzigen Form nicht.
 Unternehmen ohne Sektorzuordnung (S99) sind im H4-Potenzial nicht enthalten.
@@ -82,14 +82,14 @@ Aus dem Lauf auf echten Daten vom 28.10.2026; Felder mit „–“ sind noch nic
 |---|---|
 | Zeilen Abschlusswerte (FSDS `num`, 70 Quartale 2009q2–2026q3, geladen) | 188 865 277 |
 | Filings (FSDS `sub`) | 440 233 |
-| Beobachtungen im Modell / davon mit Label / Insolvenzen | 226 045 / 197 457 / 1 655 |
+| Beobachtungen im Modell / davon mit Label / Insolvenzen | 226 813 / 198 057 / 1 661 |
 | Ladezeit Vollhistorie | – |
 | Mapping-Abdeckung (us-gaap) | – |
 | Bilanzcheck bestanden (Ziel ≥ 98 %) | – |
 | LEI-Match-Quote / Precision / Recall (300 geprüfte Paare) | – |
-| PR-AUC M0 / M1 / M2 / M3 (gepoolt 2014–2025, 1 397 Ereignisse) | 0,027 / 0,030 / 0,026 / 0,060 |
-| PR-AUC M2r (sektorrelativ) / S1 (Hazard) | 0,035 / 0,029 |
-| Recall in den riskantesten 5 % M0 / M1 / M2 / M3 | 19 % / 22 % / 16 % / 35 % |
+| PR-AUC M0 / M1 / M2 / M3 (gepoolt 2014–2025, 1 403 Ereignisse) | 0,027 / 0,030 / 0,026 / 0,066 |
+| PR-AUC M2r (sektorrelativ) / S1 (Hazard) | 0,035 / 0,030 |
+| Recall in den riskantesten 5 % M0 / M1 / M2 / M3 | 20 % / 22 % / 17 % / 36 % |
 | Abfragezeit langsamste Visuals vorher → nachher | – |
 | Monatliche Kosten (Kapazität + Speicher) | – |
 
