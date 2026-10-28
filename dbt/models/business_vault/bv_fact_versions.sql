@@ -40,3 +40,6 @@ where
     -- subsequent events or contractual schedules (debt maturities, lease payments), not results
     -- of a period, and would create periods that "were known" before they ended.
     and (f.period_end is null or lf.period_end <= {{ bw_month_end('f.period_end') }})
+    -- and no period that had not ended when the filing was accepted (a wrong period in the
+    -- filing header would otherwise let it through)
+    and lf.period_end < cast(f.accepted_at as date)

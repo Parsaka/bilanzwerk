@@ -191,9 +191,15 @@ def to_matches(predictions: pd.DataFrame) -> pd.DataFrame:
 def load_inputs(warehouse: Path, gleif_countries: tuple[str, ...] = ("US",)) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Read SEC profiles and GLEIF entities from the local warehouse (DuckDB)."""
     con = duckdb.connect(str(warehouse), read_only=True)
+    # Only SEC registrants that filed a financial statement in the warehouse: the submissions
+    # file also lists ~1 M insiders, funds and individuals that never appear in the marts and
+    # would make the candidate pairs explode on the full data.
     sec = con.execute("""
-        select cik, company_name, business_city, business_state, business_zip, tickers
-        from staging.stg_sec_submissions__companies
+        select c.cik, c.company_name, c.business_city, c.business_state, c.business_zip, c.tickers
+        from staging.stg_sec_submissions__companies as c
+        where c.hk_company in (
+            select p.hk_company from business_vault.bv_company_periods as p
+        )
     """).df()
     placeholders = ", ".join("?" for _ in gleif_countries)
     gleif = con.execute(

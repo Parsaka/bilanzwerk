@@ -30,3 +30,14 @@ def test_postal_and_city():
     assert standardise_city("São Paulo") == "SAO PAULO"
     assert sec_country("CA") == "US"
     assert sec_country("X1") is None
+
+
+def test_missing_values_from_pandas_are_none():
+    """pandas gives NaN for empty address fields (seen in the real GLEIF and SEC data)."""
+    nan = float("nan")
+    assert standardise_city(nan) is None
+    assert standardise_name(nan) is None
+    assert standardise_postal_code(nan, "US") is None
+    assert standardise_postal_code("10001-1234", nan) == "100011234"
+    assert sec_country(nan) is None
+    assert standardise_postal_code(10001, "US") == "10001"

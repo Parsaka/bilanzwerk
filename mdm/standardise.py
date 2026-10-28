@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 import unicodedata
 
@@ -74,6 +75,14 @@ _SPACES = re.compile(r"\s+")
 _SEC_STATE_TAG = re.compile(r"\s*/[A-Z]{2}/?\s*$")
 
 
+def _text(value: object) -> str | None:
+    """Missing values arrive as None, NaN (pandas) or blanks; anything else as text."""
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return None
+    text = str(value).strip()
+    return text or None
+
+
 def ascii_upper(text: str) -> str:
     text = unicodedata.normalize("NFKD", text)
     text = "".join(ch for ch in text if not unicodedata.combining(ch))
@@ -82,7 +91,8 @@ def ascii_upper(text: str) -> str:
 
 def standardise_name(name: str | None) -> str | None:
     """'Apple Inc.' -> 'APPLE'; 'Siemens Aktiengesellschaft' -> 'SIEMENS'; 'ACME CORP /DE/' -> 'ACME'."""
-    if not name:
+    name = _text(name)
+    if name is None:
         return None
     text = ascii_upper(name)
     text = _SEC_STATE_TAG.sub("", text)
@@ -97,16 +107,18 @@ def standardise_name(name: str | None) -> str | None:
 
 
 def standardise_postal_code(code: str | None, country: str | None) -> str | None:
-    if not code:
+    code = _text(code)
+    if code is None:
         return None
     code = ascii_upper(code).replace(" ", "").replace("-", "")
-    if (country or "").upper() == "US":
+    if (_text(country) or "").upper() == "US":
         code = code[:5]
     return code or None
 
 
 def standardise_city(city: str | None) -> str | None:
-    if not city:
+    city = _text(city)
+    if city is None:
         return None
     text = _NON_ALNUM.sub(" ", ascii_upper(city))
     return _SPACES.sub(" ", text).strip() or None
@@ -170,7 +182,8 @@ US_STATES = {
 
 def sec_country(state_or_country: str | None) -> str | None:
     """SEC business address 'stateOrCountry' is a US state code or an EDGAR country code."""
-    if not state_or_country:
+    code = _text(state_or_country)
+    if code is None:
         return None
-    code = state_or_country.upper()
+    code = code.upper()
     return "US" if code in US_STATES else None

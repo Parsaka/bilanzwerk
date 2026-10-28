@@ -81,5 +81,5 @@ seeds:
 
 tests:
   bilanzwerk:
-    +store_failures: false
+    # failing rows are stored only on request (dbt build --store-failures, real-data run)
     +severity: error
