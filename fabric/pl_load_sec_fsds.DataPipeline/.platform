@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "pl_load_sec_fsds",
+    "description": "Load SEC Financial Statement Data Sets (quarterly (checked daily, loads a new quarter within 24 h))."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "9c13b1b6-daf2-5c60-b6b3-bbf738a7bca4"
+  }
+}

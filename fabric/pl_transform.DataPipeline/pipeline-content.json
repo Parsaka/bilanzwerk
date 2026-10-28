@@ -1,0 +1,218 @@
+{
+  "properties": {
+    "description": "Expose MDM and model outputs as tables, dbt build, refresh the semantic model, data quality alert.",
+    "activities": [
+      {
+        "name": "Files to tables analysis",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.04:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 300,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "bbcfc82f-d472-5cc0-8733-bb1ed9db95b0",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "source": {
+              "value": "analysis",
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "Files to tables mdm",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.04:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 300,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "bbcfc82f-d472-5cc0-8733-bb1ed9db95b0",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "source": {
+              "value": "mdm",
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "dbt build",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "Files to tables analysis",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "Files to tables mdm",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.08:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 300,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "09501bab-bab3-5f49-b9d0-e28944f5e607",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "dbt_target": {
+              "value": "@pipeline().parameters.Stage",
+              "type": "Expression"
+            }
+          }
+        }
+      },
+      {
+        "name": "Refresh semantic model",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "dbt build",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 120,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "a9384cbd-463c-5180-a019-ec0d7c6caee4",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "semantic_model": {
+              "value": "Bilanzwerk",
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "Data quality under target",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "dbt build",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@less(float(json(activity('dbt build').output.result.exitValue).dq_pass_rate), pipeline().parameters.DqTarget)",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [
+            {
+              "name": "Alert data quality",
+              "type": "Office365Outlook",
+              "dependsOn": [],
+              "typeProperties": {
+                "inputs": {
+                  "method": "post",
+                  "path": "/v2/Mail",
+                  "body": {
+                    "To": "@pipeline().parameters.AlertEmail",
+                    "Subject": "Bilanzwerk: balance check under target",
+                    "Body": "<p>Balance-check pass rate @{json(activity('dbt build').output.result.exitValue).dq_pass_rate} is under the target @{pipeline().parameters.DqTarget}; failed rules: @{json(activity('dbt build').output.result.exitValue).rules_failed}.</p><p>Data quality page in the report; runbook section Data quality.</p>",
+                    "Sensitivity": "",
+                    "Importance": "High"
+                  }
+                }
+              }
+            }
+          ],
+          "ifFalseActivities": []
+        }
+      },
+      {
+        "name": "Alert dbt build failed",
+        "type": "Office365Outlook",
+        "dependsOn": [
+          {
+            "activity": "dbt build",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "inputs": {
+            "method": "post",
+            "path": "/v2/Mail",
+            "body": {
+              "To": "@pipeline().parameters.AlertEmail",
+              "Subject": "Bilanzwerk: master pipeline failed",
+              "Body": "<p>Master pipeline failed (run @{pipeline().RunId}). The semantic model was not refreshed; reports show the previous load.</p><p>Runbook: docs/runbook.md, section Recovery.</p>",
+              "Sensitivity": "",
+              "Importance": "High"
+            }
+          }
+        }
+      },
+      {
+        "name": "Alert Refresh semantic model failed",
+        "type": "Office365Outlook",
+        "dependsOn": [
+          {
+            "activity": "Refresh semantic model",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "inputs": {
+            "method": "post",
+            "path": "/v2/Mail",
+            "body": {
+              "To": "@pipeline().parameters.AlertEmail",
+              "Subject": "Bilanzwerk: master pipeline failed",
+              "Body": "<p>Master pipeline failed (run @{pipeline().RunId}). The semantic model was not refreshed; reports show the previous load.</p><p>Runbook: docs/runbook.md, section Recovery.</p>",
+              "Sensitivity": "",
+              "Importance": "High"
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "AlertEmail": {
+        "type": "string",
+        "defaultValue": "#{ALERT_EMAIL}#"
+      },
+      "Stage": {
+        "type": "string",
+        "defaultValue": "#{STAGE}#"
+      },
+      "DqTarget": {
+        "type": "float",
+        "defaultValue": 0.98
+      }
+    }
+  }
+}

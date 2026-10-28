@@ -1,0 +1,40 @@
+table: fact_financial_line
+schema: marts
+owner: Reporting
+grain: one row per company, period, line item, scenario and version
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: company_key
+  type: string
+- name: company_id
+  type: string
+- name: period_key
+  type: string
+- name: period_end_date
+  type: date
+- name: line_item_key
+  type: string
+- name: scenario_key
+  type: string
+- name: version
+  type: string
+- name: currency_key
+  type: string
+- name: amount_local
+  type: float
+- name: amount_eur
+  type: float
+- name: amount_ttm_local
+  type: float
+- name: amount_ttm_eur
+  type: float
+- name: fx_rate
+  type: float
+- name: derivation
+  type: string
+- name: source_filing
+  type: string
+- name: available_at
+  type: timestamp

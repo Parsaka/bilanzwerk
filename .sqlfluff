@@ -1,0 +1,45 @@
+[sqlfluff]
+templater = dbt
+dialect = duckdb
+max_line_length = 120
+# Rules that fight the house style or the cross-database macros:
+#   AM04 select * in CTEs that only filter; ST06 column order is by meaning, not by type;
+#   RF04 keywords such as "value" and "name" are column names in the sources;
+#   LT05 long jinja macro calls; ST05 subqueries in joins are deliberate in a few marts;
+#   AL03 later branches of a UNION ALL take their names from the first branch (rule tables).
+exclude_rules = AM04, ST06, RF04, LT05, ST05, AL03
+large_file_skip_byte_limit = 0
+
+[sqlfluff:templater:dbt]
+project_dir = dbt
+profiles_dir = dbt
+profile = bilanzwerk
+target = local
+
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = True
+
+[sqlfluff:indentation]
+tab_space_size = 4
+indent_unit = space
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:aliasing.table]
+aliasing = explicit
+
+[sqlfluff:rules:aliasing.column]
+aliasing = explicit
+
+[sqlfluff:rules:ambiguous.column_references]
+group_by_and_order_by_style = consistent

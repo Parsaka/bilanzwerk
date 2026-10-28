@@ -1,0 +1,58 @@
+table: dim_company
+schema: marts
+owner: Master Data / Stammdaten
+grain: one row per golden company and SCD2 version (company_id, valid_from)
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: company_key
+  type: string
+- name: company_id
+  type: string
+- name: cik
+  type: integer
+- name: lei
+  type: string
+- name: company_name
+  type: string
+- name: legal_name
+  type: string
+- name: sic
+  type: integer
+- name: sector_key
+  type: string
+- name: country_code
+  type: string
+- name: hq_city
+  type: string
+- name: hq_postal_code
+  type: string
+- name: legal_form_code
+  type: string
+- name: gleif_entity_status
+  type: string
+- name: gleif_registration_status
+  type: string
+- name: company_status
+  type: string
+- name: match_source
+  type: string
+- name: match_probability
+  type: float
+- name: is_lei_matched
+  type: integer
+- name: n_ciks
+  type: integer
+- name: is_financial
+  type: integer
+- name: version_number
+  type: integer
+- name: valid_from
+  type: date
+- name: valid_to
+  type: date
+- name: is_current
+  type: integer
+- name: last_accepted_at
+  type: timestamp

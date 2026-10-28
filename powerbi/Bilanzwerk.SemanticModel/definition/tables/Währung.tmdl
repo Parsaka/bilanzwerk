@@ -1,0 +1,29 @@
+/// EUR oder Landeswährung. Die Basismessung [Betrag] liest die Auswahl; Landeswährung nur bei einer Währung im Kontext.
+table 'Währung'
+	lineageTag: f8cccd05-4614-5741-8669-d21b3639acd0
+
+	calculationGroup
+		precedence: 30
+
+		calculationItem EUR = SELECTEDMEASURE ()
+			ordinal: 0
+
+		calculationItem Lokal = SELECTEDMEASURE ()
+			ordinal: 1
+
+	column 'Währung'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+		lineageTag: 3008fe03-3156-5119-8ea9-031549c2d388
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: Ordinal
+		lineageTag: 986d794c-bbee-5f0c-93a0-cd42e8adc7e6
+
+	partition 'Währung' = calculationGroup
+		mode: import

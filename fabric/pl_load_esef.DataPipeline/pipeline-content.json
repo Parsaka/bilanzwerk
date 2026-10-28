@@ -1,0 +1,122 @@
+{
+  "properties": {
+    "description": "ESEF filings via filings.xbrl.org: download, verify, land, manifest, expose as Delta tables. Schedule: weekly.",
+    "activities": [
+      {
+        "name": "Load",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.06:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 300,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "36ff8a9f-7001-5c78-bba7-7e5b70bfac38",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "source": {
+              "value": "esef",
+              "type": "string"
+            },
+            "key_vault_uri": {
+              "value": "@pipeline().parameters.KeyVaultUri",
+              "type": "Expression"
+            }
+          }
+        }
+      },
+      {
+        "name": "Files to tables",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "Load",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.04:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 300,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "bbcfc82f-d472-5cc0-8733-bb1ed9db95b0",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "source": {
+              "value": "esef",
+              "type": "string"
+            }
+          }
+        }
+      },
+      {
+        "name": "Alert Load failed",
+        "type": "Office365Outlook",
+        "dependsOn": [
+          {
+            "activity": "Load",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "inputs": {
+            "method": "post",
+            "path": "/v2/Mail",
+            "body": {
+              "To": "@pipeline().parameters.AlertEmail",
+              "Subject": "Bilanzwerk: pl_load_esef failed",
+              "Body": "<p>Pipeline pl_load_esef failed in workspace @{pipeline().DataFactory} (run @{pipeline().RunId}).</p><p>Runbook: docs/runbook.md, section Recovery.</p>",
+              "Sensitivity": "",
+              "Importance": "High"
+            }
+          }
+        }
+      },
+      {
+        "name": "Alert Files to tables failed",
+        "type": "Office365Outlook",
+        "dependsOn": [
+          {
+            "activity": "Files to tables",
+            "dependencyConditions": [
+              "Failed"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "inputs": {
+            "method": "post",
+            "path": "/v2/Mail",
+            "body": {
+              "To": "@pipeline().parameters.AlertEmail",
+              "Subject": "Bilanzwerk: pl_load_esef failed",
+              "Body": "<p>Pipeline pl_load_esef failed in workspace @{pipeline().DataFactory} (run @{pipeline().RunId}).</p><p>Runbook: docs/runbook.md, section Recovery.</p>",
+              "Sensitivity": "",
+              "Importance": "High"
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "KeyVaultUri": {
+        "type": "string",
+        "defaultValue": "#{KEY_VAULT_URI}#"
+      },
+      "AlertEmail": {
+        "type": "string",
+        "defaultValue": "#{ALERT_EMAIL}#"
+      }
+    }
+  }
+}

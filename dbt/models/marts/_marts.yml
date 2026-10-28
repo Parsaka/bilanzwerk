@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: dim_company
+    description: Golden record per company, SCD Type 2 on name and sector.
+    columns:
+      - name: company_key
+        tests: [unique, not_null]
+      - name: company_id
+        tests: [not_null]
+      - name: sector_key
+        tests:
+          - relationships: {to: ref('dim_sector'), field: sector_key}
+    tests:
+      - unique_combination: {columns: ['company_id', 'valid_from']}
+      - scd2_no_overlap: {key: company_id}
+
+  - name: dim_period
+    columns:
+      - name: period_key
+        tests: [unique, not_null]
+      - name: fiscal_quarter
+        tests: [{values_between: {min_value: 1, max_value: 4}}]
+
+  - name: dim_line_item
+    columns:
+      - name: line_item_key
+        tests: [unique, not_null]
+
+  - name: dim_kpi
+    columns:
+      - name: kpi_key
+        tests: [unique, not_null]
+
+  - name: dim_sector
+    columns:
+      - name: sector_key
+        tests: [unique, not_null]
+
+  - name: dim_date
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+
+  - name: dim_scenario
+    columns:
+      - name: scenario_key
+        tests: [unique, not_null]
+
+  - name: dim_currency
+    columns:
+      - name: currency_key
+        tests: [unique, not_null]
+
+  - name: fact_financial_line
+    description: "Grain: company, fiscal period, line item, scenario, version."
+    tests:
+      - unique_combination: {columns: ['company_id', 'period_key', 'line_item_key', 'scenario_key', 'version']}
+    columns:
+      - name: company_key
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_company'), field: company_key}
+      - name: period_key
+        tests:
+          - relationships: {to: ref('dim_period'), field: period_key}
+      - name: line_item_key
+        tests:
+          - relationships: {to: ref('dim_line_item'), field: line_item_key}
+      - name: scenario_key
+        tests:
+          - relationships: {to: ref('dim_scenario'), field: scenario_key}
+      - name: currency_key
+        tests:
+          - matches_iso_currency:
+              config: {where: "currency_key <> 'shares'"}
+      - name: version
+        tests: [{accepted_values: {values: ['first_reported', 'latest']}}]
+
+  - name: fact_kpi
+    description: "Grain: company, fiscal period, KPI, version."
+    tests:
+      - unique_combination: {columns: ['company_id', 'period_key', 'kpi_key', 'version']}
+    columns:
+      - name: kpi_key
+        tests:
+          - relationships: {to: ref('dim_kpi'), field: kpi_key}
+      - name: sector_percentile
+        tests: [{values_between: {min_value: 0, max_value: 1}}]
+      - name: red_flag
+        tests: [{accepted_values: {values: [0, 1], quote: false}}]
+      - name: value
+        tests:
+          - values_between: {min_value: 0, max_value: 3650, where: "kpi_key in ('FILING_LAG_D')"}
+
+  - name: fact_event
+    tests:
+      - unique_combination: {columns: ['company_id', 'event_date', 'event_type']}
+    columns:
+      - name: event_type
+        tests:
+          - accepted_values:
+              values: ['BANKRUPTCY_8K_103', 'DEREGISTRATION_FORM_15', 'DELISTING_FORM_25', 'LATE_FILING_NOTICE']
+
+  - name: fact_wc_opportunity
+    tests:
+      - unique_combination: {columns: ['company_id', 'period_key']}
+    columns:
+      - name: cash_opportunity_eur
+        tests: [not_null, {values_between: {min_value: 0}}]
+
+  - name: fact_risk_score
+    tests:
+      - unique_combination: {columns: ['company_id', 'as_of_date', 'model_name']}
+    columns:
+      - name: probability_12m
+        tests: [{values_between: {min_value: 0, max_value: 1}}]
+      - name: risk_band
+        tests: [{accepted_values: {values: ['green', 'yellow', 'red']}}]
+      - name: is_champion
+        tests: [{accepted_values: {values: [0, 1], quote: false}}]
+
+  - name: fact_data_quality
+    tests:
+      - unique_combination: {columns: ['run_id', 'rule_code', 'table_name']}
+    columns:
+      - name: status
+        tests: [{accepted_values: {values: ['pass', 'fail', 'info', 'no_data']}}]

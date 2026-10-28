@@ -1,0 +1,120 @@
+version: 2
+
+models:
+  - name: hub_company
+    description: One row per company business key ('CIK', cik) or ('LEI', lei).
+    columns:
+      - name: hk_company
+        tests: [unique, not_null, hash_is_sha256_hex]
+    tests:
+      - unique_combination: {columns: ['company_bk_type', 'company_bk']}
+      - row_count_reconciles: {compare_model: ref('stg_all__companies'), compare_column: hk_company}
+
+  - name: hub_filing
+    columns:
+      - name: hk_filing
+        tests: [unique, not_null, hash_is_sha256_hex]
+      - name: filing_bk
+        tests: [unique, not_null]
+    tests:
+      - row_count_reconciles: {compare_model: ref('stg_all__filings'), compare_column: hk_filing}
+      - row_count_reconciles: {compare_model: ref('stg_sec_submissions__filings'), compare_column: hk_filing}
+
+  - name: hub_concept
+    columns:
+      - name: hk_concept
+        tests: [unique, not_null, hash_is_sha256_hex]
+    tests:
+      - unique_combination: {columns: ['taxonomy', 'tag']}
+      - row_count_reconciles: {compare_model: ref('stg_all__concepts'), compare_column: hk_concept}
+
+  - name: link_filing_company
+    columns:
+      - name: hk_filing_company
+        tests: [unique, not_null]
+      - name: hk_filing
+        tests:
+          - relationships: {to: ref('hub_filing'), field: hk_filing}
+      - name: hk_company
+        tests:
+          - relationships: {to: ref('hub_company'), field: hk_company}
+
+  - name: link_filing_registrant
+    description: The registrant whose statements a filing contains. Exactly one per filing.
+    columns:
+      - name: hk_filing_company
+        tests: [unique, not_null]
+      - name: hk_filing
+        tests:
+          - unique
+          - relationships: {to: ref('hub_filing'), field: hk_filing}
+      - name: hk_company
+        tests:
+          - relationships: {to: ref('hub_company'), field: hk_company}
+
+  - name: link_fact
+    columns:
+      - name: hk_fact
+        tests: [unique, not_null]
+      - name: hk_filing
+        tests:
+          - relationships: {to: ref('hub_filing'), field: hk_filing}
+      - name: hk_concept
+        tests:
+          - relationships: {to: ref('hub_concept'), field: hk_concept}
+    tests:
+      - row_count_reconciles: {compare_model: ref('stg_all__facts'), compare_column: hk_fact}
+
+  - name: link_company_parent
+    columns:
+      - name: hk_company_parent
+        tests: [unique, not_null]
+
+  - name: link_presentation
+    columns:
+      - name: hk_presentation
+        tests: [unique, not_null]
+
+  - name: sat_company_sec
+    tests:
+      - unique_combination: {columns: ['hk_company', 'effective_from', 'hd_company_sec']}
+    columns:
+      - name: hk_company
+        tests:
+          - relationships: {to: ref('hub_company'), field: hk_company}
+
+  - name: sat_company_sec_profile
+    tests:
+      - unique_combination: {columns: ['hk_company', 'effective_from']}
+
+  - name: sat_company_gleif
+    tests:
+      - unique_combination: {columns: ['hk_company', 'effective_from']}
+
+  - name: sat_filing
+    tests:
+      - unique_combination: {columns: ['hk_filing', 'effective_from']}
+    columns:
+      - name: hk_filing
+        tests:
+          - relationships: {to: ref('hub_filing'), field: hk_filing}
+
+  - name: sat_fact_value
+    tests:
+      - unique_combination: {columns: ['hk_fact', 'effective_from']}
+    columns:
+      - name: hk_fact
+        tests:
+          - relationships: {to: ref('link_fact'), field: hk_fact}
+
+  - name: sat_concept_def
+    tests:
+      - unique_combination: {columns: ['hk_concept', 'effective_from']}
+
+  - name: sat_event
+    tests:
+      - unique_combination: {columns: ['hk_filing', 'effective_from']}
+
+  - name: sat_presentation
+    tests:
+      - unique_combination: {columns: ['hk_presentation', 'effective_from']}

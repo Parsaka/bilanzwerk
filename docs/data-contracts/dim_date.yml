@@ -1,0 +1,26 @@
+table: dim_date
+schema: marts
+owner: Reporting
+grain: one row per calendar day 2005-01-01 to 2030-12-31
+freshness: changes only with a seed change (pull request)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: date_key
+  type: date
+- name: date_day
+  type: date
+- name: calendar_year
+  type: integer
+- name: calendar_quarter
+  type: integer
+- name: calendar_month
+  type: integer
+- name: month_name_de
+  type: string
+- name: month_end_date
+  type: date
+- name: is_month_end
+  type: integer
+- name: year_month
+  type: integer

@@ -1,0 +1,4 @@
+scenario_code,scenario_de,scenario_en,description
+IST,Ist,Actual,Values as published in the filings
+PLAN,Plan,Plan,Revenue forecast frozen each January from data public on 1 January
+FC,Forecast,Forecast,Rolling revenue forecast from the latest available quarter

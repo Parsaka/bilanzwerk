@@ -1,0 +1,86 @@
+/// Kalender für Stichtage, Ereignisse und Periodenenden.
+table dim_date
+	dataCategory: Time
+	lineageTag: aeaad585-e865-5455-9a74-4aeb74b2f4bb
+	sourceLineageTag: [marts].[dim_date]
+
+	column date_key
+		dataType: dateTime
+		isHidden
+		isKey
+		summarizeBy: none
+		sourceColumn: date_key
+		lineageTag: 97a66142-d053-52e4-b151-d56b759f80e1
+		sourceLineageTag: date_key
+
+	column date_day
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		summarizeBy: none
+		sourceColumn: date_day
+		lineageTag: e7f7650e-fe29-50a4-908b-a55803be22c2
+		sourceLineageTag: date_day
+
+	column calendar_year
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: calendar_year
+		lineageTag: 8b61ae95-29ff-5316-b5d2-5d9a76825182
+		sourceLineageTag: calendar_year
+
+	column calendar_quarter
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: calendar_quarter
+		lineageTag: 7d1fd38c-4b45-571e-baab-b96bd8462650
+		sourceLineageTag: calendar_quarter
+
+	column calendar_month
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: calendar_month
+		lineageTag: 71813571-b586-5dd3-a672-55a70860c706
+		sourceLineageTag: calendar_month
+
+	column month_name_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: month_name_de
+		lineageTag: 61e6c661-774a-58e2-83d6-5782db96a36c
+		sourceLineageTag: month_name_de
+
+	column month_end_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		summarizeBy: none
+		sourceColumn: month_end_date
+		lineageTag: 4cffd72d-6def-5490-b1b5-9baafb105c62
+		sourceLineageTag: month_end_date
+
+	column is_month_end
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_month_end
+		lineageTag: a5ee4d96-64f2-5501-a8fe-facc423942f7
+		sourceLineageTag: is_month_end
+
+	column year_month
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: year_month
+		lineageTag: 206795c4-9032-5f47-afe0-18225b105165
+		sourceLineageTag: year_month
+
+	partition dim_date = entity
+		mode: directLake
+		source
+			entityName: dim_date
+			schemaName: marts
+			expressionSource: DatabaseQuery
+
+	annotation __PBI_TimeIntelligenceEnabled = 0

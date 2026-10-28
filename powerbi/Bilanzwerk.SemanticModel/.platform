@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Bilanzwerk"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "66042c46-56b2-5d67-9905-e32dd47acc4e"
+  }
+}

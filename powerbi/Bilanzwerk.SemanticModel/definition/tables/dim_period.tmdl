@@ -1,0 +1,147 @@
+/// Geschäftsperioden je Unternehmen mit Veröffentlichungsverzug.
+table dim_period
+	lineageTag: 1760360d-1d75-5a37-9896-54518f31894f
+	sourceLineageTag: [marts].[dim_period]
+
+	column period_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: period_key
+		lineageTag: 21540d6c-d8fb-5bde-939e-2aeee9ef45c2
+		sourceLineageTag: period_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: 124e3845-0db8-5228-ac4a-ebf5de85f026
+		sourceLineageTag: company_id
+
+	column period_end_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		summarizeBy: none
+		sourceColumn: period_end_date
+		lineageTag: 3a3df4a9-8b78-57c8-9505-b659db25043c
+		sourceLineageTag: period_end_date
+
+	column fiscal_year
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: fiscal_year
+		lineageTag: 6d51a65a-00c0-5c5e-af08-2b40c19a48d0
+		sourceLineageTag: fiscal_year
+
+	column fiscal_quarter
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: fiscal_quarter
+		lineageTag: 63a11ee0-6a55-5f7e-a2dd-9a8e091c11c2
+		sourceLineageTag: fiscal_quarter
+
+	column fiscal_period_label
+		dataType: string
+		summarizeBy: none
+		sourceColumn: fiscal_period_label
+		lineageTag: 22bd01b3-4608-5e8f-a2f2-1c617e4f2e94
+		sourceLineageTag: fiscal_period_label
+
+	column is_fiscal_year_end
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_fiscal_year_end
+		lineageTag: 323f9528-8319-5d3f-b5ac-c55aed1f0fa6
+		sourceLineageTag: is_fiscal_year_end
+
+	column fye_month
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: fye_month
+		lineageTag: baf8c5a6-bad9-54d7-92ff-a53c9d6d8d12
+		sourceLineageTag: fye_month
+
+	column calendar_year
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: calendar_year
+		lineageTag: 5490d492-0aeb-5eba-a5d1-36a2f036d684
+		sourceLineageTag: calendar_year
+
+	column calendar_quarter
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: calendar_quarter
+		lineageTag: 345c824f-7ecb-59ac-bbb0-ea3492092d1d
+		sourceLineageTag: calendar_quarter
+
+	column sec_fiscal_year
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: sec_fiscal_year
+		lineageTag: ae424bad-63d6-5c48-90f3-ddf4302abdb7
+		sourceLineageTag: sec_fiscal_year
+
+	column sec_fiscal_period
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: sec_fiscal_period
+		lineageTag: afb030ff-c645-5552-93ab-91ad704b86d1
+		sourceLineageTag: sec_fiscal_period
+
+	column first_form
+		dataType: string
+		summarizeBy: none
+		sourceColumn: first_form
+		lineageTag: 6846bb5f-d828-5dd3-9d3e-c39fb18e60df
+		sourceLineageTag: first_form
+
+	column first_filing
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: first_filing
+		lineageTag: 701dfda9-e43b-54a7-a601-90e63f16b5b1
+		sourceLineageTag: first_filing
+
+	column first_accepted_at
+		dataType: dateTime
+		formatString: dd.MM.yyyy HH:mm
+		summarizeBy: none
+		sourceColumn: first_accepted_at
+		lineageTag: 57c593fb-c7fb-55d8-9bbc-10bfe0cca961
+		sourceLineageTag: first_accepted_at
+
+	column filing_lag_days
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: filing_lag_days
+		lineageTag: 3f98b584-14fc-519c-b08c-149fdc5ec906
+		sourceLineageTag: filing_lag_days
+
+	column is_filed_period
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_filed_period
+		lineageTag: 9cd9f0ff-1a00-5f3a-b34d-0ffe050dcdbf
+		sourceLineageTag: is_filed_period
+
+	partition dim_period = entity
+		mode: directLake
+		source
+			entityName: dim_period
+			schemaName: marts
+			expressionSource: DatabaseQuery

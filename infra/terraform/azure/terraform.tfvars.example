@@ -1,0 +1,5 @@
+subscription_id    = "00000000-0000-0000-0000-000000000000"
+capacity_admins    = ["parsa.kamali.data@gmail.com"]
+alert_email        = "parsa.kamali.data@gmail.com"
+monthly_budget = 60
+# sec_user_agent comes from TF_VAR_sec_user_agent (GitHub variable), never from a file in Git.

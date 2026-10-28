@@ -1,0 +1,70 @@
+/// 11 Sektoren mit SIC-Bereichen und NACE-Abschnitten.
+table dim_sector
+	lineageTag: 2295e70c-ddd6-50f8-9451-e336ecf8b8f5
+	sourceLineageTag: [marts].[dim_sector]
+
+	column sector_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: sector_key
+		lineageTag: 6be37980-bb2a-57c4-89ed-d17c2b777e28
+		sourceLineageTag: sector_key
+
+	column sector_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sector_code
+		lineageTag: 0c46e621-8f9c-5544-81c7-586c07800b0a
+		sourceLineageTag: sector_code
+
+	column sector_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sector_de
+		lineageTag: e1f4d2b9-9674-54f9-b719-5a25abed5bdc
+		sourceLineageTag: sector_de
+
+	column sector_en
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sector_en
+		lineageTag: b484282e-46c0-5221-8542-5e2e40a2726b
+		sourceLineageTag: sector_en
+
+	column sort_order
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: sort_order
+		lineageTag: a61a7a38-ad2d-525e-8226-22d8d17f055a
+		sourceLineageTag: sort_order
+
+	column is_financial
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_financial
+		lineageTag: 5f3e7744-d10c-5d02-ac0b-2d50e441531c
+		sourceLineageTag: is_financial
+
+	column sic_ranges
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sic_ranges
+		lineageTag: 148f5492-6170-536c-b3b3-31f8724cd4ab
+		sourceLineageTag: sic_ranges
+
+	column nace_sections
+		dataType: string
+		summarizeBy: none
+		sourceColumn: nace_sections
+		lineageTag: d4cde198-0022-5be4-9646-b84703f5609b
+		sourceLineageTag: nace_sections
+
+	partition dim_sector = entity
+		mode: directLake
+		source
+			entityName: dim_sector
+			schemaName: marts
+			expressionSource: DatabaseQuery

@@ -1,0 +1,67 @@
+relationship 0f5928e5-87f0-557e-b417-12fe14830e22
+	fromColumn: fact_financial_line.company_key
+	toColumn: dim_company.company_key
+
+relationship 41beaac2-e544-52ed-ac44-22fea5586779
+	fromColumn: fact_financial_line.period_key
+	toColumn: dim_period.period_key
+
+relationship 8108e006-26c4-5f13-a3b1-4c6379ac0b98
+	fromColumn: fact_financial_line.period_end_date
+	toColumn: dim_date.date_key
+
+relationship 4a69d766-0d00-5aa1-b021-ba90ea4c1d94
+	fromColumn: fact_financial_line.line_item_key
+	toColumn: dim_line_item.line_item_key
+
+relationship 09d3ca54-bb65-5262-b6c9-23c233fb26b9
+	fromColumn: fact_financial_line.scenario_key
+	toColumn: dim_scenario.scenario_key
+
+relationship 8482aceb-dba3-553d-9bfe-d0f28d3abdc3
+	fromColumn: fact_financial_line.currency_key
+	toColumn: dim_currency.currency_key
+
+relationship 886fd9c4-320f-589c-bf31-5afd61ee3f7e
+	fromColumn: fact_kpi.company_key
+	toColumn: dim_company.company_key
+
+relationship 2a187d51-e419-5509-8a8c-90ba95d8042f
+	fromColumn: fact_kpi.period_key
+	toColumn: dim_period.period_key
+
+relationship 4aa03bab-e104-57ad-90c9-9ce2b7f93b23
+	fromColumn: fact_kpi.period_end_date
+	toColumn: dim_date.date_key
+
+relationship 04cf5f20-4009-5b82-a02e-f88c931fd26d
+	fromColumn: fact_kpi.kpi_key
+	toColumn: dim_kpi.kpi_key
+
+relationship 08678022-5ab2-5373-9268-dd3b2c5a5b0c
+	fromColumn: fact_event.company_key
+	toColumn: dim_company.company_key
+
+relationship 33ec50b9-4de7-5e71-b6b6-93051d9748e1
+	fromColumn: fact_event.event_date
+	toColumn: dim_date.date_key
+
+relationship 175aa918-0119-5206-be4e-65bd2d9722dc
+	fromColumn: fact_wc_opportunity.company_key
+	toColumn: dim_company.company_key
+
+relationship 932fd32a-85a7-5b12-ae01-31ac77adc3e3
+	fromColumn: fact_wc_opportunity.period_end_date
+	toColumn: dim_date.date_key
+
+relationship dceaa24f-cc1f-573d-8672-e93651c19ecc
+	fromColumn: fact_risk_score.company_key
+	toColumn: dim_company.company_key
+
+relationship a3df8354-d09b-5389-9442-6fb753903939
+	fromColumn: fact_risk_score.as_of_date
+	toColumn: dim_date.date_key
+
+relationship e99ac3b4-7826-5c12-8158-6912061da401
+	fromColumn: dim_company.sector_key
+	toColumn: dim_sector.sector_key

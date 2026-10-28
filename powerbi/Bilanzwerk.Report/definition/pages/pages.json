@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json",
+  "pageOrder": [
+    "p01_antwort",
+    "p02_ueberblick",
+    "p03_bilanz",
+    "p04_guv",
+    "p05_working_capital",
+    "p06_peer",
+    "p07_fruehwarnung",
+    "p08_fallstudien",
+    "p09_wc_potenzial",
+    "p10_plan_ist",
+    "p11_datenqualitaet"
+  ],
+  "activePageName": "p01_antwort"
+}

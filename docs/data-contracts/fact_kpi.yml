@@ -1,0 +1,32 @@
+table: fact_kpi
+schema: marts
+owner: Controlling / Credit Risk
+grain: one row per company, period, KPI and version
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: company_key
+  type: string
+- name: company_id
+  type: string
+- name: period_key
+  type: string
+- name: period_end_date
+  type: date
+- name: kpi_key
+  type: string
+- name: version
+  type: string
+- name: value
+  type: float
+- name: sector_percentile
+  type: float
+- name: change_1q
+  type: float
+- name: change_4q
+  type: float
+- name: red_flag
+  type: integer
+- name: available_at
+  type: timestamp

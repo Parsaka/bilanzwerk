@@ -1,0 +1,87 @@
+name: bilanzwerk
+version: "0.1.0"
+config-version: 2
+profile: bilanzwerk
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+snapshot-paths: ["snapshots"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Hash key settings (docs/adr/ADR-005-data-vault-macros.md)
+  hash_delimiter: "||"
+  hash_null_placeholder: ""
+  # Analysis scope: SIC 6000-6799 (banks, insurers, funds) stay out of the model
+  financial_sic_from: 6000
+  financial_sic_to: 6799
+  # Point-in-time version labels used in the fact grain
+  version_first_reported: "first_reported"
+  version_latest: "latest"
+  # Data quality thresholds (docs/runbook.md, service levels)
+  balance_check_tolerance: 0.005
+  balance_check_target_pass_rate: 0.98
+  scale_outlier_factor: 1000
+  # KPI red flag: CCC above this sector percentile and rising
+  ccc_red_flag_percentile: 0.80
+  zscore_distress_threshold: 1.1
+  zscore_safe_threshold: 2.6
+  # Sector medians need enough peers to mean something (H4)
+  wc_min_sector_peers: 5
+  # Companies without a sector mapping (dim_company falls back to it); no sector benchmark
+  unassigned_sector_code: "S99"
+  # Model whose scores the reports show (ADR-007); the challenger stays in fact_risk_score
+  risk_champion_model: "M3_lightgbm_all"
+
+models:
+  bilanzwerk:
+    +persist_docs: {relation: true, columns: true}
+    staging:
+      +schema: staging
+      +materialized: view
+      +tags: ["staging"]
+    raw_vault:
+      +schema: raw_vault
+      +materialized: incremental
+      +incremental_strategy: append
+      +on_schema_change: fail
+      +tags: ["raw_vault"]
+    business_vault:
+      +schema: business_vault
+      +materialized: table
+      +tags: ["business_vault"]
+    intermediate:
+      +schema: intermediate
+      +materialized: table
+      +tags: ["intermediate"]
+    marts:
+      +schema: marts
+      +materialized: table
+      +tags: ["marts"]
+
+seeds:
+  bilanzwerk:
+    +schema: reference
+    +quote_columns: false
+    # Header-only seeds need explicit text types (Fabric's bare varchar is varchar(1)).
+    stewardship_decisions:
+      +column_types:
+        source_company_bk_type: "{{ 'varchar(3)' if target.type == 'fabric' else 'varchar' }}"
+        source_company_bk: "{{ 'varchar(20)' if target.type == 'fabric' else 'varchar' }}"
+        lei: "{{ 'varchar(20)' if target.type == 'fabric' else 'varchar' }}"
+        decision: "{{ 'varchar(10)' if target.type == 'fabric' else 'varchar' }}"
+        decided_by: "{{ 'varchar(100)' if target.type == 'fabric' else 'varchar' }}"
+        decided_at: date
+        note: "{{ 'varchar(500)' if target.type == 'fabric' else 'varchar' }}"
+    sector_team_users:
+      +column_types:
+        user_principal_name: "{{ 'varchar(200)' if target.type == 'fabric' else 'varchar' }}"
+        sector_code: "{{ 'varchar(3)' if target.type == 'fabric' else 'varchar' }}"
+
+tests:
+  bilanzwerk:
+    # failing rows are stored only on request (dbt build --store-failures, real-data run)
+    +severity: error

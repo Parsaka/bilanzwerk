@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_dbt_build",
+    "description": "Runs dbt build against the warehouse of this workspace and returns the data quality pass rate."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "09501bab-bab3-5f49-b9d0-e28944f5e607"
+  }
+}

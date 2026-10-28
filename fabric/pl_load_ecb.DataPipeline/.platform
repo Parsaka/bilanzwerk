@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "pl_load_ecb",
+    "description": "Load ECB euro reference rates (daily)."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "5df68a07-79dd-5bfb-8514-e115b6102c1b"
+  }
+}

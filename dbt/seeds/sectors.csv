@@ -1,0 +1,13 @@
+sector_code,sector_de,sector_en,sort_order,is_financial
+S01,Rohstoffe und Landwirtschaft,Agriculture and materials extraction,1,0
+S02,Energie,Energy,2,0
+S03,Konsumgüter,Consumer goods,3,0
+S04,Grundstoffe und Chemie,Basic materials and chemicals,4,0
+S05,Gesundheit,Health care,5,0
+S06,Technologie und Telekommunikation,Technology and telecommunications,6,0
+S07,Industrie und Bau,Industrials and construction,7,0
+S08,Transport und Versorger,Transport and utilities,8,0
+S09,Handel,Wholesale and retail,9,0
+S10,Dienstleistungen,Services,10,0
+S11,Finanzen und Immobilien,Financials and real estate,11,1
+S99,Nicht zugeordnet,Unassigned,99,0
