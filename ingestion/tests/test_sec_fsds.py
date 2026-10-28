@@ -156,3 +156,43 @@ def test_quoted_values_with_tabs_and_line_breaks_are_parsed(settings, tmp_path):
     stray = NUM.replace("\tRevenues\tus-gaap/2024\t20230930", '\tRevenues"x\tus-gaap/2024\t20230930', 1)
     sec_fsds.land_zip(make_fsds_zip(tmp_path / "s.zip", num=stray), Q, settings, Manifest(settings.manifest_path))
     assert 'Revenues"x' in _rows(settings, "num").column("tag").to_pylist()
+
+
+class _FakeSession:
+    """Serves the published quarters from fixture zips and counts downloads."""
+
+    def __init__(self, tmp_path, published):
+        self.published = published
+        self.tmp_path = tmp_path
+        self.downloads: list[str] = []
+
+    def head(self, url):
+        class R:
+            status_code = 200 if any(q in url for q in self.published) else 404
+
+        return R()
+
+    def download(self, url, target):
+        if not any(q in url for q in self.published):
+            raise RuntimeError(f"404 {url}")
+        self.downloads.append(url)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        make_fsds_zip(target)
+
+
+def test_loaded_quarters_are_not_downloaded_again(settings, tmp_path):
+    session = _FakeSession(tmp_path, ("2024q3",))
+    sec_fsds.run(settings, [Q], session)
+    (settings.download_root / "sec_fsds" / "2024q3.zip").unlink()  # the runner deletes archives
+    assert sec_fsds.run(settings, [Q], session) == {"2024q3": {}}
+    assert len(session.downloads) == 1
+    sec_fsds.run(settings, [Q], session, recheck=True)
+    assert len(session.downloads) == 2
+
+
+def test_unpublished_last_quarter_is_skipped(settings, tmp_path):
+    session = _FakeSession(tmp_path, ("2024q3",))
+    result = sec_fsds.run(settings, [Q, sec_fsds.Quarter(2024, 4)], session)
+    assert list(result) == ["2024q3"]
+    with pytest.raises(RuntimeError):  # a gap in the middle still fails loudly
+        sec_fsds.run(settings, [sec_fsds.Quarter(2024, 2), Q], session)

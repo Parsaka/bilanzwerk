@@ -297,14 +297,34 @@ def land_zip(
     return counts
 
 
-def run(settings: Settings, quarters: list[Quarter], session: PoliteSession | None = None) -> dict[str, dict[str, int]]:
+def run(
+    settings: Settings,
+    quarters: list[Quarter],
+    session: PoliteSession | None = None,
+    recheck: bool = False,
+) -> dict[str, dict[str, int]]:
+    """Download and land the given quarters.
+
+    Quarters already in the manifest are not downloaded again (the archives are deleted after
+    landing on the runners; 70+ zips of several GB each would otherwise be fetched on every run).
+    `recheck` downloads them anyway, so a republished zip is found by its new checksum. The last
+    quarter is skipped with a warning while the SEC has not published it yet.
+    """
     session = session or PoliteSession(settings)
     manifest = Manifest(settings.manifest_path)
-    results = {}
+    loaded = set() if recheck else manifest.loaded_files(SOURCE)
+    results: dict[str, dict[str, int]] = {}
     for quarter in quarters:
         url = BASE_URL.format(quarter=quarter.label)
         target = settings.download_root / SOURCE / f"{quarter.label}.zip"
+        if target.name in loaded:
+            log.info("%s already loaded, not downloaded again", quarter.label)
+            results[quarter.label] = {}
+            continue
         if not target.exists():
+            if quarter == quarters[-1] and session.head(url).status_code == 404:
+                log.warning("%s is not published yet, skipped", quarter.label)
+                break
             log.info("downloading %s", url)
             session.download(url, target)
         results[quarter.label] = land_zip(target, quarter, settings, manifest, url)

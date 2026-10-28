@@ -66,19 +66,20 @@ jobs:
           key: landing-${{ github.run_id }}
           restore-keys: landing-
 
+      # Loader logs go to the results too: the job log is not always readable from outside.
       - name: Load ECB exchange rates
-        run: uv run bilanzwerk ecb
+        run: uv run bilanzwerk ecb 2>&1 | tee -a data/results/load.log
       - name: Load GLEIF golden copy
-        run: uv run bilanzwerk gleif
+        run: uv run bilanzwerk gleif 2>&1 | tee -a data/results/load.log
       - name: Load SEC submissions
-        run: uv run bilanzwerk sec-submissions
+        run: uv run bilanzwerk sec-submissions 2>&1 | tee -a data/results/load.log
       - name: Load SEC Financial Statement Data Sets
-        run: uv run bilanzwerk sec-fsds --start "$FSDS_START"
+        run: uv run bilanzwerk sec-fsds --start "$FSDS_START" 2>&1 | tee -a data/results/load.log
       - name: Load ESEF filings
         run: |
           args=()
           for c in $ESEF_COUNTRIES; do args+=(--countries "$c"); done
-          uv run bilanzwerk esef "${args[@]}"
+          uv run bilanzwerk esef "${args[@]}" 2>&1 | tee -a data/results/load.log
 
       - name: Save the landing zone (also when a later step fails)
         if: always()

@@ -26,9 +26,10 @@ def main(verbose: bool = False) -> None:
 def cmd_sec_fsds(
     start: Annotated[str, typer.Option(help="first quarter, e.g. 2009q2")] = "2009q2",
     end: Annotated[str | None, typer.Option(help="last quarter; default: last completed")] = None,
+    recheck: Annotated[bool, typer.Option(help="download loaded quarters again (republished zips)")] = False,
 ) -> None:
     quarters = sec_fsds.list_quarters(sec_fsds.Quarter.parse(start), sec_fsds.Quarter.parse(end) if end else None)
-    result = sec_fsds.run(get_settings(), quarters)
+    result = sec_fsds.run(get_settings(), quarters, recheck=recheck)
     typer.echo(result)
 
 
