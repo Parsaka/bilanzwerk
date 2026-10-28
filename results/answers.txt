@@ -1,0 +1,4 @@
+H1 nicht bestätigt: Das CCC-Signal wurde im Median 0.0 Monate vor der Insolvenz rot, das Z''-Signal 6.0 Monate; Differenz -6.0 Monate (95%-KI -7.4 bis -4.6).
+H2 nicht bestätigt: PR-AUC M2 minus M1 = -0.004 (95%-KI -0.007 bis -0.001).
+H3 bestätigt: PR-AUC sektorrelativ minus absolut = 0.009 (95%-KI 0.006 bis 0.012).
+H4 bestätigt: Working-Capital-Potenzial gesamt 1295.3 Mrd. EUR; größter Hebel Technologie und Telekommunikation mit 327.7 Mrd. EUR.

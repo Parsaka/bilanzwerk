@@ -1,0 +1,129 @@
+{
+  "label": "label_main",
+  "label_note": "1661 bankruptcy positives; 8-K Item 1.03 is the main label.",
+  "data_version": "d1faea100296bf1e",
+  "n_observations": 226813,
+  "n_labelled": 198057,
+  "n_positive": 1661,
+  "H1": {
+    "hypothesis": "H1 lead time",
+    "held": false,
+    "status": "not_held",
+    "text_de": "H1 nicht bestätigt: Das CCC-Signal wurde im Median 0.0 Monate vor der Insolvenz rot, das Z''-Signal 6.0 Monate; Differenz -6.0 Monate (95%-KI -7.4 bis -4.6).",
+    "estimate": -6.04517453798768,
+    "ci_low": -7.3770020533880905,
+    "ci_high": -4.599178644763861,
+    "p_le_zero": 1.0,
+    "n_resamples": 1000,
+    "median_ccc": 0.0,
+    "median_z": 6.04517453798768,
+    "median_ccc_flagged_only": 4.698151950718686,
+    "median_z_flagged_only": 11.40041067761807,
+    "share_never_red_ccc": 0.9571428571428572,
+    "share_never_red_z": 0.36666666666666664,
+    "n_companies": 630
+  },
+  "H2": {
+    "hypothesis": "H2 accuracy",
+    "held": false,
+    "status": "not_held",
+    "text_de": "H2 nicht bestätigt: PR-AUC M2 minus M1 = -0.004 (95%-KI -0.007 bis -0.001).",
+    "estimate": -0.003875394772670203,
+    "ci_low": -0.0069499808560343716,
+    "ci_high": -0.0010743726806679912,
+    "p_le_zero": 0.997,
+    "n_resamples": 1000
+  },
+  "H3": {
+    "hypothesis": "H3 sector view",
+    "held": true,
+    "status": "held",
+    "text_de": "H3 bestätigt: PR-AUC sektorrelativ minus absolut = 0.009 (95%-KI 0.006 bis 0.012).",
+    "estimate": 0.008891822494001604,
+    "ci_low": 0.005538913527976775,
+    "ci_high": 0.012162394555869883,
+    "p_le_zero": 0.0,
+    "n_resamples": 1000
+  },
+  "H4": {
+    "hypothesis": "H4 euro value",
+    "held": true,
+    "status": "held",
+    "total_eur_bn": 1295.2697978421747,
+    "top_sector": "Technologie und Telekommunikation",
+    "top_sector_eur_bn": 327.7367942223687,
+    "text_de": "H4 bestätigt: Working-Capital-Potenzial gesamt 1295.3 Mrd. EUR; größter Hebel Technologie und Telekommunikation mit 327.7 Mrd. EUR."
+  },
+  "champion_check": {
+    "comparison": "PR-AUC M3_lightgbm_all minus M2_logit_z_wc",
+    "estimate": 0.039973470311128516,
+    "ci_low": 0.027810242840126283,
+    "ci_high": 0.05481640486574263,
+    "m3_gain_excludes_zero": true
+  },
+  "pooled": [
+    {
+      "model": "M3_lightgbm_all",
+      "n": 156566,
+      "n_pos": 1403,
+      "pr_auc": 0.06608523244588921,
+      "recall_top5": 0.36136849607982896,
+      "brier": 0.00870060342747937
+    },
+    {
+      "model": "M2r_logit_z_wc_relative",
+      "n": 156566,
+      "n_pos": 1403,
+      "pr_auc": 0.035003584628762296,
+      "recall_top5": 0.2587312900926586,
+      "brier": 0.008745534099698011
+    },
+    {
+      "model": "M1_logit_z",
+      "n": 156566,
+      "n_pos": 1403,
+      "pr_auc": 0.029987156907430895,
+      "recall_top5": 0.218104062722737,
+      "brier": 0.008766381783230442
+    },
+    {
+      "model": "S1_discrete_time_hazard",
+      "n": 156566,
+      "n_pos": 1403,
+      "pr_auc": 0.02954075842929211,
+      "recall_top5": 0.2444761225944405,
+      "brier": 0.008810706332008018
+    },
+    {
+      "model": "M0_zscore_rule",
+      "n": 156566,
+      "n_pos": 1403,
+      "pr_auc": 0.02698916864239787,
+      "recall_top5": 0.19885958660014255,
+      "brier": 0.008786504544447519
+    },
+    {
+      "model": "M2_logit_z_wc",
+      "n": 156566,
+      "n_pos": 1403,
+      "pr_auc": 0.026111762134760692,
+      "recall_top5": 0.17034925160370634,
+      "brier": 0.008814939936496848
+    }
+  ],
+  "config": {
+    "data_root": "/home/runner/work/bilanzwerk/bilanzwerk/data",
+    "first_test_year": "2014",
+    "last_test_year": "2025",
+    "horizon_months": "12",
+    "alive_evidence_months": "9",
+    "min_events_for_main_label": "100",
+    "bootstrap_iterations": "1000",
+    "top_share": "0.05",
+    "seed": "42",
+    "ccc_flag_percentile": "0.8",
+    "z_flag_threshold": "1.1",
+    "red_band": "0.1",
+    "yellow_band": "0.03"
+  }
+}
