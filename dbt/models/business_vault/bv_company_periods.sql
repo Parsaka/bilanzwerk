@@ -20,6 +20,8 @@ with filings as (
     where
         f.form in ('10-K', '10-Q', '10-KT', '20-F', '40-F', 'AFR')
         and f.period_end is not null
+        -- a period that had not ended when the filing was accepted is a header error
+        and f.period_end < cast(f.accepted_at as date)
 )
 
 select

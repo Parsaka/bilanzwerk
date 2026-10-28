@@ -89,6 +89,8 @@ jobs:
             data/_manifest
           key: landing-${{ github.run_id }}
 
+      - name: Remove downloaded archives (landed as Parquet; frees disk for DuckDB)
+        run: rm -rf data/downloads && df -h "$GITHUB_WORKSPACE"
       - name: Raw vault, one SEC quarter at a time
         working-directory: dbt
         run: |
@@ -115,7 +117,7 @@ jobs:
       - name: dbt build with MDM
         env:
           BW_HAS_MDM: "true"
-        run: scripts/real_data_dbt_build.sh mdm
+        run: scripts/real_data_dbt_build.sh mdm source:mdm+
       - name: Early-warning analysis (M0-M3, S1, H1-H4)
         env:
           BW_HAS_MDM: "true"
@@ -126,7 +128,7 @@ jobs:
         env:
           BW_HAS_MDM: "true"
           BW_HAS_RISK_SCORES: "true"
-        run: scripts/real_data_dbt_build.sh scores
+        run: scripts/real_data_dbt_build.sh scores source:analysis+
       - name: Data contracts match the warehouse
         run: uv run python scripts/check_contracts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" | tee data/results/contracts.txt
       - name: Tableau extract
