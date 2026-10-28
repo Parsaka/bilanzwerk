@@ -167,6 +167,10 @@ def run(cfg: AnalysisConfig | None = None, log_mlflow: bool = True) -> dict:
     diff_h3 = (
         backtest.paired_difference(preds, "M2r_logit_z_wc_relative", "M2_logit_z_wc", cfg) if len(preds) else nan_diff
     )
+    # ADR-007: the reports switch from M2 to M3 only when M3's PR-AUC gain excludes zero.
+    diff_champion = (
+        backtest.paired_difference(preds, "M3_lightgbm_all", "M2_logit_z_wc", cfg) if len(preds) else nan_diff
+    )
     per_company_lead, lead = lead_time_analysis(frame, label, cfg)
     per_company_lead.to_csv(results_dir / "lead_times_per_company.csv", index=False)
     by_sector, top20 = wc_opportunity(con)
@@ -207,6 +211,11 @@ def run(cfg: AnalysisConfig | None = None, log_mlflow: bool = True) -> dict:
         "H2": answer.h2(diff_h2),
         "H3": answer.h3(diff_h3),
         "H4": answer.h4(by_sector),
+        "champion_check": {
+            "comparison": "PR-AUC M3_lightgbm_all minus M2_logit_z_wc",
+            **{k: diff_champion[k] for k in ("estimate", "ci_low", "ci_high")},
+            "m3_gain_excludes_zero": bool(diff_champion["ci_low"] > 0),
+        },
         "pooled": pooled.to_dict(orient="records"),
         "config": {k: str(v) for k, v in dataclasses.asdict(cfg).items()},
     }
