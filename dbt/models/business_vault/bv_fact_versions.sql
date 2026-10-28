@@ -36,3 +36,7 @@ where
     and (
         f.form in ('10-K', '10-Q', '10-K/A', '10-Q/A', '10-KT', '10-KT/A', '20-F', '20-F/A', '40-F', '40-F/A', 'AFR')
     )
+    -- A statement reports values up to its own period end. Later dates in the same filing are
+    -- subsequent events or contractual schedules (debt maturities, lease payments), not results
+    -- of a period, and would create periods that "were known" before they ended.
+    and (f.period_end is null or lf.period_end <= {{ bw_month_end('f.period_end') }})

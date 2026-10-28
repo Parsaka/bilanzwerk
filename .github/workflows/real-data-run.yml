@@ -107,8 +107,7 @@ jobs:
             echo "LAST_QUARTER=$q" >> "$GITHUB_ENV"
           done
       - name: dbt build (without MDM and model outputs)
-        run: |
-          uv run dbt build --project-dir dbt --vars "{load_quarter: ${LAST_QUARTER}}"
+        run: scripts/real_data_dbt_build.sh base
       - name: MDM matching (Splink) and review sample
         run: |
           uv run python -m mdm.cli match
@@ -116,8 +115,7 @@ jobs:
       - name: dbt build with MDM
         env:
           BW_HAS_MDM: "true"
-        run: |
-          uv run dbt build --project-dir dbt --vars "{load_quarter: ${LAST_QUARTER}}"
+        run: scripts/real_data_dbt_build.sh mdm
       - name: Early-warning analysis (M0-M3, S1, H1-H4)
         env:
           BW_HAS_MDM: "true"
@@ -128,8 +126,7 @@ jobs:
         env:
           BW_HAS_MDM: "true"
           BW_HAS_RISK_SCORES: "true"
-        run: |
-          uv run dbt build --project-dir dbt --vars "{load_quarter: ${LAST_QUARTER}}"
+        run: scripts/real_data_dbt_build.sh scores
       - name: Data contracts match the warehouse
         run: uv run python scripts/check_contracts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" | tee data/results/contracts.txt
       - name: Tableau extract
@@ -144,6 +141,7 @@ jobs:
           cp -r data/analysis/results "$out/analysis" 2>/dev/null || true
           find data/mdm -maxdepth 1 -type f \( -name '*.json' -o -name '*.csv' -o -name '*.md' \) -exec cp {} "$out/" \; 2>/dev/null || true
           cp dbt/target/run_results.json "$out/dbt_run_results.json" 2>/dev/null || true
+          uv run python scripts/export_test_failures.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" --out "$out/test_failures" || true
           cp tableau/data/*manifest* "$out/" 2>/dev/null || true
           uv run bilanzwerk manifest > "$out/ingest_manifest.tsv" || true
           {
@@ -151,9 +149,11 @@ jobs:
             echo "commit: ${GITHUB_SHA}"
             echo "finished_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "fsds_start: ${FSDS_START}"
+            echo "dbt_tests_failed: ${DBT_TESTS_FAILED:-0}"
           } > "$out/RUN.txt"
           {
             echo "## Real-data run"
+            if [ "${DBT_TESTS_FAILED:-0}" = 1 ]; then echo "**dbt tests failed: diagnostic run, the numbers below are not results.**"; fi
             echo '```'
             cat "$out/answers.txt" 2>/dev/null || echo "analysis did not run"
             echo '```'
@@ -172,3 +172,8 @@ jobs:
           git add -f results/
           git commit -m "Real-data run ${GITHUB_RUN_ID} on ${GITHUB_SHA::7}" || exit 0
           git push -f origin real-data-results
+      - name: Fail the run when dbt tests failed
+        if: env.DBT_TESTS_FAILED == '1'
+        run: |
+          echo "::error::dbt tests failed (see results/test_failures); the numbers of this run are diagnostic only"
+          exit 1

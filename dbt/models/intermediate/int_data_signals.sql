@@ -33,7 +33,8 @@ select
     p.period_key,
     p.period_end_date,
     p.first_accepted_at,
-    cast(p.filing_lag_days as {{ bw_float() }}) as filing_lag_d,
+    -- negative lags or lags over ten years are period-end errors in the filing, not signals
+    cast(case when p.filing_lag_days between 0 and 3650 then p.filing_lag_days end as {{ bw_float() }}) as filing_lag_d,
     cast((
         select count(*) from nt
         where
