@@ -90,3 +90,27 @@ def test_leakage_guard_fails_the_build():
     )
     with pytest.raises(data.LeakageError):
         data.assert_no_leakage(bad)
+
+
+def test_unfinished_window_censors_positives_too():
+    """An unfinished window can only show positives; keeping them would inflate the last year's
+    event rate (first real-data run: every labelled 2026 observation was positive)."""
+    frame = pd.DataFrame(
+        {"company_id": ["a", "b"], "as_of": pd.to_datetime(["2022-02-01", "2022-02-01"]), "period_key": ["a3", "b3"]}
+    )
+    out = data.attach_labels(frame, _events(), _activity(), pd.Timestamp("2022-07-01"), CFG).set_index("period_key")
+    assert np.isnan(out.loc["a3", "label_main"])  # event within the window, but the window is not over
+    assert np.isnan(out.loc["b3", "label_main"])
+
+
+def test_s1_hazard_is_not_shifted_to_a_balanced_base_rate():
+    from analysis.models import SurvivalHazard
+
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=4000)
+    y = (rng.random(4000) < 0.01 * np.exp(x) / np.exp(0.5)).astype(int)
+    df = pd.DataFrame({"f__value": x})
+    model = SurvivalHazard(["f__value"]).fit(df, y)
+    p12 = model.prob_12m(df)
+    # four quarters of a ~1 % hazard: about 4 %, not the ~90 % a balanced fit gives
+    assert 0.01 < p12.mean() < 0.10

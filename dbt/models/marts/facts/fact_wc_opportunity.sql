@@ -1,6 +1,8 @@
 -- H4: cash that each company could free if DSO and DIO fell to its sector median and DPO
 -- rose to it, per fiscal year (latest values, non-financial companies, EUR).
 -- Stretch target: the sector's 25th percentile for DSO and DIO, the 75th for DPO.
+-- Companies without a sector (no SIC/NACE mapping) stay out: a median over an unmapped,
+-- mixed group is no benchmark.
 with fy as (
     select
         k.company_id,
@@ -20,6 +22,7 @@ with fy as (
     where
         k.version = '{{ var("version_latest") }}'
         and k.is_financial = 0
+        and k.sector_key <> '{{ var("unassigned_sector_code") }}'
         and p.is_fiscal_year_end = 1
         and k.dso between 0 and 730
         and k.dpo between 0 and 730

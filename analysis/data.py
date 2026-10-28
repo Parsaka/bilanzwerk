@@ -104,8 +104,8 @@ def attach_labels(
 
     label_main     = 1 if an 8-K Item 1.03 is filed within 12 months after the as-of date
     label_distress = 1 if Item 1.03, Form 15 or Form 25 within 12 months
-    Censored (NaN): the window runs past the data end, or the company stopped filing without an
-    event (no statement accepted after as_of + alive_evidence_months).
+    Censored (NaN): the window runs past the data end (positives too), or the company stopped
+    filing without an event (no statement accepted after as_of + alive_evidence_months).
     Observations after a company's first event are dropped.
     """
     df = frame.copy()
@@ -131,11 +131,16 @@ def attach_labels(
         ev_date = df[event_col]
         after_event = ev_date.notna() & (df["as_of"] >= ev_date)
         positive = ev_date.notna() & (ev_date > df["as_of"]) & (ev_date <= df["window_end"])
-        past_end = df["window_end"] > data_end
+        # Censored for both classes alike: an unfinished window can show a positive but never a
+        # negative, so keeping its positives would inflate the event rate of the last year
+        # (seen in the first real-data run: 2026 had only positives).
+        past_end = (df["window_end"] > data_end) | (
+            df["as_of"] + pd.DateOffset(months=cfg.alive_evidence_months) > data_end
+        )
         alive = df["last_accepted_at"] > df["as_of"] + pd.DateOffset(months=cfg.alive_evidence_months)
         label = pd.Series(np.nan, index=df.index)
         label[~positive & alive & ~past_end] = 0
-        label[positive] = 1
+        label[positive & ~past_end] = 1
         label[after_event] = np.nan
         df[name] = label
         df[f"{name}_after_event"] = after_event

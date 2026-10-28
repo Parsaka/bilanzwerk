@@ -98,7 +98,7 @@ last_per_day as (
 with_sector as (
     select
         h.*,
-        coalesce(sm.sector_code, 'S99') as sector_code
+        coalesce(sm.sector_code, '{{ var("unassigned_sector_code") }}') as sector_code
     from last_per_day as h
     left join {{ ref('sector_map') }} as sm
         on h.sic between sm.sic_from and sm.sic_to

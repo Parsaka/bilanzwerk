@@ -31,6 +31,8 @@ vars:
   zscore_safe_threshold: 2.6
   # Sector medians need enough peers to mean something (H4)
   wc_min_sector_peers: 5
+  # Companies without a sector mapping (dim_company falls back to it); no sector benchmark
+  unassigned_sector_code: "S99"
   # Model whose scores the reports show (ADR-007); the challenger stays in fact_risk_score
   risk_champion_model: "M2_logit_z_wc"
 

@@ -105,15 +105,15 @@ class ZRule(Model):
 
 
 class Logit(Model):
-    def __init__(self, name: str, features: list[str], C: float = 1.0):
-        self.name, self.features, self.C = name, features, C
+    def __init__(self, name: str, features: list[str], C: float = 1.0, class_weight: str | None = "balanced"):
+        self.name, self.features, self.C, self.class_weight = name, features, C, class_weight
         self.prep: Preprocessor | None = None
         self.clf: LogisticRegression | None = None
         self.calibrator: IsotonicRegression | None = None
 
     def fit(self, train: pd.DataFrame, y: np.ndarray) -> Logit:
         self.prep = Preprocessor(self.features).fit(train)
-        self.clf = LogisticRegression(C=self.C, class_weight="balanced", max_iter=2000)
+        self.clf = LogisticRegression(C=self.C, class_weight=self.class_weight, max_iter=2000)
         self.clf.fit(self.prep.transform(train), y)
         return self
 
@@ -198,10 +198,15 @@ def hazard_frame(frame: pd.DataFrame, label_col: str) -> pd.DataFrame:
 
 
 class SurvivalHazard(Logit):
-    """S1: quarterly hazard h; 12-month probability = 1 - (1 - h)^4."""
+    """S1: quarterly hazard h; 12-month probability = 1 - (1 - h)^4.
+
+    Fitted without class weights: the hazard is used as a probability directly (no isotonic
+    step), and balanced weights would move it to a 50 % base rate (seen in the first real-data
+    run: Brier 0.48).
+    """
 
     def __init__(self, features: list[str]):
-        super().__init__("S1_discrete_time_hazard", features)
+        super().__init__("S1_discrete_time_hazard", features, class_weight=None)
 
     def prob_12m(self, X: pd.DataFrame) -> np.ndarray:
         h = 1 / (1 + np.exp(-self.raw_score(X)))
