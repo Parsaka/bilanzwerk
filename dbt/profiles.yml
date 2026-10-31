@@ -1,0 +1,33 @@
+# Profiles read every secret from environment variables; nothing is stored in Git.
+# local: DuckDB over the Parquet landing zone (laptop and CI).
+# dev / prod: Microsoft Fabric Warehouse (CI logs in with OIDC -> Azure CLI token).
+bilanzwerk:
+  target: "{{ env_var('BW_DBT_TARGET', 'local') }}"
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('BW_DATA_ROOT', '../data') }}/bilanzwerk.duckdb"
+      threads: "{{ env_var('BW_DBT_THREADS', '4') | int }}"
+      settings:
+        memory_limit: "{{ env_var('BW_DUCKDB_MEMORY', '8GB') }}"
+        preserve_insertion_order: false
+    dev:
+      type: fabric
+      driver: "ODBC Driver 18 for SQL Server"
+      server: "{{ env_var('BW_FABRIC_SQL_ENDPOINT', '') }}"
+      port: 1433
+      database: "{{ env_var('BW_FABRIC_WAREHOUSE', 'wh_bilanzwerk') }}"
+      schema: dbo
+      authentication: "{{ env_var('BW_FABRIC_AUTH', 'CLI') }}"
+      threads: 8
+      retries: 2
+    prod:
+      type: fabric
+      driver: "ODBC Driver 18 for SQL Server"
+      server: "{{ env_var('BW_FABRIC_SQL_ENDPOINT_PROD', '') }}"
+      port: 1433
+      database: "{{ env_var('BW_FABRIC_WAREHOUSE', 'wh_bilanzwerk') }}"
+      schema: dbo
+      authentication: "{{ env_var('BW_FABRIC_AUTH', 'CLI') }}"
+      threads: 8
+      retries: 2

@@ -1,0 +1,127 @@
+/// Insolvenzwahrscheinlichkeit 12 Monate je Unternehmen, Stichtag und Modell.
+table fact_risk_score
+	lineageTag: c19198bb-03ab-5305-86e6-5a741a04c2ba
+	sourceLineageTag: [marts].[fact_risk_score]
+
+	/// Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten, Champion-Modell (ADR-007), zum letzten Stichtag im Kontext.
+	measure 'Risiko 12M' =
+			VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+			RETURN
+			    CALCULATE (
+			        AVERAGE ( fact_risk_score[probability_12m] ),
+			        fact_risk_score[is_champion] = 1,
+			        fact_risk_score[as_of_date] = _stichtag
+			    )
+		formatString: 0.0%
+		displayFolder: Kreditrisiko
+		lineageTag: b562c582-e93b-5404-a5a2-d922cb3c2d2c
+
+	/// Anzahl Unternehmen im roten Risikoband (Champion-Modell, letzter Stichtag je Unternehmen im Kontext).
+	measure 'Unternehmen rot' =
+			COUNTROWS (
+			    FILTER (
+			        VALUES ( dim_company[company_id] ),
+			        VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+			        RETURN
+			            CALCULATE (
+			                COUNTROWS ( fact_risk_score ),
+			                fact_risk_score[is_champion] = 1,
+			                fact_risk_score[as_of_date] = _stichtag,
+			                fact_risk_score[risk_band] = "red"
+			            ) > 0
+			    )
+			)
+		formatString: #,0
+		displayFolder: Kreditrisiko
+		lineageTag: 8d9dc8d2-ea49-5347-8b04-e5afa7a2c364
+
+	/// Risiko 12M minus Risiko 12M drei Monate früher.
+	measure 'Risiko Veränderung zum Vorquartal' = [Risiko 12M] - CALCULATE ( [Risiko 12M], DATEADD ( dim_date[date_key], -3, MONTH ) )
+		formatString: +0.0%;-0.0%
+		displayFolder: Kreditrisiko
+		lineageTag: 5245682a-6de8-5fe4-a3ae-28d2493a5363
+
+	column risk_score_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: risk_score_key
+		lineageTag: 6e4ea3b6-a4f6-5e54-af9a-c5622ecbb4e7
+		sourceLineageTag: risk_score_key
+
+	column company_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_key
+		lineageTag: 6743af56-1dad-5ffc-bfb9-6ab22a925c0e
+		sourceLineageTag: company_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: 9bde4000-ed18-5c42-b8f9-862f655759b9
+		sourceLineageTag: company_id
+
+	column as_of_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		isHidden
+		summarizeBy: none
+		sourceColumn: as_of_date
+		lineageTag: d82937e1-455b-5499-8ea1-ca9fc428c1fe
+		sourceLineageTag: as_of_date
+
+	column model_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: model_name
+		lineageTag: f09d260a-b609-5f76-b7c6-de36e18ad166
+		sourceLineageTag: model_name
+
+	column is_champion
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_champion
+		lineageTag: e19adb3c-e01f-5494-80ba-7713aa03c9fc
+		sourceLineageTag: is_champion
+
+	column probability_12m
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: probability_12m
+		lineageTag: e1f2bdbe-6bca-5ca5-873a-960aab041488
+		sourceLineageTag: probability_12m
+
+	column risk_band
+		dataType: string
+		summarizeBy: none
+		sourceColumn: risk_band
+		lineageTag: 6ce87d2c-edb2-5a57-8158-b8fba03f0c2f
+		sourceLineageTag: risk_band
+
+	column top_3_drivers
+		dataType: string
+		summarizeBy: none
+		sourceColumn: top_3_drivers
+		lineageTag: afa00900-a856-5745-a5f6-894e7302f5b5
+		sourceLineageTag: top_3_drivers
+
+	column run_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: run_id
+		lineageTag: 8a848aac-60a7-5b84-ab4a-1ed7ca1b6409
+		sourceLineageTag: run_id
+
+	partition fact_risk_score = entity
+		mode: directLake
+		source
+			entityName: fact_risk_score
+			schemaName: marts
+			expressionSource: DatabaseQuery

@@ -1,0 +1,83 @@
+name: quarterly-load
+
+# Checks every morning whether the SEC has published a new Financial Statement Data Sets quarter;
+# if so (or when started by hand), runs the master pipeline for it in prod and posts row counts
+# and the data quality pass rate as the job summary. The last loaded quarter is kept in the
+# landing storage account, which is reachable while the capacity is paused.
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+    inputs:
+      quarter:
+        description: "Quarter to (re)load, e.g. 2026q3. Empty: every newly published quarter."
+        required: false
+      stage:
+        description: Workspace
+        type: choice
+        options: [prod, dev]
+        default: prod
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: fabric-capacity
+  cancel-in-progress: false
+
+env:
+  AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  BW_RESOURCE_GROUP: ${{ vars.BW_RESOURCE_GROUP }}
+  BW_CAPACITY_NAME: ${{ vars.BW_CAPACITY_NAME }}
+  BW_USER_AGENT: ${{ vars.BW_USER_AGENT }}
+  STORAGE: ${{ vars.BW_STORAGE_ACCOUNT }}
+  WORKSPACE: ${{ inputs.stage == 'dev' && vars.FABRIC_WORKSPACE_ID_DEV || vars.FABRIC_WORKSPACE_ID_PROD }}
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      quarters: ${{ steps.find.outputs.quarters }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-fabric
+        with:
+          resume-capacity: "false"
+      - id: find
+        name: Find quarters to load
+        run: |
+          if [ -n "${{ inputs.quarter }}" ]; then
+            quarters="${{ inputs.quarter }}"
+          else
+            az storage blob download --auth-mode login --account-name "$STORAGE" -c archive \
+              -n state/last_sec_quarter.txt -f last.txt --only-show-errors || echo "2009q1" > last.txt
+            quarters=$(uv run bilanzwerk sec-fsds-check --after "$(cat last.txt)" | tr '\n' ' ')
+          fi
+          echo "quarters=${quarters}" >> "$GITHUB_OUTPUT"
+          echo "Quarters to load: ${quarters:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+  load:
+    needs: check
+    if: needs.check.outputs.quarters != ''
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.stage || 'prod' }}
+    timeout-minutes: 600
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-fabric
+      - name: Master pipeline per quarter
+        run: |
+          for q in ${{ needs.check.outputs.quarters }}; do
+            uv run python scripts/fabric_run.py run --workspace-id "$WORKSPACE" pl_master --param "Quarter=$q"
+            echo "$q" > last.txt
+            az storage blob upload --auth-mode login --account-name "$STORAGE" -c archive \
+              -n state/last_sec_quarter.txt -f last.txt --overwrite --only-show-errors
+          done
+      - name: Job summary (row counts, data quality)
+        run: uv run python scripts/fabric_run.py summary --workspace-id "$WORKSPACE"
+      - name: Pause the Fabric capacity
+        if: always()
+        run: scripts/fabric_capacity.sh pause

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_refresh_model",
+    "description": "Refreshes (reframes) the Direct Lake semantic model after dbt build."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "a9384cbd-463c-5180-a019-ec0d7c6caee4"
+  }
+}

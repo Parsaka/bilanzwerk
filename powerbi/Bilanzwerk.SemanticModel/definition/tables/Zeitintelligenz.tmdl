@@ -1,0 +1,42 @@
+/// Ist, Vorjahr, Abweichung zum Vorjahr, YTD, TTM.
+table Zeitintelligenz
+	lineageTag: ace2814f-5ec6-5daa-a93c-4521d8741a6a
+
+	calculationGroup
+		precedence: 10
+
+		calculationItem Ist = SELECTEDMEASURE ()
+			ordinal: 0
+
+		calculationItem Vorjahr = CALCULATE ( SELECTEDMEASURE (), DATEADD ( dim_date[date_key], -1, YEAR ) )
+			ordinal: 1
+
+		calculationItem 'Abweichung zum Vorjahr' = SELECTEDMEASURE () - CALCULATE ( SELECTEDMEASURE (), DATEADD ( dim_date[date_key], -1, YEAR ) )
+			ordinal: 2
+
+		calculationItem 'Abweichung zum Vorjahr %' = DIVIDE ( SELECTEDMEASURE () - CALCULATE ( SELECTEDMEASURE (), DATEADD ( dim_date[date_key], -1, YEAR ) ), ABS ( CALCULATE ( SELECTEDMEASURE (), DATEADD ( dim_date[date_key], -1, YEAR ) ) ) )
+			ordinal: 3
+			formatStringDefinition = "0.0%"
+
+		calculationItem YTD = CALCULATE ( SELECTEDMEASURE (), DATESYTD ( dim_date[date_key] ) )
+			ordinal: 4
+
+		calculationItem TTM = CALCULATE ( SELECTEDMEASURE (), DATESINPERIOD ( dim_date[date_key], MAX ( dim_date[date_key] ), -12, MONTH ) )
+			ordinal: 5
+
+	column Zeit
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+		lineageTag: 8ff240f4-78ce-5c2a-863d-209aeb0a79fb
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: Ordinal
+		lineageTag: e765e6f1-b499-5d07-9451-957967c579fc
+
+	partition Zeitintelligenz = calculationGroup
+		mode: import

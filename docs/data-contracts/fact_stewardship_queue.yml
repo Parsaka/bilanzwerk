@@ -1,0 +1,28 @@
+table: fact_stewardship_queue
+schema: marts
+owner: Master Data / Stammdaten
+grain: one row per open candidate pair (CIK, LEI)
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: source_company_bk_type
+  type: string
+- name: source_company_bk
+  type: string
+- name: lei
+  type: string
+- name: match_probability
+  type: float
+- name: match_weight
+  type: float
+- name: model_version
+  type: string
+- name: sec_name
+  type: string
+- name: gleif_legal_name
+  type: string
+- name: gleif_city
+  type: string
+- name: gleif_country
+  type: string

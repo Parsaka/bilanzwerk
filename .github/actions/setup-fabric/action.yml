@@ -1,0 +1,32 @@
+name: Set up for Fabric
+description: uv with the deploy and dbt extras, ODBC Driver 18, Azure login with OIDC, capacity resumed.
+inputs:
+  resume-capacity:
+    description: Resume the Fabric capacity (pause it in a final step with if always()).
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v6
+      with:
+        enable-cache: true
+    - shell: bash
+      run: uv sync --extra dbt --extra deploy --locked
+    - name: ODBC Driver 18 for SQL Server (dbt-fabric, pyodbc)
+      shell: bash
+      run: |
+        if ! odbcinst -q -d | grep -q "ODBC Driver 18"; then
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc >/dev/null
+          curl -sSL "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
+          sudo apt-get update -q
+          sudo ACCEPT_EULA=Y apt-get install -y -q msodbcsql18 unixodbc
+        fi
+    - uses: azure/login@v2
+      with:
+        client-id: ${{ env.AZURE_CLIENT_ID }}
+        tenant-id: ${{ env.AZURE_TENANT_ID }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+    - name: Resume the Fabric capacity
+      if: inputs.resume-capacity == 'true'
+      shell: bash
+      run: scripts/fabric_capacity.sh resume

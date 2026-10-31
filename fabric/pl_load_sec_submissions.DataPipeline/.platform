@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "pl_load_sec_submissions",
+    "description": "Load SEC submissions bulk file (weekly)."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "c7cb9be6-b060-5a86-bc33-9e50e8957acd"
+  }
+}

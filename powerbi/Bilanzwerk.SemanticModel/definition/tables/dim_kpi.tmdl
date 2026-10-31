@@ -1,0 +1,105 @@
+/// Kennzahlen-Glossar: Formel, Einheit, Richtung, Schwellen, Owner.
+table dim_kpi
+	lineageTag: cde490a5-513a-5146-b5e7-77f01fcd216a
+	sourceLineageTag: [marts].[dim_kpi]
+
+	column kpi_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: kpi_key
+		lineageTag: a06a670c-6427-5a43-9d76-7ba639d4e0f2
+		sourceLineageTag: kpi_key
+
+	column kpi_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: kpi_code
+		lineageTag: 643435bc-0322-5d5c-902f-1c14bec65f64
+		sourceLineageTag: kpi_code
+
+	column name_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: name_de
+		lineageTag: 453f2b99-3462-5dc8-9541-d80095d0623a
+		sourceLineageTag: name_de
+
+	column name_en
+		dataType: string
+		summarizeBy: none
+		sourceColumn: name_en
+		lineageTag: e5185efe-a903-5700-8758-c154c1ec1794
+		sourceLineageTag: name_en
+
+	column area
+		dataType: string
+		summarizeBy: none
+		sourceColumn: area
+		lineageTag: 36995c7a-9fe5-5bfe-beb8-910753e8944a
+		sourceLineageTag: area
+
+	column formula_text
+		dataType: string
+		summarizeBy: none
+		sourceColumn: formula_text
+		lineageTag: b890f912-3b1a-5023-b26d-0cdd516a0392
+		sourceLineageTag: formula_text
+
+	column unit
+		dataType: string
+		summarizeBy: none
+		sourceColumn: unit
+		lineageTag: 17255190-f774-5063-819d-53e58a442b51
+		sourceLineageTag: unit
+
+	column direction
+		dataType: string
+		summarizeBy: none
+		sourceColumn: direction
+		lineageTag: 8dfd1ce1-3994-536c-a96a-bbf85b68284a
+		sourceLineageTag: direction
+
+	column threshold_green
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: threshold_green
+		lineageTag: e79375ef-b665-5085-a2cd-5b730138048c
+		sourceLineageTag: threshold_green
+
+	column threshold_red
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: threshold_red
+		lineageTag: 63ab0373-25c6-5c95-8121-e006aab9e94f
+		sourceLineageTag: threshold_red
+
+	column owner
+		dataType: string
+		summarizeBy: none
+		sourceColumn: owner
+		lineageTag: 965a6ab1-ecaf-5cd7-a941-82f3718a2326
+		sourceLineageTag: owner
+
+	column source_line_items
+		dataType: string
+		summarizeBy: none
+		sourceColumn: source_line_items
+		lineageTag: 36b863b9-6882-5378-93fa-83d023d0f025
+		sourceLineageTag: source_line_items
+
+	column description_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: description_de
+		lineageTag: 5cd3950f-fb36-54c1-8fb4-a277d1b0a6d3
+		sourceLineageTag: description_de
+
+	partition dim_kpi = entity
+		mode: directLake
+		source
+			entityName: dim_kpi
+			schemaName: marts
+			expressionSource: DatabaseQuery

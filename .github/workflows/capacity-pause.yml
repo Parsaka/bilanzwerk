@@ -1,0 +1,35 @@
+name: capacity-pause
+
+# Safety net for cost: pause the Fabric capacity every evening, whatever left it running.
+on:
+  schedule:
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [pause, resume, status]
+        default: pause
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: fabric-capacity
+  cancel-in-progress: false
+
+jobs:
+  capacity:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - env:
+          BW_RESOURCE_GROUP: ${{ vars.BW_RESOURCE_GROUP }}
+          BW_CAPACITY_NAME: ${{ vars.BW_CAPACITY_NAME }}
+        run: scripts/fabric_capacity.sh "${{ inputs.action || 'pause' }}"

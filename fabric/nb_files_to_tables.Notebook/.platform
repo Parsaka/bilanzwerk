@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_files_to_tables",
+    "description": "Exposes the landed Parquet folders as Lakehouse Delta tables <source>_<table> for dbt."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "bbcfc82f-d472-5cc0-8733-bb1ed9db95b0"
+  }
+}

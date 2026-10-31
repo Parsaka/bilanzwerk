@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "pl_master",
+    "description": "Master pipeline: sources, dbt, semantic model refresh."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "335ac004-5da2-5f3e-be27-0086cf0d590a"
+  }
+}

@@ -1,0 +1,28 @@
+table: fact_data_quality
+schema: marts
+owner: Data Engineering
+grain: one row per dbt run, rule and table
+freshness: appended on every dbt run
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: run_id
+  type: string
+- name: run_at
+  type: timestamp
+- name: rule_code
+  type: string
+- name: dq_dimension
+  type: string
+- name: table_name
+  type: string
+- name: rows_checked
+  type: integer
+- name: rows_failed
+  type: integer
+- name: pass_rate
+  type: float
+- name: target_pass_rate
+  type: float
+- name: status
+  type: string

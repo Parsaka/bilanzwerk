@@ -1,0 +1,28 @@
+table: fact_risk_score
+schema: marts
+owner: Credit Risk
+grain: one row per company, as-of date and model
+freshness: new SEC quarter within 24 hours of publication
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: risk_score_key
+  type: string
+- name: company_key
+  type: string
+- name: company_id
+  type: string
+- name: as_of_date
+  type: date
+- name: model_name
+  type: string
+- name: is_champion
+  type: integer
+- name: probability_12m
+  type: float
+- name: risk_band
+  type: string
+- name: top_3_drivers
+  type: string
+- name: run_id
+  type: string

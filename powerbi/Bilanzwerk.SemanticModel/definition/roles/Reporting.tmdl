@@ -1,0 +1,6 @@
+/// Objektebene: die Modelltreiber (SHAP-Treiber) sind für Reporting-Nutzer unsichtbar.
+role Reporting
+	modelPermission: read
+
+	tablePermission fact_risk_score
+		columnPermission top_3_drivers = none

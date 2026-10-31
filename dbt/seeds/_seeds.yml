@@ -1,0 +1,73 @@
+version: 2
+
+seeds:
+  - name: line_items
+    description: Target chart of accounts (about 60 line items) with German and English labels. Owner per row.
+    config:
+      column_types: {is_monetary: integer, is_core: integer, sort_order: integer}
+    columns:
+      - name: line_item_code
+        tests: [unique, not_null]
+      - name: statement_code
+        tests: [{accepted_values: {values: ['BS', 'IS', 'CF']}}]
+      - name: period_type
+        tests: [{accepted_values: {values: ['instant', 'duration']}}]
+
+  - name: line_item_map
+    description: Which us-gaap and ifrs-full tags feed each line item. The lowest priority number that exists wins.
+    config:
+      column_types: {priority: integer, sign: integer}
+    tests:
+      - unique_combination: {columns: ['line_item_code', 'taxonomy', 'tag']}
+      - unique_combination: {columns: ['line_item_code', 'taxonomy', 'priority']}
+    columns:
+      - name: line_item_code
+        tests:
+          - relationships: {to: ref('line_items'), field: line_item_code}
+      - name: taxonomy
+        tests: [{accepted_values: {values: ['us-gaap', 'ifrs-full']}}]
+      - name: sign
+        tests: [{accepted_values: {values: [1, -1], quote: false}}]
+
+  - name: sector_map
+    description: SIC code ranges to 11 sectors and NACE sections. Owner Controlling.
+    config:
+      column_types: {sic_from: integer, sic_to: integer, is_financial: integer}
+    tests:
+      - no_overlapping_sic_ranges
+
+  - name: sectors
+    config:
+      column_types: {sort_order: integer, is_financial: integer}
+    columns:
+      - name: sector_code
+        tests: [unique, not_null]
+
+  - name: kpi_definitions
+    description: The business glossary. Each KPI with formula, unit, direction, thresholds, owner and source line items.
+    config:
+      column_types: {threshold_green: float, threshold_red: float}
+    columns:
+      - name: kpi_code
+        tests: [unique, not_null]
+      - name: direction
+        tests: [{accepted_values: {values: ['higher_is_better', 'higher_is_worse']}}]
+
+  - name: scenarios
+    columns:
+      - name: scenario_code
+        tests: [unique, not_null]
+
+  - name: currencies
+    columns:
+      - name: currency_code
+        tests: [unique, not_null]
+
+  - name: stewardship_decisions
+    description: Decisions of the data steward on match candidates between the two thresholds. Survives reruns.
+    columns:
+      - name: decision
+        tests: [{accepted_values: {values: ['match', 'no_match']}}]
+
+  - name: sector_team_users
+    description: Row-level security mapping for the Power BI role "Sektor-Team" (user to sector).

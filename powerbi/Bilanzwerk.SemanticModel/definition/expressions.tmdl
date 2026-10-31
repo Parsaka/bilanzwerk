@@ -1,0 +1,7 @@
+/// Direct Lake source: the Fabric Warehouse. Placeholders are replaced at deployment.
+expression DatabaseQuery =
+		let
+		    database = Sql.Database("#{SQL_ENDPOINT}#", "#{WAREHOUSE}#")
+		in
+		    database
+	lineageTag: 73490b16-d4b4-5186-b36b-80954611317d

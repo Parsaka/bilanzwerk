@@ -1,0 +1,47 @@
+/// Ist, Plan (im Januar eingefroren), Forecast.
+table dim_scenario
+	lineageTag: 8f2c48bd-994c-5079-aae4-16dad91c7918
+	sourceLineageTag: [marts].[dim_scenario]
+
+	column scenario_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: scenario_key
+		lineageTag: 9bfe1b5a-d37e-5ebc-b0b6-884ca0855f9a
+		sourceLineageTag: scenario_key
+
+	column scenario_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: scenario_code
+		lineageTag: eb0e728d-0ad6-5a5c-9ad0-9bbe84bcfa0b
+		sourceLineageTag: scenario_code
+
+	column scenario_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: scenario_de
+		lineageTag: 3af798a4-559a-515e-9aac-36b9b17843f3
+		sourceLineageTag: scenario_de
+
+	column scenario_en
+		dataType: string
+		summarizeBy: none
+		sourceColumn: scenario_en
+		lineageTag: 35a07582-f163-5375-afc1-3b5adaf4a397
+		sourceLineageTag: scenario_en
+
+	column description
+		dataType: string
+		summarizeBy: none
+		sourceColumn: description
+		lineageTag: 6cdf73d6-718d-5a9e-9541-e24c90f8b1db
+		sourceLineageTag: description
+
+	partition dim_scenario = entity
+		mode: directLake
+		source
+			entityName: dim_scenario
+			schemaName: marts
+			expressionSource: DatabaseQuery

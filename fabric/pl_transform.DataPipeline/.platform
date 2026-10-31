@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "pl_transform",
+    "description": "dbt build and semantic model refresh after any load."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "187ca15b-cf29-510b-97ea-fb0342a2da3e"
+  }
+}

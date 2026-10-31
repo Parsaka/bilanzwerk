@@ -1,0 +1,18 @@
+table: dim_scenario
+schema: marts
+owner: Controlling
+grain: one row per scenario (Ist, Plan, Forecast)
+freshness: changes only with a seed change (pull request)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: scenario_key
+  type: string
+- name: scenario_code
+  type: string
+- name: scenario_de
+  type: string
+- name: scenario_en
+  type: string
+- name: description
+  type: string

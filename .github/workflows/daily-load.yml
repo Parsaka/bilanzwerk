@@ -1,0 +1,48 @@
+name: daily-load
+
+# GLEIF and ECB every day, SEC submissions and ESEF on Sundays, then the transform pipeline.
+# The capacity is resumed for the run and paused afterwards (the Fabric schedules cannot run on
+# a paused capacity, see fabric/README.md).
+on:
+  schedule:
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: fabric-capacity
+  cancel-in-progress: false
+
+env:
+  AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  BW_RESOURCE_GROUP: ${{ vars.BW_RESOURCE_GROUP }}
+  BW_CAPACITY_NAME: ${{ vars.BW_CAPACITY_NAME }}
+
+jobs:
+  load:
+    runs-on: ubuntu-24.04
+    environment: prod
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-fabric
+      - name: Pick today's pipelines
+        id: pick
+        run: |
+          pipelines="pl_load_gleif pl_load_ecb"
+          if [ "$(date -u +%u)" = "7" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pipelines="$pipelines pl_load_sec_submissions pl_load_esef"
+          fi
+          echo "pipelines=$pipelines pl_transform" >> "$GITHUB_OUTPUT"
+      - name: Run
+        run: uv run python scripts/fabric_run.py run --workspace-id "${{ vars.FABRIC_WORKSPACE_ID_PROD }}" ${{ steps.pick.outputs.pipelines }}
+      - name: Job summary
+        run: uv run python scripts/fabric_run.py summary --workspace-id "${{ vars.FABRIC_WORKSPACE_ID_PROD }}"
+      - name: Pause the Fabric capacity
+        if: always()
+        run: scripts/fabric_capacity.sh pause

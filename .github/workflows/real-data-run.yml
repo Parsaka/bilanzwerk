@@ -1,0 +1,182 @@
+name: real-data-run
+
+# The whole local stack on the real sources, on a GitHub runner (open internet, no Azure
+# needed): loaders -> dbt (DuckDB) -> MDM -> early-warning analysis -> dbt with scores ->
+# contracts -> Tableau extract. The landing zone is cached between runs, so a rerun loads only
+# what is new. Results (CSV/JSON, no raw data) go to the branch `real-data-results` and to the
+# run's artifacts; README, management summary and report titles are filled from them.
+#
+# Start: Actions -> real-data-run -> Run workflow, or push to the branch `run/real-data`.
+on:
+  workflow_dispatch:
+    inputs:
+      fsds_start:
+        description: First SEC FSDS quarter
+        default: 2009q2
+      esef_countries:
+        description: ESEF countries, space-separated (empty = loader default)
+        default: ""
+  push:
+    branches: [run/real-data]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: real-data-run
+  cancel-in-progress: false
+
+env:
+  BW_DATA_ROOT: ${{ github.workspace }}/data
+  BW_USER_AGENT: ${{ vars.BW_USER_AGENT || 'Parsa Kamali parsa.kamali.data@gmail.com' }}
+  BW_DUCKDB_MEMORY: 12GB
+  BW_DBT_THREADS: "2"
+  DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
+  UV_PYTHON: "3.12"
+  FSDS_START: ${{ inputs.fsds_start || '2009q2' }}
+  ESEF_COUNTRIES: ${{ inputs.esef_countries }}
+
+defaults:
+  run:
+    shell: bash  # -eo pipefail: a failing command before `| tee` fails the step
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space (the landing zone and DuckDB need ~40 GB)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h "$GITHUB_WORKSPACE"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: |
+          uv sync --all-extras --locked
+          mkdir -p data/results
+
+      - name: Restore the landing zone of the last run
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/raw
+            data/_manifest
+          key: landing-${{ github.run_id }}
+          restore-keys: landing-
+
+      # Loader logs go to the results too: the job log is not always readable from outside.
+      - name: Load ECB exchange rates
+        run: uv run bilanzwerk ecb 2>&1 | tee -a data/results/load.log
+      - name: Load GLEIF golden copy
+        run: uv run bilanzwerk gleif 2>&1 | tee -a data/results/load.log
+      - name: Load SEC submissions
+        run: uv run bilanzwerk sec-submissions 2>&1 | tee -a data/results/load.log
+      - name: Load SEC Financial Statement Data Sets
+        run: uv run bilanzwerk sec-fsds --start "$FSDS_START" 2>&1 | tee -a data/results/load.log
+      - name: Load ESEF filings
+        run: |
+          args=()
+          for c in $ESEF_COUNTRIES; do args+=(--countries "$c"); done
+          uv run bilanzwerk esef "${args[@]}" 2>&1 | tee -a data/results/load.log
+
+      - name: Save the landing zone (also when a later step fails)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/raw
+            data/_manifest
+          key: landing-${{ github.run_id }}
+
+      - name: Remove downloaded archives (landed as Parquet; frees disk for DuckDB)
+        run: rm -rf data/downloads && df -h "$GITHUB_WORKSPACE"
+      - name: Raw vault, one SEC quarter at a time
+        working-directory: dbt
+        run: |
+          uv run dbt seed
+          # Unit tests of incremental models need the relations to exist (as in ci.yml).
+          uv run dbt run --empty
+          # The full FSDS history (~180 M amounts) in one batch exceeds the runner's memory and
+          # temp disk. Loading quarter by quarter is also how production loads it: the
+          # satellites are incremental and insert only changes.
+          for q in $(ls ../data/raw/sec_fsds/num | sed 's/quarter=//' | sort); do
+            echo "::group::raw vault $q"
+            # Staging views are rebuilt too: they hold the quarter filter.
+            uv run dbt run --vars "{load_quarter: $q}" \
+              --select "source:sec_fsds+,path:models/staging" "source:sec_fsds+,path:models/raw_vault"
+            echo "::endgroup::"
+            echo "LAST_QUARTER=$q" >> "$GITHUB_ENV"
+          done
+      - name: dbt build (without MDM and model outputs)
+        run: scripts/real_data_dbt_build.sh base
+      - name: MDM matching (Splink) and review sample
+        run: |
+          uv run python -m mdm.cli match
+          uv run python -m mdm.cli sample --out data/results/mdm_pairs_to_label.csv
+      - name: dbt build with MDM
+        env:
+          BW_HAS_MDM: "true"
+        run: scripts/real_data_dbt_build.sh mdm source:mdm+
+      - name: Early-warning analysis (M0-M3, S1, H1-H4)
+        env:
+          BW_HAS_MDM: "true"
+        run: |
+          uv run bw-analysis events | tee data/results/event_counts.txt
+          uv run bw-analysis run | tee data/results/answers.txt
+      - name: dbt build with risk scores
+        env:
+          BW_HAS_MDM: "true"
+          BW_HAS_RISK_SCORES: "true"
+        run: scripts/real_data_dbt_build.sh scores source:analysis+
+      - name: Data contracts match the warehouse
+        run: uv run python scripts/check_contracts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" | tee data/results/contracts.txt
+      - name: Tableau extract
+        run: uv run python scripts/export_tableau.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb"
+
+      - name: Collect results
+        if: always()
+        run: |
+          out=results
+          rm -rf "$out" && mkdir -p "$out"
+          cp -r data/results/. "$out/" 2>/dev/null || true
+          cp -r data/analysis/results "$out/analysis" 2>/dev/null || true
+          find data/mdm -maxdepth 1 -type f \( -name '*.json' -o -name '*.csv' -o -name '*.md' \) -exec cp {} "$out/" \; 2>/dev/null || true
+          cp dbt/target/run_results.json "$out/dbt_run_results.json" 2>/dev/null || true
+          uv run python scripts/export_test_failures.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" --out "$out/test_failures" || true
+          cp tableau/data/*manifest* "$out/" 2>/dev/null || true
+          uv run bilanzwerk manifest > "$out/ingest_manifest.tsv" || true
+          {
+            echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "commit: ${GITHUB_SHA}"
+            echo "finished_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "fsds_start: ${FSDS_START}"
+            echo "dbt_tests_failed: ${DBT_TESTS_FAILED:-0}"
+          } > "$out/RUN.txt"
+          {
+            echo "## Real-data run"
+            if [ "${DBT_TESTS_FAILED:-0}" = 1 ]; then echo "**dbt tests failed: diagnostic run, the numbers below are not results.**"; fi
+            echo '```'
+            cat "$out/answers.txt" 2>/dev/null || echo "analysis did not run"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-data-results
+          path: results/
+      - name: Push results to the branch real-data-results
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B real-data-results
+          git add -f results/
+          git commit -m "Real-data run ${GITHUB_RUN_ID} on ${GITHUB_SHA::7}" || exit 0
+          git push -f origin real-data-results
+      - name: Fail the run when dbt tests failed
+        if: env.DBT_TESTS_FAILED == '1'
+        run: |
+          echo "::error::dbt tests failed (see results/test_failures); the numbers of this run are diagnostic only"
+          exit 1

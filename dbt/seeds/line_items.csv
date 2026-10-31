@@ -1,0 +1,64 @@
+line_item_code,statement_code,statement_de,statement_en,group_code,group_de,group_en,label_de,label_en,period_type,is_monetary,is_core,sort_order,owner
+CASH,BS,Bilanz,Balance sheet,CA,Aktiva - Umlaufvermögen,Assets - current,Liquide Mittel,Cash and cash equivalents,instant,1,1,110,Reporting
+STI,BS,Bilanz,Balance sheet,CA,Aktiva - Umlaufvermögen,Assets - current,Kurzfristige Finanzanlagen,Short-term investments,instant,1,0,120,Reporting
+AR,BS,Bilanz,Balance sheet,CA,Aktiva - Umlaufvermögen,Assets - current,Forderungen aus Lieferungen und Leistungen,Trade receivables,instant,1,1,130,Controlling
+INV,BS,Bilanz,Balance sheet,CA,Aktiva - Umlaufvermögen,Assets - current,Vorräte,Inventories,instant,1,1,140,Controlling
+OCA,BS,Bilanz,Balance sheet,CA,Aktiva - Umlaufvermögen,Assets - current,Sonstige kurzfristige Vermögenswerte,Other current assets,instant,1,0,150,Reporting
+TCA,BS,Bilanz,Balance sheet,CA,Aktiva - Umlaufvermögen,Assets - current,Kurzfristige Vermögenswerte gesamt,Total current assets,instant,1,1,190,Reporting
+PPE,BS,Bilanz,Balance sheet,NCA,Aktiva - Anlagevermögen,Assets - non-current,Sachanlagen,"Property, plant and equipment",instant,1,0,210,Reporting
+GW,BS,Bilanz,Balance sheet,NCA,Aktiva - Anlagevermögen,Assets - non-current,Geschäfts- oder Firmenwert,Goodwill,instant,1,0,220,Reporting
+INTAN,BS,Bilanz,Balance sheet,NCA,Aktiva - Anlagevermögen,Assets - non-current,Immaterielle Vermögenswerte,Intangible assets,instant,1,0,230,Reporting
+ROU,BS,Bilanz,Balance sheet,NCA,Aktiva - Anlagevermögen,Assets - non-current,Nutzungsrechte (Leasing),Right-of-use assets,instant,1,0,240,Reporting
+LTI,BS,Bilanz,Balance sheet,NCA,Aktiva - Anlagevermögen,Assets - non-current,Langfristige Finanzanlagen,Long-term investments,instant,1,0,250,Reporting
+DTA,BS,Bilanz,Balance sheet,NCA,Aktiva - Anlagevermögen,Assets - non-current,Aktive latente Steuern,Deferred tax assets,instant,1,0,260,Reporting
+ONCA,BS,Bilanz,Balance sheet,NCA,Aktiva - Anlagevermögen,Assets - non-current,Sonstige langfristige Vermögenswerte,Other non-current assets,instant,1,0,270,Reporting
+TNCA,BS,Bilanz,Balance sheet,NCA,Aktiva - Anlagevermögen,Assets - non-current,Langfristige Vermögenswerte gesamt,Total non-current assets,instant,1,0,290,Reporting
+TA,BS,Bilanz,Balance sheet,TA,Aktiva gesamt,Total assets,Bilanzsumme (Aktiva),Total assets,instant,1,1,299,Reporting
+AP,BS,Bilanz,Balance sheet,CL,Passiva - kurzfristige Schulden,Liabilities - current,Verbindlichkeiten aus Lieferungen und Leistungen,Trade payables,instant,1,1,310,Controlling
+ACCR,BS,Bilanz,Balance sheet,CL,Passiva - kurzfristige Schulden,Liabilities - current,Kurzfristige Rückstellungen und Abgrenzungen,Accrued liabilities and current provisions,instant,1,0,320,Reporting
+STD,BS,Bilanz,Balance sheet,CL,Passiva - kurzfristige Schulden,Liabilities - current,Kurzfristige Finanzverbindlichkeiten,Short-term debt,instant,1,1,330,Credit
+DEFREV,BS,Bilanz,Balance sheet,CL,Passiva - kurzfristige Schulden,Liabilities - current,Vertragsverbindlichkeiten,Contract liabilities (deferred revenue),instant,1,0,340,Reporting
+OCL,BS,Bilanz,Balance sheet,CL,Passiva - kurzfristige Schulden,Liabilities - current,Sonstige kurzfristige Verbindlichkeiten,Other current liabilities,instant,1,0,350,Reporting
+TCL,BS,Bilanz,Balance sheet,CL,Passiva - kurzfristige Schulden,Liabilities - current,Kurzfristige Verbindlichkeiten gesamt,Total current liabilities,instant,1,1,390,Reporting
+LTD,BS,Bilanz,Balance sheet,NCL,Passiva - langfristige Schulden,Liabilities - non-current,Langfristige Finanzverbindlichkeiten,Long-term debt,instant,1,1,410,Credit
+LEASE,BS,Bilanz,Balance sheet,NCL,Passiva - langfristige Schulden,Liabilities - non-current,Langfristige Leasingverbindlichkeiten,Non-current lease liabilities,instant,1,0,420,Credit
+DTL,BS,Bilanz,Balance sheet,NCL,Passiva - langfristige Schulden,Liabilities - non-current,Passive latente Steuern,Deferred tax liabilities,instant,1,0,430,Reporting
+PROV,BS,Bilanz,Balance sheet,NCL,Passiva - langfristige Schulden,Liabilities - non-current,Langfristige Rückstellungen und Pensionen,Non-current provisions and pensions,instant,1,0,440,Reporting
+ONCL,BS,Bilanz,Balance sheet,NCL,Passiva - langfristige Schulden,Liabilities - non-current,Sonstige langfristige Verbindlichkeiten,Other non-current liabilities,instant,1,0,450,Reporting
+TNCL,BS,Bilanz,Balance sheet,NCL,Passiva - langfristige Schulden,Liabilities - non-current,Langfristige Verbindlichkeiten gesamt,Total non-current liabilities,instant,1,0,490,Reporting
+TL,BS,Bilanz,Balance sheet,TL,Passiva - Schulden gesamt,Total liabilities,Verbindlichkeiten gesamt,Total liabilities,instant,1,1,499,Credit
+SC,BS,Bilanz,Balance sheet,EQ,Passiva - Eigenkapital,Equity,Gezeichnetes Kapital,Share capital,instant,1,0,510,Reporting
+APIC,BS,Bilanz,Balance sheet,EQ,Passiva - Eigenkapital,Equity,Kapitalrücklage,Additional paid-in capital,instant,1,0,520,Reporting
+RE,BS,Bilanz,Balance sheet,EQ,Passiva - Eigenkapital,Equity,Gewinnrücklagen / Bilanzergebnis,Retained earnings,instant,1,1,530,Credit
+TS,BS,Bilanz,Balance sheet,EQ,Passiva - Eigenkapital,Equity,Eigene Anteile,Treasury shares,instant,1,0,540,Reporting
+EQP,BS,Bilanz,Balance sheet,EQ,Passiva - Eigenkapital,Equity,Eigenkapital der Anteilseigner,Equity attributable to owners,instant,1,0,550,Reporting
+NCI,BS,Bilanz,Balance sheet,EQ,Passiva - Eigenkapital,Equity,Nicht beherrschende Anteile,Non-controlling interests,instant,1,0,560,Reporting
+EQ,BS,Bilanz,Balance sheet,EQ,Passiva - Eigenkapital,Equity,Eigenkapital gesamt,Total equity,instant,1,1,590,Credit
+TLE,BS,Bilanz,Balance sheet,TLE,Passiva gesamt,Total equity and liabilities,Bilanzsumme (Passiva),Total equity and liabilities,instant,1,1,599,Reporting
+REV,IS,GuV,Income statement,REV,Erlöse,Revenue,Umsatzerlöse,Revenue,duration,1,1,610,Controlling
+COGS,IS,GuV,Income statement,OPEX,Aufwendungen,Expenses,Umsatzkosten,Cost of sales,duration,1,1,620,Controlling
+MAT,IS,GuV,Income statement,OPEX,Aufwendungen,Expenses,Materialaufwand,Cost of materials,duration,1,0,625,Controlling
+GP,IS,GuV,Income statement,RES,Ergebnis,Result,Bruttoergebnis vom Umsatz,Gross profit,duration,1,0,630,Controlling
+SGA,IS,GuV,Income statement,OPEX,Aufwendungen,Expenses,Vertriebs- und Verwaltungskosten,"Selling, general and administrative expense",duration,1,0,640,Controlling
+RND,IS,GuV,Income statement,OPEX,Aufwendungen,Expenses,Forschungs- und Entwicklungskosten,Research and development expense,duration,1,0,650,Controlling
+PERS,IS,GuV,Income statement,OPEX,Aufwendungen,Expenses,Personalaufwand,Employee benefits expense,duration,1,0,655,Controlling
+DA,IS,GuV,Income statement,OPEX,Aufwendungen,Expenses,Abschreibungen,Depreciation and amortisation,duration,1,1,660,Controlling
+OPEX,IS,GuV,Income statement,OPEX,Aufwendungen,Expenses,Betriebliche Aufwendungen gesamt,Total operating expenses,duration,1,0,670,Controlling
+EBIT,IS,GuV,Income statement,RES,Ergebnis,Result,Betriebsergebnis (EBIT),Operating income (EBIT),duration,1,1,680,Controlling
+INTINC,IS,GuV,Income statement,FIN,Finanzergebnis,Financial result,Zinserträge und Finanzerträge,Interest and finance income,duration,1,0,685,Credit
+INTEXP,IS,GuV,Income statement,FIN,Finanzergebnis,Financial result,Zinsaufwand und Finanzaufwand,Interest and finance expense,duration,1,1,690,Credit
+EBT,IS,GuV,Income statement,RES,Ergebnis,Result,Ergebnis vor Steuern,Profit before tax,duration,1,1,700,Controlling
+TAX,IS,GuV,Income statement,RES,Ergebnis,Result,Ertragsteuern,Income tax expense,duration,1,0,710,Controlling
+NI,IS,GuV,Income statement,RES,Ergebnis,Result,Jahresergebnis (Anteilseigner),Net income attributable to owners,duration,1,1,720,Controlling
+SHARES,IS,GuV,Income statement,SH,Aktien,Shares,Durchschnittliche Aktienanzahl,Weighted average shares outstanding,duration,0,0,790,Reporting
+CFO,CF,Cashflow,Cash flow,OP,Operativer Cashflow,Operating cash flow,Cashflow aus laufender Geschäftstätigkeit,Net cash from operating activities,duration,1,1,810,Credit
+SBC,CF,Cashflow,Cash flow,OP,Operativer Cashflow,Operating cash flow,Aktienbasierte Vergütung,Share-based compensation,duration,1,0,815,Reporting
+INTPAID,CF,Cashflow,Cash flow,OP,Operativer Cashflow,Operating cash flow,Gezahlte Zinsen,Interest paid,duration,1,0,820,Credit
+TAXPAID,CF,Cashflow,Cash flow,OP,Operativer Cashflow,Operating cash flow,Gezahlte Ertragsteuern,Income taxes paid,duration,1,0,825,Reporting
+CAPEX,CF,Cashflow,Cash flow,INV,Investitions-Cashflow,Investing cash flow,Investitionen in Sachanlagen,Capital expenditure,duration,1,1,830,Controlling
+CFI,CF,Cashflow,Cash flow,INV,Investitions-Cashflow,Investing cash flow,Cashflow aus Investitionstätigkeit,Net cash from investing activities,duration,1,0,840,Reporting
+DEBTISS,CF,Cashflow,Cash flow,FIN,Finanzierungs-Cashflow,Financing cash flow,Aufnahme von Finanzschulden,Proceeds from borrowings,duration,1,0,850,Credit
+DEBTREP,CF,Cashflow,Cash flow,FIN,Finanzierungs-Cashflow,Financing cash flow,Tilgung von Finanzschulden,Repayments of borrowings,duration,1,0,855,Credit
+DIV,CF,Cashflow,Cash flow,FIN,Finanzierungs-Cashflow,Financing cash flow,Gezahlte Dividenden,Dividends paid,duration,1,0,860,Reporting
+CFF,CF,Cashflow,Cash flow,FIN,Finanzierungs-Cashflow,Financing cash flow,Cashflow aus Finanzierungstätigkeit,Net cash from financing activities,duration,1,0,870,Reporting
+CASH_CF,CF,Cashflow,Cash flow,END,Finanzmittelbestand,Cash position,Finanzmittelbestand am Periodenende,"Cash, cash equivalents and restricted cash at period end",instant,1,0,890,Reporting

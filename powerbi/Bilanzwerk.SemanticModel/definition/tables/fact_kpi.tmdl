@@ -1,0 +1,163 @@
+/// Kennzahlen mit Sektorperzentil, Veränderung und roter Flagge.
+table fact_kpi
+	lineageTag: 9cc15d74-9159-523f-a2ce-0ae943d485dd
+	sourceLineageTag: [marts].[fact_kpi]
+
+	/// Median des CCC über alle Unternehmen des Sektors im Kontext (aus fact_kpi, letzte Version).
+	measure 'CCC Sektor-Median' =
+			CALCULATE (
+			    MEDIANX ( VALUES ( dim_company[company_key] ), [KPI Wert] ),
+			    REMOVEFILTERS ( dim_company ),
+			    VALUES ( dim_sector[sector_key] ),
+			    dim_kpi[kpi_code] = "CCC"
+			)
+		formatString: 0.0
+		displayFolder: Working Capital
+		lineageTag: 664d9e1f-b41d-5fe9-94e0-d29ec3871af6
+
+	/// Durchschnittlicher Kennzahlenwert im Kontext (letzte Version, nach Restatements).
+	measure 'KPI Wert' = CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "latest" )
+		formatString: 0.00
+		displayFolder: Kennzahlen
+		lineageTag: 8ad5023c-68c9-54e7-a542-314bed7d1d33
+
+	/// Kennzahlenwert aus den erstveröffentlichten Zahlen (Point-in-time, Grundlage des Modells).
+	measure 'KPI Wert erstveröffentlicht' = CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "first_reported" )
+		formatString: 0.00
+		displayFolder: Kennzahlen
+		lineageTag: 5672502a-cde8-59bd-96f9-8f5067fd4d95
+
+	/// Perzentil der Kennzahl innerhalb von Sektor und Jahr.
+	measure Sektorperzentil = CALCULATE ( AVERAGE ( fact_kpi[sector_percentile] ), fact_kpi[version] = "latest" )
+		formatString: 0%
+		displayFolder: Kennzahlen
+		lineageTag: 58360fe2-56e0-5275-9d8b-6e8a1bf0db90
+
+	/// Anzahl roter Flaggen (Schwelle laut dim_kpi).
+	measure 'Rote Flaggen' = CALCULATE ( SUM ( fact_kpi[red_flag] ), fact_kpi[version] = "latest" )
+		formatString: #,0
+		displayFolder: Kennzahlen
+		lineageTag: a8e6c125-aaa7-575e-8054-6d36f918793d
+
+	/// Altman Z'' (1995) für Nicht-Produzenten. Unter 1,1 Distress-Zone, über 2,6 sichere Zone.
+	measure 'Z'''' Score' = CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "ZPP" )
+		formatString: 0.00
+		displayFolder: Kreditrisiko
+		lineageTag: f2371b39-df62-51cb-9731-3232d3e510ec
+
+	/// Anteil der Kennzahlenwerte, deren letzte Version von der Erstveröffentlichung abweicht.
+	measure 'Restatement-Quote' =
+			VAR _paare =
+			    ADDCOLUMNS (
+			        SUMMARIZE ( fact_kpi, fact_kpi[company_key], fact_kpi[period_key], fact_kpi[kpi_key] ),
+			        "@erst", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "first_reported" ),
+			        "@letzt", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "latest" )
+			    )
+			RETURN DIVIDE ( COUNTROWS ( FILTER ( _paare, ABS ( [@erst] - [@letzt] ) > 0.005 * ABS ( [@erst] ) ) ), COUNTROWS ( _paare ) )
+		formatString: 0.0%
+		displayFolder: Datenqualität
+		lineageTag: 1649e910-f3a5-5cc8-95c2-401a8397f82a
+
+	column company_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_key
+		lineageTag: 8a4495d0-507a-5e76-8e80-01783b60d895
+		sourceLineageTag: company_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: 3012f218-1a02-5c80-8369-4616d00eb2ad
+		sourceLineageTag: company_id
+
+	column period_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: period_key
+		lineageTag: f800785e-26b2-5c73-9288-6ac4db353440
+		sourceLineageTag: period_key
+
+	column period_end_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		isHidden
+		summarizeBy: none
+		sourceColumn: period_end_date
+		lineageTag: 2acfc7b1-7a73-5c1b-bb13-8482a80a1294
+		sourceLineageTag: period_end_date
+
+	column kpi_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: kpi_key
+		lineageTag: 112ef6f3-2154-50ab-9171-3094e8d3e950
+		sourceLineageTag: kpi_key
+
+	column version
+		dataType: string
+		summarizeBy: none
+		sourceColumn: version
+		lineageTag: f960151f-0922-5556-a960-9b8325a90059
+		sourceLineageTag: version
+
+	column value
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: value
+		lineageTag: 4eec6069-d36a-5b3f-b500-443c4a405306
+		sourceLineageTag: value
+
+	column sector_percentile
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: sector_percentile
+		lineageTag: 4d017676-e015-506a-9291-0cd0def698da
+		sourceLineageTag: sector_percentile
+
+	column change_1q
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: change_1q
+		lineageTag: b45a3c87-9cf9-5833-8b69-58461b1c0ac3
+		sourceLineageTag: change_1q
+
+	column change_4q
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: change_4q
+		lineageTag: f7cd2d2f-2d2a-54ac-90ad-5c6bc408d943
+		sourceLineageTag: change_4q
+
+	column red_flag
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: red_flag
+		lineageTag: 184cc59b-17be-5a1a-9924-505c4f920a6e
+		sourceLineageTag: red_flag
+
+	column available_at
+		dataType: dateTime
+		formatString: dd.MM.yyyy HH:mm
+		isHidden
+		summarizeBy: none
+		sourceColumn: available_at
+		lineageTag: 67a909c8-93fb-5fea-b64d-790d529985d6
+		sourceLineageTag: available_at
+
+	partition fact_kpi = entity
+		mode: directLake
+		source
+			entityName: fact_kpi
+			schemaName: marts
+			expressionSource: DatabaseQuery

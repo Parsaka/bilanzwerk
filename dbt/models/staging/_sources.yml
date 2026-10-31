@@ -1,0 +1,102 @@
+version: 2
+
+# Landed Parquet. Locally (DuckDB) each source reads the Parquet files directly through
+# external_location. In Fabric the Lakehouse exposes the same folders as Delta tables
+# (fabric/notebooks/nb_files_to_tables) and dbt reads them across databases.
+
+sources:
+  - name: sec_fsds
+    description: SEC Financial Statement Data Sets, one partition per quarter.
+    database: "{{ env_var('BW_LAKEHOUSE', 'lh_bilanzwerk') if target.type == 'fabric' else none }}"
+    schema: "{{ 'dbo' if target.type == 'fabric' else 'main' }}"
+    meta:
+      external_location: "read_parquet('{{ env_var('BW_DATA_ROOT', '../data') }}/raw/sec_fsds/{name}/*/*.parquet', hive_partitioning = true, union_by_name = true)"
+    loaded_at_field: "cast(accepted as timestamp)"
+    tables:
+      - name: sub
+        identifier: "{{ 'sec_fsds_sub' if target.type == 'fabric' else 'sub' }}"
+        description: One row per filing.
+        freshness:
+          warn_after: {count: 100, period: day}
+          error_after: {count: 120, period: day}
+      - name: num
+        identifier: "{{ 'sec_fsds_num' if target.type == 'fabric' else 'num' }}"
+        description: One row per reported amount.
+        loaded_at_field: null
+      - name: tag
+        identifier: "{{ 'sec_fsds_tag' if target.type == 'fabric' else 'tag' }}"
+        loaded_at_field: null
+      - name: pre
+        identifier: "{{ 'sec_fsds_pre' if target.type == 'fabric' else 'pre' }}"
+        loaded_at_field: null
+
+  - name: sec_submissions
+    description: SEC submissions bulk file, flattened. Partitioned by load_date.
+    database: "{{ env_var('BW_LAKEHOUSE', 'lh_bilanzwerk') if target.type == 'fabric' else none }}"
+    schema: "{{ 'dbo' if target.type == 'fabric' else 'main' }}"
+    meta:
+      external_location: "read_parquet('{{ env_var('BW_DATA_ROOT', '../data') }}/raw/sec_submissions/{name}/*/*.parquet', hive_partitioning = true, union_by_name = true)"
+    tables:
+      - name: companies
+        identifier: "{{ 'sec_submissions_companies' if target.type == 'fabric' else 'companies' }}"
+      - name: former_names
+        identifier: "{{ 'sec_submissions_former_names' if target.type == 'fabric' else 'former_names' }}"
+      - name: filings
+        identifier: "{{ 'sec_submissions_filings' if target.type == 'fabric' else 'filings' }}"
+
+  - name: gleif
+    description: GLEIF LEI golden copy (full and daily deltas), privacy-filtered at ingestion.
+    database: "{{ env_var('BW_LAKEHOUSE', 'lh_bilanzwerk') if target.type == 'fabric' else none }}"
+    schema: "{{ 'dbo' if target.type == 'fabric' else 'main' }}"
+    meta:
+      external_location: "read_parquet('{{ env_var('BW_DATA_ROOT', '../data') }}/raw/gleif/{name}/*/*/*.parquet', hive_partitioning = true, union_by_name = true)"
+    tables:
+      - name: entities
+        identifier: "{{ 'gleif_entities' if target.type == 'fabric' else 'entities' }}"
+      - name: relationships
+        identifier: "{{ 'gleif_relationships' if target.type == 'fabric' else 'relationships' }}"
+
+  - name: ecb
+    description: ECB euro reference rates (units of currency per 1 EUR).
+    database: "{{ env_var('BW_LAKEHOUSE', 'lh_bilanzwerk') if target.type == 'fabric' else none }}"
+    schema: "{{ 'dbo' if target.type == 'fabric' else 'main' }}"
+    meta:
+      external_location: "read_parquet('{{ env_var('BW_DATA_ROOT', '../data') }}/raw/ecb/{name}/*/*.parquet', hive_partitioning = true, union_by_name = true)"
+    tables:
+      - name: rates
+        identifier: "{{ 'ecb_rates' if target.type == 'fabric' else 'rates' }}"
+
+  - name: esef
+    description: ESEF filings from filings.xbrl.org, facts without dimensions.
+    database: "{{ env_var('BW_LAKEHOUSE', 'lh_bilanzwerk') if target.type == 'fabric' else none }}"
+    schema: "{{ 'dbo' if target.type == 'fabric' else 'main' }}"
+    tables:
+      - name: filings
+        identifier: "{{ 'esef_filings' if target.type == 'fabric' else 'filings' }}"
+        meta:
+          external_location: "read_parquet('{{ env_var('BW_DATA_ROOT', '../data') }}/raw/esef/filings/*/*.parquet', hive_partitioning = true, union_by_name = true)"
+      - name: facts
+        identifier: "{{ 'esef_facts' if target.type == 'fabric' else 'facts' }}"
+        meta:
+          external_location: "read_parquet('{{ env_var('BW_DATA_ROOT', '../data') }}/raw/esef/facts/*/*/*.parquet', hive_partitioning = true, union_by_name = true)"
+
+  - name: mdm
+    description: Output of the Splink matching job (mdm/), written back as Parquet / tables.
+    database: "{{ env_var('BW_LAKEHOUSE', 'lh_bilanzwerk') if target.type == 'fabric' else none }}"
+    schema: "{{ 'dbo' if target.type == 'fabric' else 'main' }}"
+    meta:
+      external_location: "read_parquet('{{ env_var('BW_DATA_ROOT', '../data') }}/mdm/{name}.parquet')"
+    tables:
+      - name: company_matches
+        identifier: "{{ 'mdm_company_matches' if target.type == 'fabric' else 'company_matches' }}"
+        description: One row per scored SEC/ESEF-to-GLEIF candidate pair above the review threshold.
+
+  - name: analysis
+    description: Risk scores written back by the early-warning model (analysis/).
+    database: "{{ env_var('BW_LAKEHOUSE', 'lh_bilanzwerk') if target.type == 'fabric' else none }}"
+    schema: "{{ 'dbo' if target.type == 'fabric' else 'main' }}"
+    meta:
+      external_location: "read_parquet('{{ env_var('BW_DATA_ROOT', '../data') }}/analysis/{name}.parquet')"
+    tables:
+      - name: risk_scores
+        identifier: "{{ 'analysis_risk_scores' if target.type == 'fabric' else 'risk_scores' }}"

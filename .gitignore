@@ -1,0 +1,44 @@
+# data never goes into Git
+data/
+.ci-data/
+*.duckdb
+*.duckdb.wal
+*.parquet
+!mdm/labelled_pairs.csv
+mlruns/
+mlflow.db
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/
+
+# terraform
+**/.terraform/
+infra/terraform/*/backend.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# Power BI local settings / cache
+powerbi/**/.pbi/localSettings.json
+powerbi/**/.pbi/cache.abf
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Tableau extract: produced by scripts/export_tableau.py, published to Tableau Public, not versioned
+tableau/data/

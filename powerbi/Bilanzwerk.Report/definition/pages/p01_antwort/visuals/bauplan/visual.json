@@ -1,0 +1,70 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "bauplan",
+  "position": {
+    "x": 24,
+    "y": 88,
+    "z": 2,
+    "width": 1232,
+    "height": 560,
+    "tabOrder": 2
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Bauplan (nach dem Platzieren der Visuals löschen):",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Vier Hypothesen-Karten H1–H4: gehalten oder nicht, Kennzahl, 95%-Intervall (Quelle: analysis/answer.json, nicht von Hand)",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Vorlaufzeit-Diagramm Z'' gegen CCC (Monate vor dem Ereignis, Median und Interquartil)",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Summe Cash-Potenzial in Mrd. EUR ([Cash-Potenzial])",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drawVisualContainerHeader": false
+  }
+}

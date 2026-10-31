@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: pit_fact_first_reported
+    description: The value from the earliest accepted filing per company, concept, period end, duration and unit. The only version the model may use.
+    tests:
+      - unique_combination: {columns: ['hk_company', 'taxonomy', 'tag', 'period_end', 'qtrs', 'unit']}
+    columns:
+      - name: available_at
+        tests: [not_null]
+
+  - name: pit_fact_latest
+    tests:
+      - unique_combination: {columns: ['hk_company', 'taxonomy', 'tag', 'period_end', 'qtrs', 'unit']}
+
+  - name: bv_line_item_values
+    tests:
+      - unique_combination: {columns: ['version', 'hk_company', 'line_item_code', 'period_end', 'qtrs']}
+
+  - name: bv_single_quarter
+    tests:
+      - unique_combination: {columns: ['version', 'hk_company', 'line_item_code', 'period_end']}
+
+  - name: bv_period_values
+    tests:
+      - unique_combination: {columns: ['version', 'hk_company', 'line_item_code', 'period_end']}
+    columns:
+      - name: derivation
+        tests: [{accepted_values: {values: ['reported', 'derived_ytd', 'annual_only']}}]
+
+  - name: bv_period_values_eur
+    tests:
+      - unique_combination: {columns: ['version', 'hk_company', 'line_item_code', 'period_end']}
+
+  - name: bv_fx_daily
+    tests:
+      - unique_combination: {columns: ['currency_code', 'date_day']}
+
+  - name: bv_company_golden
+    columns:
+      - name: hk_company
+        tests: [unique, not_null]
+      - name: golden_company_id
+        tests: [not_null]
+      - name: match_source
+        tests: [{accepted_values: {values: ['steward', 'sec_profile', 'splink', 'unmatched', 'lei_native']}}]
+
+  - name: bv_company_periods
+    tests:
+      - unique_combination: {columns: ['hk_company', 'period_end']}

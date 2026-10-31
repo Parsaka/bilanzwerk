@@ -1,0 +1,33 @@
+/// ISO-Währungen.
+table dim_currency
+	lineageTag: b8a00777-2778-5ef5-ae29-a3a8ee1f0b8a
+	sourceLineageTag: [marts].[dim_currency]
+
+	column currency_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: currency_key
+		lineageTag: 0a9b8d16-4779-54b3-a369-adc7baec2da3
+		sourceLineageTag: currency_key
+
+	column currency_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: currency_code
+		lineageTag: 0b7c0b57-ef3c-5071-b3fc-b448359a5860
+		sourceLineageTag: currency_code
+
+	column currency_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: currency_name
+		lineageTag: f2e1c00b-4273-50eb-95c3-12e92d493af0
+		sourceLineageTag: currency_name
+
+	partition dim_currency = entity
+		mode: directLake
+		source
+			entityName: dim_currency
+			schemaName: marts
+			expressionSource: DatabaseQuery

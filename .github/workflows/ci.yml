@@ -1,0 +1,126 @@
+name: ci
+
+# Every pull request: lint, unit tests (incl. the leakage test), SQLFluff, the whole dbt DAG on
+# the synthetic CI fixture, contract check, MDM and model smoke run, Power BI model checks and the
+# Tabular Editor Best Practice Analyzer. No cloud access needed.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BW_DATA_ROOT: ${{ github.workspace }}/.ci-data
+  UV_PYTHON: "3.12"
+
+jobs:
+  python:
+    name: Lint and unit tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras --locked
+      - name: ruff
+        run: |
+          uv run ruff check --output-format github .
+          uv run ruff format --check .
+      - name: pytest (loaders, MDM, analysis incl. leakage test, Power BI and Fabric item checks)
+        run: uv run pytest --cov=ingestion --cov=mdm --cov=analysis --cov-report=term-missing:skip-covered
+
+  dbt:
+    name: dbt on the CI fixture
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras --locked
+      - name: Build the synthetic landing zone (real loaders, invented companies)
+        run: uv run python scripts/build_test_landing.py --out "$BW_DATA_ROOT"
+      - name: dbt build without MDM and model outputs
+        working-directory: dbt
+        env:
+          DBT_PROFILES_DIR: .
+        run: |
+          uv run dbt seed
+          uv run dbt run --empty
+          uv run dbt build --vars '{wc_min_sector_peers: 1}'
+      - name: MDM matching and early-warning smoke run on the fixture
+        run: |
+          uv run python -m mdm.cli match
+          BW_HAS_MDM=true uv run dbt build --project-dir dbt --profiles-dir dbt --vars '{wc_min_sector_peers: 1}'
+          uv run bw-analysis run --no-mlflow
+      - name: dbt build with MDM and risk scores, then an incremental rerun
+        working-directory: dbt
+        env:
+          DBT_PROFILES_DIR: .
+          BW_HAS_MDM: "true"
+          BW_HAS_RISK_SCORES: "true"
+        run: |
+          uv run dbt build --vars '{wc_min_sector_peers: 1}'
+          uv run dbt build --vars '{wc_min_sector_peers: 1}'
+      - name: Data contracts match the warehouse
+        run: uv run python scripts/check_contracts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb"
+      - name: SQLFluff
+        env:
+          BW_HAS_MDM: "true"
+          BW_HAS_RISK_SCORES: "true"
+        run: uv run sqlfluff lint dbt/models --processes 4 --format github-annotation-native
+      - name: Generated Power BI model and report pages are up to date
+        run: |
+          uv run python powerbi/tools/generate_tmdl.py
+          uv run python powerbi/tools/generate_report.py
+          uv run python powerbi/tools/check_pbip.py
+          git diff --exit-code -- powerbi/
+
+  bpa:
+    name: Best Practice Analyzer (Tabular Editor 2)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Tabular Editor 2 (portable)
+        shell: pwsh
+        run: |
+          # Latest TE2 release (TMDL folders are supported since 2.21).
+          $url = "https://github.com/TabularEditor/TabularEditor/releases/latest/download/TabularEditor.Portable.zip"
+          Invoke-WebRequest $url -OutFile te2.zip
+          Expand-Archive te2.zip -DestinationPath te2
+      - name: Run the BPA rules on the TMDL model (fails on severity 3)
+        shell: pwsh
+        run: |
+          # TabularEditor.exe is a GUI-subsystem program: start it with redirected streams so the
+          # job waits for it and its output (the ::error lines for violations) reaches the log.
+          $p = Start-Process -FilePath .\te2\TabularEditor.exe -Wait -PassThru -NoNewWindow `
+            -ArgumentList '"powerbi\Bilanzwerk.SemanticModel\definition" -A "powerbi\bpa\rules.json" -G' `
+            -RedirectStandardOutput bpa.out -RedirectStandardError bpa.err
+          $out = @(Get-Content bpa.out) + @(Get-Content bpa.err)
+          $out | Write-Output
+          Write-Output "Tabular Editor exit code: $($p.ExitCode)"
+          if ($p.ExitCode -ne 0 -or ($out | Select-String -Pattern "^::error")) { exit 1 }
+
+  terraform:
+    name: Terraform fmt and validate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - run: terraform fmt -check -recursive infra/terraform
+      - name: validate (no backend)
+        run: |
+          for stack in azure fabric; do
+            terraform -chdir=infra/terraform/$stack init -backend=false -input=false
+            terraform -chdir=infra/terraform/$stack validate
+          done

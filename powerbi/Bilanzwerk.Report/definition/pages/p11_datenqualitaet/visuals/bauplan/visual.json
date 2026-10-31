@@ -1,0 +1,81 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "bauplan",
+  "position": {
+    "x": 24,
+    "y": 88,
+    "z": 2,
+    "width": 1232,
+    "height": 560,
+    "tabOrder": 2
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Bauplan (nach dem Platzieren der Visuals löschen):",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Scorecard je Regel und Lauf (fact_data_quality)",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• LEI-Match-Quote, Restatement-Quote",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Stewardship-Warteschlange",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Service Levels aus docs/runbook.md: Frische 24 h, Bilanzprüfung ≥ 98 %, Refresh-Erfolg 99 %",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#8C8C8C"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drawVisualContainerHeader": false
+  }
+}
