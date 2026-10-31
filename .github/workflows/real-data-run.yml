@@ -118,6 +118,9 @@ jobs:
       - name: dbt build with MDM
         env:
           BW_HAS_MDM: "true"
+          # one model at a time: fact_event and dim_period spilling together filled the runner's
+          # disk (DuckDB temp, run 41209125535)
+          BW_DBT_THREADS: "1"
         run: scripts/real_data_dbt_build.sh mdm source:mdm+
       - name: Early-warning analysis (M0-M3, S1, H1-H4)
         env:
@@ -129,6 +132,7 @@ jobs:
         env:
           BW_HAS_MDM: "true"
           BW_HAS_RISK_SCORES: "true"
+          BW_DBT_THREADS: "1"
         run: scripts/real_data_dbt_build.sh scores source:analysis+
       - name: Data contracts match the warehouse
         run: uv run python scripts/check_contracts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" | tee data/results/contracts.txt
