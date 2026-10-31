@@ -144,6 +144,8 @@ jobs:
         run: scripts/real_data_dbt_build.sh scores source:analysis+
       - name: Data contracts match the warehouse
         run: uv run python scripts/check_contracts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" | tee data/results/contracts.txt
+      - name: Run metrics (data-quality rules, MDM counts)
+        run: uv run python scripts/export_run_metrics.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" --out data/results
       - name: Tableau extract
         run: uv run python scripts/export_tableau.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb"
       - name: Tableau workbook (packaged with the extract)
