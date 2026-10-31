@@ -1,0 +1,152 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "ereignisse",
+  "position": {
+    "x": 856,
+    "y": 274,
+    "z": 9,
+    "width": 400,
+    "height": 390,
+    "tabOrder": 9
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_event"
+                    }
+                  },
+                  "Property": "event_date"
+                }
+              },
+              "queryRef": "fact_event.event_date",
+              "nativeQueryRef": "event_date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_event"
+                    }
+                  },
+                  "Property": "event_type"
+                }
+              },
+              "queryRef": "fact_event.event_type",
+              "nativeQueryRef": "event_type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_event"
+                    }
+                  },
+                  "Property": "form"
+                }
+              },
+              "queryRef": "fact_event.form",
+              "nativeQueryRef": "form"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_event"
+                    }
+                  },
+                  "Property": "item_code"
+                }
+              },
+              "queryRef": "fact_event.item_code",
+              "nativeQueryRef": "item_code"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_event"
+                  }
+                },
+                "Property": "event_date"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 02 ereignisse"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

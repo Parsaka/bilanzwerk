@@ -1,0 +1,96 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "ccc",
+  "position": {
+    "x": 24,
+    "y": 414,
+    "z": 5,
+    "width": 820,
+    "height": 250,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_period"
+                    }
+                  },
+                  "Property": "period_end_date"
+                }
+              },
+              "queryRef": "dim_period.period_end_date",
+              "nativeQueryRef": "period_end_date"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_financial_line"
+                    }
+                  },
+                  "Property": "CCC"
+                }
+              },
+              "queryRef": "fact_financial_line.CCC",
+              "nativeQueryRef": "CCC"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_kpi"
+                    }
+                  },
+                  "Property": "CCC Sektor-Median"
+                }
+              },
+              "queryRef": "fact_kpi.CCC Sektor-Median",
+              "nativeQueryRef": "CCC Sektor-Median"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 05 ccc"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

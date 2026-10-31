@@ -1,0 +1,110 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "umsatz_bis_ebit",
+  "position": {
+    "x": 646,
+    "y": 152,
+    "z": 6,
+    "width": 610,
+    "height": 250,
+    "tabOrder": 6
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_period"
+                    }
+                  },
+                  "Property": "fiscal_year"
+                }
+              },
+              "queryRef": "dim_period.fiscal_year",
+              "nativeQueryRef": "fiscal_year"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_financial_line"
+                    }
+                  },
+                  "Property": "Umsatz"
+                }
+              },
+              "queryRef": "fact_financial_line.Umsatz",
+              "nativeQueryRef": "Umsatz"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_financial_line"
+                    }
+                  },
+                  "Property": "COGS"
+                }
+              },
+              "queryRef": "fact_financial_line.COGS",
+              "nativeQueryRef": "COGS"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_financial_line"
+                    }
+                  },
+                  "Property": "EBIT"
+                }
+              },
+              "queryRef": "fact_financial_line.EBIT",
+              "nativeQueryRef": "EBIT"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 04 umsatz_bis_ebit"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

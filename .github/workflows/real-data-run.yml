@@ -134,6 +134,8 @@ jobs:
         run: uv run python scripts/check_contracts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" | tee data/results/contracts.txt
       - name: Tableau extract
         run: uv run python scripts/export_tableau.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb"
+      - name: Tableau workbook (packaged with the extract)
+        run: uv run python tableau/build_workbook.py --out data/results/tableau/Bilanzwerk_Working_Capital.twbx
 
       - name: Collect results
         if: always()
@@ -143,6 +145,7 @@ jobs:
           cp -r data/results/. "$out/" 2>/dev/null || true
           cp -r data/analysis/results "$out/analysis" 2>/dev/null || true
           find data/mdm -maxdepth 1 -type f \( -name '*.json' -o -name '*.csv' -o -name '*.md' \) -exec cp {} "$out/" \; 2>/dev/null || true
+          cp -r data/mdm/reports "$out/mdm_reports" 2>/dev/null || true
           cp dbt/target/run_results.json "$out/dbt_run_results.json" 2>/dev/null || true
           uv run python scripts/export_test_failures.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" --out "$out/test_failures" || true
           cp tableau/data/*manifest* "$out/" 2>/dev/null || true

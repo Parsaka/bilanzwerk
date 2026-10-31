@@ -19,11 +19,17 @@ ref table fact_wc_opportunity
 ref table fact_risk_score
 ref table fact_data_quality
 ref table fact_stewardship_queue
+ref table fact_hypothesis_result
+ref table fact_model_backtest
+ref table fact_lead_time
+ref table fact_case_study
 ref table sector_team_users
 ref table Zeitintelligenz
 ref table Szenario
 ref table 'Währung'
 ref table 'KPI-Auswahl'
+ref table 'KPI-Auswahl Y'
+ref table 'GuV-Brücke'
 ref table Sprache
 
 ref role 'Sektor-Team'

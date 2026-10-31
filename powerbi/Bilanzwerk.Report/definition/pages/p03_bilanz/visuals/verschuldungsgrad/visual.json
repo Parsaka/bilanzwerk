@@ -1,0 +1,82 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "verschuldungsgrad",
+  "position": {
+    "x": 646,
+    "y": 414,
+    "z": 7,
+    "width": 610,
+    "height": 250,
+    "tabOrder": 7
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_period"
+                    }
+                  },
+                  "Property": "fiscal_year"
+                }
+              },
+              "queryRef": "dim_period.fiscal_year",
+              "nativeQueryRef": "fiscal_year"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_financial_line"
+                    }
+                  },
+                  "Property": "Verschuldungsgrad"
+                }
+              },
+              "queryRef": "fact_financial_line.Verschuldungsgrad",
+              "nativeQueryRef": "Verschuldungsgrad"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 03 verschuldungsgrad"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

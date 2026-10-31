@@ -1,8 +1,8 @@
 # Berichtsseiten / Report pages
 
 Generated from `powerbi/report/pages.yml` by `powerbi/tools/generate_report.py`. Each page answers one
-question, printed in its title. Title, language switch and footer are generated; the main visuals
-are placed in Power BI Desktop as listed here.
+question, printed in its title. The whole page is generated from `layout` in pages.yml: title,
+language switch, footer and the main visuals listed here.
 
 Design rules: one accent colour (#1F5AA6) for the item the title talks about, grey for the rest,
 red and green only for risk bands; every chart title states the finding (written after the real-data
@@ -24,5 +24,6 @@ run, never before); a footer on each page with data cut-off date and source (mea
 
 ## Status
 
-Pages with a build note (`bauplan` visual) still need their main visuals. Screenshots of all 11 pages
-go to `docs/img/report/` once the report runs on real data.
+All 11 pages carry their main visuals (generated, checked against the Microsoft PBIR schemas and
+the model by `check_pbip.py`). Open in Power BI Desktop: screenshots of all 11 pages for
+`docs/img/report/` and the DAX Studio timings, both against the deployed model.

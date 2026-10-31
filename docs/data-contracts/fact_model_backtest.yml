@@ -1,0 +1,26 @@
+table: fact_model_backtest
+schema: marts
+owner: Credit Risk
+grain: one row per model of the last model run
+freshness: after each model run (quarterly)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: model_name
+  type: string
+- name: is_champion
+  type: integer
+- name: n_observations
+  type: integer
+- name: n_events
+  type: integer
+- name: pr_auc
+  type: float
+- name: recall_top5
+  type: float
+- name: brier
+  type: float
+- name: run_id
+  type: string
+- name: data_version
+  type: string

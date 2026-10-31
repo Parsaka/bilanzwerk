@@ -1,0 +1,150 @@
+/// Die drei Fallstudien (feste Auswahlregel, analysis/pipeline.py).
+table fact_case_study
+	lineageTag: 3914dc89-6835-5509-9e4b-ac808a25dece
+	sourceLineageTag: [marts].[fact_case_study]
+
+	/// Z'' Score der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung).
+	measure 'Fall Z'''' Score' = CALCULATE ( [Z'' Score], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+		formatString: 0.00
+		displayFolder: Fallstudien
+		lineageTag: bc8a53af-adcf-5596-8f47-d882a66c7b22
+
+	/// CCC der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung).
+	measure 'Fall CCC' = CALCULATE ( [CCC], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+		formatString: 0.0
+		displayFolder: Fallstudien
+		lineageTag: 90d6b9fb-b7f3-5f2d-8448-5ec58d8f29d1
+
+	/// CCC Sektor-Median der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung).
+	measure 'Fall CCC Sektor-Median' = CALCULATE ( [CCC Sektor-Median], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+		formatString: 0.0
+		displayFolder: Fallstudien
+		lineageTag: 362584a8-dccc-5c02-bb0a-4cb17f9bf266
+
+	/// Rote Flaggen der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung).
+	measure 'Fall Rote Flaggen' = CALCULATE ( [Rote Flaggen], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+		formatString: #,0
+		displayFolder: Fallstudien
+		lineageTag: f33fde03-7ff4-5f3a-9cb6-99c51b90f214
+
+	/// Ereignisse der gewählten Fallstudie bis zur Insolvenz, eines je Zeile (Datum, Art, Formular).
+	measure 'Fall Ereignisse' =
+			VAR _ereignisse = CALCULATETABLE ( fact_event, TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+			RETURN
+			    CONCATENATEX (
+			        _ereignisse,
+			        FORMAT ( fact_event[event_date], "dd.MM.yyyy" ) & "  " & fact_event[event_type] & "  " & fact_event[form],
+			        UNICHAR ( 10 ),
+			        fact_event[event_date], ASC
+			    )
+		displayFolder: Beschriftungen\Fallstudien
+		lineageTag: 5cc41cec-0e53-5192-9404-6f1fc48b489d
+
+	/// Titel der Fallstudie: Unternehmen, Ereignisdatum und Vorlaufzeiten beider Flaggen, aus den Daten.
+	measure 'Befund Fallstudie' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _name = SELECTEDVALUE ( fact_case_study[company_name] )
+			VAR _datum = SELECTEDVALUE ( fact_case_study[event_date] )
+			VAR _z = SELECTEDVALUE ( fact_case_study[lead_months_z] )
+			VAR _c = SELECTEDVALUE ( fact_case_study[lead_months_ccc] )
+			VAR _zt = IF ( ISBLANK ( _z ), IF ( _en, "never red", "nie rot" ), FORMAT ( _z, "0.0" ) & IF ( _en, " months ahead", " Monate vorher" ) )
+			VAR _ct = IF ( ISBLANK ( _c ), IF ( _en, "never red", "nie rot" ), FORMAT ( _c, "0.0" ) & IF ( _en, " months ahead", " Monate vorher" ) )
+			RETURN
+			    IF ( ISBLANK ( _name ), IF ( _en, "Pick a case study", "Bitte eine Fallstudie wählen" ),
+			        _name & IF ( _en, ", bankruptcy ", ", Insolvenz " ) & FORMAT ( _datum, IF ( _en, "yyyy-MM-dd", "dd.MM.yyyy" ) )
+			            & " · Z'': " & _zt & " · CCC: " & _ct )
+		displayFolder: Beschriftungen
+		lineageTag: 8eb1a3f6-9a81-52b4-be41-1a2563c1103c
+
+	column case_rank
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: case_rank
+		lineageTag: 6faba3db-987c-5077-ad6c-feb4c24dffb6
+		sourceLineageTag: case_rank
+
+	column company_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_key
+		lineageTag: 52f0153b-fdb5-57c6-ad40-1ad2949ffba1
+		sourceLineageTag: company_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: db4d6736-7e70-5811-96aa-f3239a77d0e8
+		sourceLineageTag: company_id
+
+	column cik
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: cik
+		lineageTag: 0d4158e9-3784-523f-940d-ed7ce5cadb4a
+		sourceLineageTag: cik
+
+	column company_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: company_name
+		lineageTag: 5fda33af-e060-57df-81d1-c0a9e8b2aa31
+		sourceLineageTag: company_name
+
+	column sector_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: sector_de
+		lineageTag: bedc3de3-337c-543d-848d-b109f95afc2a
+		sourceLineageTag: sector_de
+
+	column event_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		summarizeBy: none
+		sourceColumn: event_date
+		lineageTag: 8fd1b1b3-3393-54ef-99b6-0d95c63bf73b
+		sourceLineageTag: event_date
+
+	column revenue_ttm_eur
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: revenue_ttm_eur
+		lineageTag: 4a640491-754c-5cd4-8a1c-9aebc23fe518
+		sourceLineageTag: revenue_ttm_eur
+
+	column lead_months_ccc
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: lead_months_ccc
+		lineageTag: 28b34c0f-eb07-558a-8b23-ded843023089
+		sourceLineageTag: lead_months_ccc
+
+	column lead_months_z
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: lead_months_z
+		lineageTag: 01976109-88ae-5fda-bce0-87d98982c858
+		sourceLineageTag: lead_months_z
+
+	column run_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: run_id
+		lineageTag: df9b398b-6877-5b75-8000-89e79a8134c0
+		sourceLineageTag: run_id
+
+	partition fact_case_study = entity
+		mode: directLake
+		source
+			entityName: fact_case_study
+			schemaName: marts
+			expressionSource: DatabaseQuery

@@ -1,0 +1,150 @@
+/// H1–H4, wie der letzte Modelllauf sie entschieden hat (analysis/answer.json).
+table fact_hypothesis_result
+	lineageTag: 34f7f263-379b-5b16-90e9-1647ecdc24fd
+	sourceLineageTag: [marts].[fact_hypothesis_result]
+
+	/// Ergebnissatz der Hypothese in der Zeile (Tabelle auf der Seite Antwort), Deutsch oder Englisch.
+	measure 'Antwort Text' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			RETURN IF ( _en, SELECTEDVALUE ( fact_hypothesis_result[text_en] ), SELECTEDVALUE ( fact_hypothesis_result[text_de] ) )
+		displayFolder: Beschriftungen\Antwort
+		lineageTag: 51f78bb4-f967-5eee-b62a-4304a6ea08e6
+
+	/// Ergebnissatz zu H1 Vorlaufzeit aus dem letzten Modelllauf (Deutsch oder Englisch nach Sprache), nie von Hand.
+	measure 'Antwort H1' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _de = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_de] ), fact_hypothesis_result[hypothesis_code] = "H1" )
+			VAR _txt = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_en] ), fact_hypothesis_result[hypothesis_code] = "H1" )
+			RETURN IF ( _en, _txt, _de )
+		displayFolder: Beschriftungen\Antwort
+		lineageTag: 5c16b2f9-02cd-52cc-b484-ffeb20bc039b
+
+	/// Ergebnissatz zu H2 Genauigkeit aus dem letzten Modelllauf (Deutsch oder Englisch nach Sprache), nie von Hand.
+	measure 'Antwort H2' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _de = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_de] ), fact_hypothesis_result[hypothesis_code] = "H2" )
+			VAR _txt = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_en] ), fact_hypothesis_result[hypothesis_code] = "H2" )
+			RETURN IF ( _en, _txt, _de )
+		displayFolder: Beschriftungen\Antwort
+		lineageTag: 3c86e763-7788-53c1-99e4-dbcb71d173b9
+
+	/// Ergebnissatz zu H3 Sektorsicht aus dem letzten Modelllauf (Deutsch oder Englisch nach Sprache), nie von Hand.
+	measure 'Antwort H3' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _de = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_de] ), fact_hypothesis_result[hypothesis_code] = "H3" )
+			VAR _txt = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_en] ), fact_hypothesis_result[hypothesis_code] = "H3" )
+			RETURN IF ( _en, _txt, _de )
+		displayFolder: Beschriftungen\Antwort
+		lineageTag: 6d82587b-71c5-55e8-bd2a-bbc94a200b49
+
+	/// Ergebnissatz zu H4 Euro-Wert aus dem letzten Modelllauf (Deutsch oder Englisch nach Sprache), nie von Hand.
+	measure 'Antwort H4' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _de = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_de] ), fact_hypothesis_result[hypothesis_code] = "H4" )
+			VAR _txt = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_en] ), fact_hypothesis_result[hypothesis_code] = "H4" )
+			RETURN IF ( _en, _txt, _de )
+		displayFolder: Beschriftungen\Antwort
+		lineageTag: 5ac6ceaf-6022-5e0d-804d-03e20fe5ecee
+
+	/// Anzahl der Hypothesen H1–H4, die der letzte Lauf bestätigt hat.
+	measure 'Hypothesen bestätigt' = SUM ( fact_hypothesis_result[is_held] )
+		formatString: #,0
+		displayFolder: Antwort
+		lineageTag: 897551ff-4d54-533f-8b59-5d643871e71c
+
+	column hypothesis_code
+		dataType: string
+		summarizeBy: none
+		sourceColumn: hypothesis_code
+		lineageTag: 48fe5172-9d51-5341-8bdf-3452228f7030
+		sourceLineageTag: hypothesis_code
+
+	column hypothesis
+		dataType: string
+		summarizeBy: none
+		sourceColumn: hypothesis
+		lineageTag: 82cd1fbf-46ae-50ba-af69-3c422dbba00e
+		sourceLineageTag: hypothesis
+
+	column status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: status
+		lineageTag: 0193a23c-9bbb-5e38-9b64-0af2a44334cc
+		sourceLineageTag: status
+
+	column is_held
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_held
+		lineageTag: 2d9b642c-7006-57a4-aa2d-6b0345b979fc
+		sourceLineageTag: is_held
+
+	column estimate
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: estimate
+		lineageTag: 81067437-95d9-5a69-b957-39546e973e2e
+		sourceLineageTag: estimate
+
+	column ci_low
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: ci_low
+		lineageTag: 7dd5056a-763f-5153-af02-484880e7b8ca
+		sourceLineageTag: ci_low
+
+	column ci_high
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: ci_high
+		lineageTag: 8de5b6d5-04dc-54e4-b519-d4e93f1cff43
+		sourceLineageTag: ci_high
+
+	column unit
+		dataType: string
+		summarizeBy: none
+		sourceColumn: unit
+		lineageTag: af863cb0-bfec-5235-9869-6e4167afdf19
+		sourceLineageTag: unit
+
+	column text_de
+		dataType: string
+		summarizeBy: none
+		sourceColumn: text_de
+		lineageTag: 0003092d-c2f1-5da9-83e2-8d416832aa7e
+		sourceLineageTag: text_de
+
+	column text_en
+		dataType: string
+		summarizeBy: none
+		sourceColumn: text_en
+		lineageTag: e5598fa4-b679-5ea6-8ea5-595d8ff14291
+		sourceLineageTag: text_en
+
+	column run_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: run_id
+		lineageTag: 8c1f050d-e932-5122-af23-75184ec831c9
+		sourceLineageTag: run_id
+
+	column data_version
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: data_version
+		lineageTag: 2cba1869-615f-5a82-9c2a-b6697fceea59
+		sourceLineageTag: data_version
+
+	partition fact_hypothesis_result = entity
+		mode: directLake
+		source
+			entityName: fact_hypothesis_result
+			schemaName: marts
+			expressionSource: DatabaseQuery

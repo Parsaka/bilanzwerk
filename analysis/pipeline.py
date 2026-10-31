@@ -41,7 +41,7 @@ def lead_time_analysis(frame: pd.DataFrame, label: str, cfg: AnalysisConfig) -> 
         "ccc": leadtime.ccc_flag(frame, cfg.ccc_flag_percentile),
         "z": leadtime.z_flag(frame, cfg.z_flag_threshold),
     }
-    per_company = leadtime.lead_times(frame, event_col, flags)
+    per_company = leadtime.lead_times(frame, event_col, flags, inputs={"ccc": "CCC__pct", "z": "ZPP__value"})
     if per_company.empty:
         nan = float("nan")
         return per_company, {
@@ -67,6 +67,10 @@ def lead_time_analysis(frame: pd.DataFrame, label: str, cfg: AnalysisConfig) -> 
         "median_z_flagged_only": float(per_company["lead_months_z"].median()),
         "share_never_red_ccc": float(per_company["lead_months_ccc"].isna().mean()),
         "share_never_red_z": float(per_company["lead_months_z"].isna().mean()),
+        "share_ever_red_ccc": float(per_company["ever_red_ccc"].mean()),
+        "share_ever_red_z": float(per_company["ever_red_z"].mean()),
+        "share_ccc_available_last": float(per_company["ccc_available_last"].mean()),
+        "share_z_available_last": float(per_company["z_available_last"].mean()),
         "n_companies": len(pc),
     }
     return per_company, summary
@@ -115,14 +119,14 @@ def wc_opportunity(con: duckdb.DuckDBPyConnection) -> tuple[pd.DataFrame, pd.Dat
             select w.*, row_number() over (partition by company_id order by fiscal_year desc) as rn
             from marts.fact_wc_opportunity as w
         )
-        select r.*, c.company_name, s.sector_de
+        select r.*, c.company_name, c.cik, s.sector_de, s.sector_en
         from ranked as r
         join marts.dim_company as c on r.company_key = c.company_key
         join marts.dim_sector as s on r.sector_key = s.sector_key
         where rn = 1
     """).df()
     by_sector = (
-        latest.groupby("sector_de")
+        latest.groupby(["sector_de", "sector_en"])
         .agg(
             cash_opportunity_eur_bn=("cash_opportunity_eur", lambda s: s.sum() / 1e9),
             stretch_eur_bn=("cash_opportunity_stretch_eur", lambda s: s.sum() / 1e9),
@@ -173,6 +177,10 @@ def run(cfg: AnalysisConfig | None = None, log_mlflow: bool = True) -> dict:
     )
     per_company_lead, lead = lead_time_analysis(frame, label, cfg)
     per_company_lead.to_csv(results_dir / "lead_times_per_company.csv", index=False)
+    cases = select_case_studies(con, per_company_lead, cfg)
+    cases.to_csv(results_dir / "case_studies.csv", index=False)
+    for case in cases.itertuples():
+        case_timeline(con, int(case.cik)).to_csv(results_dir / f"case_{case.case_rank}_{case.cik}.csv", index=False)
     by_sector, top20 = wc_opportunity(con)
     by_sector.to_csv(results_dir / "wc_opportunity_by_sector.csv", index=False)
     top20.to_csv(results_dir / "wc_opportunity_top20.csv", index=False)
@@ -224,8 +232,51 @@ def run(cfg: AnalysisConfig | None = None, log_mlflow: bool = True) -> dict:
         run_id = log_run(cfg, answer_doc, pooled, results_dir)
     risk["run_id"] = run_id
     risk.to_parquet(out / "risk_scores.parquet", index=False)
+    write_back(out, answer_doc, pooled, per_company_lead, cases, run_id)
     (results_dir / "answer.json").write_text(json.dumps(answer_doc, indent=2, default=str, ensure_ascii=False))
     return answer_doc
+
+
+def hypothesis_rows(doc: dict) -> pd.DataFrame:
+    """One row per hypothesis, for the report's answer cards (marts.fact_hypothesis_result)."""
+    units = {"H1": "Monate", "H2": "PR-AUC", "H3": "PR-AUC", "H4": "Mrd. EUR"}
+    rows = []
+    for code in ("H1", "H2", "H3", "H4"):
+        h = doc[code]
+        estimate = h.get("total_eur_bn") if code == "H4" else h.get("estimate")
+        rows.append(
+            {
+                "hypothesis_code": code,
+                "hypothesis": h["hypothesis"],
+                "status": h["status"],
+                "is_held": int(bool(h["held"])),
+                "estimate": estimate,
+                "ci_low": h.get("ci_low"),
+                "ci_high": h.get("ci_high"),
+                "unit": units[code],
+                "text_de": h["text_de"],
+                "text_en": h["text_en"],
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def write_back(
+    out: Path, doc: dict, pooled: pd.DataFrame, lead: pd.DataFrame, cases: pd.DataFrame, run_id: str
+) -> None:
+    """Model outputs the warehouse reads (source `analysis`): one Parquet file per table.
+
+    The report shows the answer from these tables, so no number on a page is typed by hand.
+    """
+    extra = {"run_id": run_id, "data_version": doc["data_version"]}
+    hypothesis_rows(doc).assign(**extra).to_parquet(out / "hypothesis_results.parquet", index=False)
+    backtest_cols = ["model", "n", "n_pos", "pr_auc", "recall_top5", "brier"]
+    pooled_out = pooled.reindex(columns=backtest_cols).rename(columns={"model": "model_name"})
+    pooled_out.assign(**extra).to_parquet(out / "model_backtest.parquet", index=False)
+    lead_cols = ["company_id", "event_date", "n_observations", "lead_months_ccc", "lead_months_z"]
+    lead_cols += ["ever_red_ccc", "ever_red_z", "ccc_available_last", "z_available_last"]
+    lead.reindex(columns=lead_cols).assign(**extra).to_parquet(out / "lead_times.parquet", index=False)
+    cases.drop(columns=["selection_rule"]).assign(**extra).to_parquet(out / "case_studies.parquet", index=False)
 
 
 def log_run(cfg: AnalysisConfig, doc: dict, pooled: pd.DataFrame, results_dir: Path) -> str:
@@ -252,6 +303,64 @@ def log_run(cfg: AnalysisConfig, doc: dict, pooled: pd.DataFrame, results_dir: P
                 mlflow.log_metric(f"{h}.estimate", float(v))
         mlflow.log_artifacts(str(results_dir))
         return r.info.run_id
+
+
+CASE_RULE = (
+    "Die drei umsatzstärksten Unternehmen (Umsatz TTM in EUR zum letzten erstveröffentlichten "
+    "Abschluss vor dem Ereignis) mit Insolvenz (8-K Item 1.03) im Testzeitraum und mindestens acht "
+    "Beobachtungen davor, höchstens eines je Sektor."
+)
+
+
+def select_case_studies(
+    con: duckdb.DuckDBPyConnection, per_company_lead: pd.DataFrame, cfg: AnalysisConfig, n: int = 3
+) -> pd.DataFrame:
+    """The case studies for report page 8, chosen by a fixed rule (CASE_RULE), not by hand.
+
+    The rule looks only at size and data depth, never at whether a flag fired, so the cases show
+    what the warning looked like and are not picked to make a signal look good.
+    """
+    cols = ["case_rank", "company_id", "cik", "company_name", "sector_de", "event_date", "revenue_ttm_eur"]
+    if per_company_lead.empty:
+        return pd.DataFrame(columns=[*cols, "lead_months_ccc", "lead_months_z", "selection_rule"])
+    events = per_company_lead[
+        (per_company_lead["n_observations"] >= 8)
+        & pd.to_datetime(per_company_lead["event_date"]).dt.year.between(cfg.first_test_year, cfg.last_test_year)
+    ][["company_id", "event_date", "lead_months_ccc", "lead_months_z"]]
+    con.register("bw_case_events", events)
+    try:
+        sized = con.execute(
+            """
+            with last_report as (
+                select e.company_id, e.event_date, k.rev_ttm_eur,
+                       row_number() over (partition by e.company_id order by k.period_end desc) as rn
+                from bw_case_events as e
+                join intermediate.int_kpi_wide as k
+                    on k.company_id = e.company_id
+                   and k.version = 'first_reported'
+                   and k.period_end < cast(e.event_date as date)
+                where k.rev_ttm_eur is not null
+            )
+            select l.company_id, l.event_date, l.rev_ttm_eur as revenue_ttm_eur,
+                   c.cik, c.company_name, s.sector_de
+            from last_report as l
+            join marts.dim_company as c on c.company_id = l.company_id and c.is_current = 1
+            join marts.dim_sector as s on s.sector_key = c.sector_key
+            where l.rn = 1
+            """
+        ).df()
+    finally:
+        con.unregister("bw_case_events")
+    sized = sized.merge(events[["company_id", "lead_months_ccc", "lead_months_z"]], on="company_id")
+    picked = (
+        sized.sort_values(["revenue_ttm_eur", "company_id"], ascending=[False, True])
+        .drop_duplicates("sector_de")
+        .head(n)
+        .reset_index(drop=True)
+    )
+    picked.insert(0, "case_rank", range(1, len(picked) + 1))
+    picked["selection_rule"] = CASE_RULE
+    return picked[[*cols, "lead_months_ccc", "lead_months_z", "selection_rule"]]
 
 
 def case_timeline(con: duckdb.DuckDBPyConnection, cik: int) -> pd.DataFrame:

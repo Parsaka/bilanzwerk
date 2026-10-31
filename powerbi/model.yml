@@ -22,6 +22,10 @@ tables:
   fact_risk_score: {hidden_columns: [company_id, risk_score_key, run_id], description: "Insolvenzwahrscheinlichkeit 12 Monate je Unternehmen, Stichtag und Modell."}
   fact_data_quality: {hidden_columns: [run_id], description: "Datenqualitäts-Scorecard je Lauf, Regel und Tabelle."}
   fact_stewardship_queue: {description: "Offene Stewardship-Fälle der Stammdaten (Kandidatenpaare zur Prüfung)."}
+  fact_hypothesis_result: {hidden_columns: [run_id, data_version], description: "H1–H4, wie der letzte Modelllauf sie entschieden hat (analysis/answer.json)."}
+  fact_model_backtest: {hidden_columns: [run_id, data_version], description: "Gepoolter Out-of-time-Backtest je Modell (PR-AUC, Recall Top 5 %, Brier)."}
+  fact_lead_time: {hidden_columns: [company_id, run_id], description: "H1: Vorlaufzeit der CCC- und Z''-Flagge je Unternehmen mit Insolvenz."}
+  fact_case_study: {hidden_columns: [company_id, run_id], description: "Die drei Fallstudien (feste Auswahlregel, analysis/pipeline.py)."}
   sector_team_users: {schema: reference, hidden: true, description: "RLS-Zuordnung Benutzer zu Sektoren.", columns: [{name: user_principal_name, type: string}, {name: sector_code, type: string}]}
 
 relationships:
@@ -42,8 +46,367 @@ relationships:
   - [fact_risk_score.company_key, dim_company.company_key]
   - [fact_risk_score.as_of_date, dim_date.date_key]
   - [dim_company.sector_key, dim_sector.sector_key]
+  - [fact_lead_time.company_key, dim_company.company_key]
+  # single direction like every other relationship (BPA rule); page 8 reaches the other facts
+  # through the [Fall ...] measures, which apply the picked case with TREATAS
+  - [fact_case_study.company_key, dim_company.company_key]
 
 measures:
+  - table: fact_case_study
+    name: "Fall Z'' Score"
+    folder: "Fallstudien"
+    format: "0.00"
+    description: "Z'' Score der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung)."
+    expression: |
+      CALCULATE ( [Z'' Score], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+
+  - table: fact_case_study
+    name: "Fall CCC"
+    folder: "Fallstudien"
+    format: "0.0"
+    description: "CCC der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung)."
+    expression: |
+      CALCULATE ( [CCC], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+
+  - table: fact_case_study
+    name: "Fall CCC Sektor-Median"
+    folder: "Fallstudien"
+    format: "0.0"
+    description: "CCC Sektor-Median der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung)."
+    expression: |
+      CALCULATE ( [CCC Sektor-Median], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+
+  - table: fact_case_study
+    name: "Fall Rote Flaggen"
+    folder: "Fallstudien"
+    format: "#,0"
+    description: "Rote Flaggen der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung)."
+    expression: |
+      CALCULATE ( [Rote Flaggen], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+
+  - table: fact_case_study
+    name: "Fall Ereignisse"
+    folder: "Beschriftungen\\Fallstudien"
+    description: "Ereignisse der gewählten Fallstudie bis zur Insolvenz, eines je Zeile (Datum, Art, Formular)."
+    expression: |
+      VAR _ereignisse = CALCULATETABLE ( fact_event, TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+      RETURN
+          CONCATENATEX (
+              _ereignisse,
+              FORMAT ( fact_event[event_date], "dd.MM.yyyy" ) & "  " & fact_event[event_type] & "  " & fact_event[form],
+              UNICHAR ( 10 ),
+              fact_event[event_date], ASC
+          )
+
+  - table: fact_financial_line
+    name: "GuV-Brücke Betrag"
+    folder: "GuV"
+    format: "#,0,,\" Mio\""
+    description: "Vorzeichenrichtige Schritte von Umsatz bis EBIT: Umsatz, minus Umsatzkosten, Rest bis EBIT; ohne Schritt das EBIT (Summe des Wasserfalls)."
+    expression: |
+      IF (
+          HASONEVALUE ( 'GuV-Brücke'[Reihenfolge] ),
+          SWITCH (
+              VALUES ( 'GuV-Brücke'[Reihenfolge] ),
+              1, [Umsatz],
+              2, - [COGS],
+              3, [EBIT] - ( [Umsatz] - [COGS] )
+          ),
+          [EBIT]
+      )
+
+  - table: fact_hypothesis_result
+    name: "Antwort Text"
+    folder: "Beschriftungen\\Antwort"
+    description: "Ergebnissatz der Hypothese in der Zeile (Tabelle auf der Seite Antwort), Deutsch oder Englisch."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      RETURN IF ( _en, SELECTEDVALUE ( fact_hypothesis_result[text_en] ), SELECTEDVALUE ( fact_hypothesis_result[text_de] ) )
+
+  - table: fact_risk_score
+    name: "Risiko Farbe"
+    folder: "Beschriftungen\\Farben"
+    description: "Hintergrundfarbe des Risikobands (rot ab 10 %, gelb ab 3 %, sonst grün; Schwellen wie analysis/config.py). Rot und Grün nur hier."
+    expression: |
+      VAR _p = [Risiko 12M]
+      RETURN
+          SWITCH (
+              TRUE (),
+              ISBLANK ( _p ), BLANK (),
+              _p >= 0.10, "#F4C7C3",
+              _p >= 0.03, "#FCE8B2",
+              "#C8E6C9"
+          )
+
+  - table: fact_wc_opportunity
+    name: "Farbe Sektor-Hebel"
+    folder: "Beschriftungen\\Farben"
+    description: "Akzentfarbe für den Sektor mit dem größten Cash-Potenzial, Grau für die übrigen (Designregel)."
+    expression: |
+      VAR _alle = CALCULATETABLE ( VALUES ( dim_sector[sector_key] ), ALLSELECTED ( dim_sector ) )
+      VAR _top = TOPN ( 1, _alle, CALCULATE ( [Cash-Potenzial aktuell] ), DESC )
+      RETURN IF ( SELECTEDVALUE ( dim_sector[sector_key] ) IN _top, "#1F5AA6", "#B3B3B3" )
+
+  - table: fact_risk_score
+    name: "Befund Unternehmen"
+    folder: "Beschriftungen"
+    description: "Kopfzeile der Unternehmensseiten: Unternehmen, Insolvenzrisiko 12 Monate und rote Flaggen, aus den Daten."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _p = [Risiko 12M]
+      VAR _flaggen = COALESCE ( [Rote Flaggen], 0 )
+      RETURN
+          IF ( NOT HASONEVALUE ( dim_company[company_id] ), [Ausgewähltes Unternehmen],
+              [Ausgewähltes Unternehmen] & " · "
+                  & IF ( _en, "12-month bankruptcy risk ", "Insolvenzrisiko 12 Monate " )
+                  & IF ( ISBLANK ( _p ), "n/a", FORMAT ( _p, "0.0%" ) )
+                  & " · " & FORMAT ( _flaggen, "#,0" ) & IF ( _en, " red flags", " rote Flaggen" ) )
+
+  - table: fact_hypothesis_result
+    name: "Antwort H1"
+    folder: "Beschriftungen\\Antwort"
+    description: "Ergebnissatz zu H1 Vorlaufzeit aus dem letzten Modelllauf (Deutsch oder Englisch nach Sprache), nie von Hand."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _de = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_de] ), fact_hypothesis_result[hypothesis_code] = "H1" )
+      VAR _txt = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_en] ), fact_hypothesis_result[hypothesis_code] = "H1" )
+      RETURN IF ( _en, _txt, _de )
+
+  - table: fact_hypothesis_result
+    name: "Antwort H2"
+    folder: "Beschriftungen\\Antwort"
+    description: "Ergebnissatz zu H2 Genauigkeit aus dem letzten Modelllauf (Deutsch oder Englisch nach Sprache), nie von Hand."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _de = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_de] ), fact_hypothesis_result[hypothesis_code] = "H2" )
+      VAR _txt = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_en] ), fact_hypothesis_result[hypothesis_code] = "H2" )
+      RETURN IF ( _en, _txt, _de )
+
+  - table: fact_hypothesis_result
+    name: "Antwort H3"
+    folder: "Beschriftungen\\Antwort"
+    description: "Ergebnissatz zu H3 Sektorsicht aus dem letzten Modelllauf (Deutsch oder Englisch nach Sprache), nie von Hand."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _de = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_de] ), fact_hypothesis_result[hypothesis_code] = "H3" )
+      VAR _txt = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_en] ), fact_hypothesis_result[hypothesis_code] = "H3" )
+      RETURN IF ( _en, _txt, _de )
+
+  - table: fact_hypothesis_result
+    name: "Antwort H4"
+    folder: "Beschriftungen\\Antwort"
+    description: "Ergebnissatz zu H4 Euro-Wert aus dem letzten Modelllauf (Deutsch oder Englisch nach Sprache), nie von Hand."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _de = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_de] ), fact_hypothesis_result[hypothesis_code] = "H4" )
+      VAR _txt = CALCULATE ( SELECTEDVALUE ( fact_hypothesis_result[text_en] ), fact_hypothesis_result[hypothesis_code] = "H4" )
+      RETURN IF ( _en, _txt, _de )
+
+  - table: fact_hypothesis_result
+    name: "Hypothesen bestätigt"
+    folder: "Antwort"
+    format: "#,0"
+    description: "Anzahl der Hypothesen H1–H4, die der letzte Lauf bestätigt hat."
+    expression: |
+      SUM ( fact_hypothesis_result[is_held] )
+
+  - table: fact_lead_time
+    name: "Vorlaufzeit CCC (Median)"
+    folder: "Antwort"
+    format: "0.0"
+    description: "Median der Monate zwischen der dauerhaft roten CCC-Flagge und der Insolvenz; nie rot zählt als 0 (wie in H1)."
+    expression: |
+      MEDIANX ( fact_lead_time, COALESCE ( fact_lead_time[lead_months_ccc], 0 ) )
+
+  - table: fact_lead_time
+    name: "Vorlaufzeit Z'' (Median)"
+    folder: "Antwort"
+    format: "0.0"
+    description: "Median der Monate zwischen der dauerhaft roten Z''-Flagge und der Insolvenz; nie rot zählt als 0 (wie in H1)."
+    expression: |
+      MEDIANX ( fact_lead_time, COALESCE ( fact_lead_time[lead_months_z], 0 ) )
+
+  - table: fact_lead_time
+    name: "Anteil CCC-Flagge rot"
+    folder: "Antwort"
+    format: "0%"
+    description: "Anteil der Unternehmen mit Insolvenz, deren CCC-Flagge vor dem Ereignis dauerhaft rot war."
+    expression: |
+      DIVIDE ( COUNTROWS ( FILTER ( fact_lead_time, NOT ISBLANK ( fact_lead_time[lead_months_ccc] ) ) ), COUNTROWS ( fact_lead_time ) )
+
+  - table: fact_lead_time
+    name: "Anteil Z''-Flagge rot"
+    folder: "Antwort"
+    format: "0%"
+    description: "Anteil der Unternehmen mit Insolvenz, deren Z''-Flagge vor dem Ereignis dauerhaft rot war."
+    expression: |
+      DIVIDE ( COUNTROWS ( FILTER ( fact_lead_time, NOT ISBLANK ( fact_lead_time[lead_months_z] ) ) ), COUNTROWS ( fact_lead_time ) )
+
+  - table: fact_lead_time
+    name: "Anteil CCC berechenbar"
+    folder: "Antwort"
+    format: "0%"
+    description: "Anteil der Unternehmen mit Insolvenz, für die die CCC-Flagge an der letzten Beobachtung vor dem Ereignis berechenbar war."
+    expression: |
+      AVERAGE ( fact_lead_time[ccc_available_last] )
+
+  - table: fact_lead_time
+    name: "Insolvenzen mit Kennzahlen"
+    folder: "Antwort"
+    format: "#,0"
+    description: "Unternehmen mit Insolvenz und Kennzahlen vor dem Ereignis (Grundgesamtheit von H1)."
+    expression: |
+      COUNTROWS ( fact_lead_time )
+
+  - table: fact_model_backtest
+    name: "PR-AUC"
+    folder: "Modellgüte"
+    format: "0.000"
+    description: "Fläche unter der Precision-Recall-Kurve im gepoolten Out-of-time-Backtest."
+    expression: |
+      MAX ( fact_model_backtest[pr_auc] )
+
+  - table: fact_model_backtest
+    name: "Recall Top 5 %"
+    folder: "Modellgüte"
+    format: "0%"
+    description: "Anteil der Insolvenzen unter den 5 % Unternehmen mit dem höchsten Score."
+    expression: |
+      MAX ( fact_model_backtest[recall_top5] )
+
+  - table: fact_model_backtest
+    name: "Brier Score"
+    folder: "Modellgüte"
+    format: "0.0000"
+    description: "Mittlerer quadratischer Fehler der Wahrscheinlichkeit (kleiner ist besser)."
+    expression: |
+      MAX ( fact_model_backtest[brier] )
+
+  - table: fact_wc_opportunity
+    name: "Cash-Potenzial aktuell"
+    folder: "Working Capital"
+    format: "#,0.0,,,\" Mrd\""
+    description: "Cash-Potenzial im letzten Geschäftsjahr je Unternehmen (wie H4), summiert über die Unternehmen im Kontext."
+    expression: |
+      SUMX (
+          VALUES ( fact_wc_opportunity[company_id] ),
+          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+          RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
+      )
+
+  - table: fact_wc_opportunity
+    name: "Cash-Potenzial Stretch aktuell"
+    folder: "Working Capital"
+    format: "#,0.0,,,\" Mrd\""
+    description: "Wie Cash-Potenzial aktuell, Ziel ist das 25. Perzentil des Sektors (DPO: 75.)."
+    expression: |
+      SUMX (
+          VALUES ( fact_wc_opportunity[company_id] ),
+          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+          RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
+      )
+
+  - table: fact_lead_time
+    name: "Befund Vorlaufzeit"
+    folder: "Beschriftungen"
+    description: "Diagrammtitel mit dem Befund zu H1, aus den Daten berechnet."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _z = FORMAT ( [Vorlaufzeit Z'' (Median)], "0.0" )
+      VAR _c = FORMAT ( [Vorlaufzeit CCC (Median)], "0.0" )
+      RETURN
+          IF ( ISBLANK ( [Insolvenzen mit Kennzahlen] ), BLANK (),
+              IF ( _en,
+                  "Z'' warned a median " & _z & " months before bankruptcy, the CCC flag " & _c,
+                  "Z'' warnte im Median " & _z & " Monate vor der Insolvenz, die CCC-Flagge " & _c ) )
+
+  - table: fact_wc_opportunity
+    name: "Befund Cash-Potenzial"
+    folder: "Beschriftungen"
+    description: "Diagrammtitel mit dem größten Working-Capital-Hebel nach Sektor, aus den Daten berechnet."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _top = TOPN ( 1, VALUES ( dim_sector[sector_key] ), [Cash-Potenzial aktuell], DESC )
+      VAR _name = IF ( _en, CALCULATE ( SELECTEDVALUE ( dim_sector[sector_en] ), _top ), CALCULATE ( SELECTEDVALUE ( dim_sector[sector_de] ), _top ) )
+      VAR _wert = FORMAT ( DIVIDE ( CALCULATE ( [Cash-Potenzial aktuell], _top ), 1e9 ), "#,0.0" )
+      RETURN
+          IF ( ISBLANK ( [Cash-Potenzial aktuell] ), BLANK (),
+              IF ( _en,
+                  _name & " has the largest lever: EUR " & _wert & " bn to sector median",
+                  _name & " hat den größten Hebel: " & _wert & " Mrd. EUR bis zum Sektormedian" ) )
+
+  - table: fact_model_backtest
+    name: "Befund Modellgüte"
+    folder: "Beschriftungen"
+    description: "Diagrammtitel: bestes Modell nach PR-AUC und sein Abstand zu Z'' allein (M1), aus den Daten berechnet."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _best = TOPN ( 1, VALUES ( fact_model_backtest[model_name] ), [PR-AUC], DESC )
+      VAR _name = CALCULATE ( SELECTEDVALUE ( fact_model_backtest[model_name] ), _best )
+      VAR _bestauc = CALCULATE ( [PR-AUC], _best )
+      VAR _m1 = CALCULATE ( [PR-AUC], fact_model_backtest[model_name] = "M1_logit_z" )
+      RETURN
+          IF ( ISBLANK ( _bestauc ), BLANK (),
+              IF ( _en,
+                  _name & " ranks best: PR-AUC " & FORMAT ( _bestauc, "0.000" ) & " against " & FORMAT ( _m1, "0.000" ) & " for Z'' alone",
+                  _name & " trennt am besten: PR-AUC " & FORMAT ( _bestauc, "0.000" ) & " gegen " & FORMAT ( _m1, "0.000" ) & " für Z'' allein" ) )
+
+  - table: fact_risk_score
+    name: "Befund Frühwarnung"
+    folder: "Beschriftungen"
+    description: "Diagrammtitel: Unternehmen im roten Band zum letzten Stichtag (Champion-Modell), aus den Daten berechnet."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _n = [Unternehmen rot]
+      VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+      RETURN
+          IF ( ISBLANK ( _stichtag ), BLANK (),
+              IF ( _en,
+                  FORMAT ( COALESCE ( _n, 0 ), "#,0" ) & " companies in the red band on " & FORMAT ( _stichtag, "yyyy-MM-dd" ),
+                  FORMAT ( COALESCE ( _n, 0 ), "#,0" ) & " Unternehmen im roten Band zum " & FORMAT ( _stichtag, "dd.MM.yyyy" ) ) )
+
+  - table: fact_data_quality
+    name: "Befund Datenqualität"
+    folder: "Beschriftungen"
+    description: "Diagrammtitel: Pass-Rate der Prüfregeln im letzten Lauf gegen das Ziel, aus den Daten berechnet."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _rate = [DQ Pass-Rate]
+      VAR _verletzt = [Regeln verletzt]
+      RETURN
+          IF ( ISBLANK ( _rate ), BLANK (),
+              IF ( _en,
+                  FORMAT ( _rate, "0.0%" ) & " of checks passed; " & FORMAT ( COALESCE ( _verletzt, 0 ), "#,0" ) & " rules violated",
+                  FORMAT ( _rate, "0.0%" ) & " der Prüfungen bestanden; " & FORMAT ( COALESCE ( _verletzt, 0 ), "#,0" ) & " Regeln verletzt" ) )
+
+  - table: dim_company
+    name: "Ausgewähltes Unternehmen"
+    folder: "Beschriftungen"
+    description: "Name des gewählten Unternehmens für Diagrammtitel der Unternehmensseiten."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      RETURN
+          IF ( HASONEVALUE ( dim_company[company_id] ),
+              SELECTEDVALUE ( dim_company[company_name] ),
+              IF ( _en, "All companies (pick one)", "Alle Unternehmen (bitte eines wählen)" ) )
+
+  - table: fact_case_study
+    name: "Befund Fallstudie"
+    folder: "Beschriftungen"
+    description: "Titel der Fallstudie: Unternehmen, Ereignisdatum und Vorlaufzeiten beider Flaggen, aus den Daten."
+    expression: |
+      VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+      VAR _name = SELECTEDVALUE ( fact_case_study[company_name] )
+      VAR _datum = SELECTEDVALUE ( fact_case_study[event_date] )
+      VAR _z = SELECTEDVALUE ( fact_case_study[lead_months_z] )
+      VAR _c = SELECTEDVALUE ( fact_case_study[lead_months_ccc] )
+      VAR _zt = IF ( ISBLANK ( _z ), IF ( _en, "never red", "nie rot" ), FORMAT ( _z, "0.0" ) & IF ( _en, " months ahead", " Monate vorher" ) )
+      VAR _ct = IF ( ISBLANK ( _c ), IF ( _en, "never red", "nie rot" ), FORMAT ( _c, "0.0" ) & IF ( _en, " months ahead", " Monate vorher" ) )
+      RETURN
+          IF ( ISBLANK ( _name ), IF ( _en, "Pick a case study", "Bitte eine Fallstudie wählen" ),
+              _name & IF ( _en, ", bankruptcy ", ", Insolvenz " ) & FORMAT ( _datum, IF ( _en, "yyyy-MM-dd", "dd.MM.yyyy" ) )
+                  & " · Z'': " & _zt & " · CCC: " & _ct )
+
   - table: fact_financial_line
     name: "_Betrag Roh"
     folder: "_Basis"
@@ -513,10 +876,24 @@ calculation_groups:
       - [EUR, "SELECTEDMEASURE ()"]
       - [Lokal, "SELECTEDMEASURE ()"]
 
+static_tables:
+  - name: GuV-Brücke
+    description: "Schritte der GuV-Brücke von Umsatz bis EBIT (Seite GuV und Margen, Wasserfall)."
+    columns:
+      - {name: Schritt, type: string, sort_by: Reihenfolge}
+      - {name: Reihenfolge, type: int64, hidden: true}
+    rows:
+      - ["Umsatz", 1]
+      - ["Umsatzkosten", 2]
+      - ["Übrige betriebliche Aufwendungen und Erträge", 3]
+
 field_parameters:
   - name: KPI-Auswahl
     description: "Feldparameter für den Peer-Vergleich: wählt die Kennzahl auf Achsen und in Tabellen."
     measures: [DSO, DIO, DPO, CCC, EBIT-Marge, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
+  - name: KPI-Auswahl Y
+    description: "Zweiter Feldparameter für den Peer-Vergleich: die Kennzahl auf der y-Achse des Streudiagramms."
+    measures: [EBIT-Marge, DSO, DIO, DPO, CCC, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
 
 roles:
   - name: Sektor-Team

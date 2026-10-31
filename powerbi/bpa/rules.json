@@ -23,10 +23,10 @@
     "ID": "BW_MEASURE_FORMAT",
     "Name": "[Bilanzwerk] Zahlenmessungen haben ein Format",
     "Category": "Formatting",
-    "Description": "Messungen, die Zahlen liefern, brauchen einen Formatstring; Beschriftungen in der Tabelle Sprache sind Text.",
+    "Description": "Messungen, die Zahlen liefern, brauchen einen Formatstring; Beschriftungen (Tabelle Sprache und Ordner Beschriftungen) sind Text.",
     "Severity": 3,
     "Scope": "Measure",
-    "Expression": "string.IsNullOrWhitespace(FormatString) and Table.Name <> \"Sprache\"",
+    "Expression": "string.IsNullOrWhitespace(FormatString) and Table.Name <> \"Sprache\" and not DisplayFolder.StartsWith(\"Beschriftungen\")",
     "CompatibilityLevel": 1200
   },
   {

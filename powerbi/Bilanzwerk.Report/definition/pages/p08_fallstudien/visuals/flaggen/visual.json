@@ -1,0 +1,82 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "flaggen",
+  "position": {
+    "x": 24,
+    "y": 414,
+    "z": 7,
+    "width": 610,
+    "height": 250,
+    "tabOrder": 7
+  },
+  "visual": {
+    "visualType": "columnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_period"
+                    }
+                  },
+                  "Property": "period_end_date"
+                }
+              },
+              "queryRef": "dim_period.period_end_date",
+              "nativeQueryRef": "period_end_date"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_case_study"
+                    }
+                  },
+                  "Property": "Fall Rote Flaggen"
+                }
+              },
+              "queryRef": "fact_case_study.Fall Rote Flaggen",
+              "nativeQueryRef": "Fall Rote Flaggen"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 08 flaggen"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

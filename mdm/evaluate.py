@@ -19,14 +19,28 @@ BANDS = [(0.5, 0.7), (0.7, 0.8), (0.8, 0.9), (0.9, 0.95), (0.95, 0.99), (0.99, 1
 
 
 def sample(candidate_pairs: pd.DataFrame, n_total: int = 300, seed: int = 42) -> pd.DataFrame:
-    per_band = n_total // len(BANDS)
-    parts = []
-    for lo, hi in BANDS:
-        band = candidate_pairs[
-            (candidate_pairs["match_probability"] >= lo) & (candidate_pairs["match_probability"] < hi)
-        ]
-        parts.append(band.sample(n=min(per_band, len(band)), random_state=seed))
-    out = pd.concat(parts)
+    """About n_total pairs spread over the probability bands.
+
+    A band with fewer pairs than its share gives all it has; the shortfall goes to the other
+    bands in turn, so the sample still reaches n_total when the candidates allow it.
+    """
+    bands = [
+        candidate_pairs[(candidate_pairs["match_probability"] >= lo) & (candidate_pairs["match_probability"] < hi)]
+        for lo, hi in BANDS
+    ]
+    quota = [0] * len(bands)
+    left = min(n_total, sum(len(b) for b in bands))
+    while left > 0:
+        open_bands = [i for i, b in enumerate(bands) if quota[i] < len(b)]
+        share = max(1, left // len(open_bands))
+        for i in open_bands:
+            take = min(share, len(bands[i]) - quota[i], left)
+            quota[i] += take
+            left -= take
+            if left == 0:
+                break
+    parts = [b.sample(n=q, random_state=seed) for b, q in zip(bands, quota, strict=True) if q]
+    out = pd.concat(parts) if parts else candidate_pairs.head(0)
     cols = [
         c
         for c in [
@@ -34,6 +48,10 @@ def sample(candidate_pairs: pd.DataFrame, n_total: int = 300, seed: int = 42) ->
             "unique_id_r",
             "name_orig_l",
             "name_orig_r",
+            "name_std_l",
+            "name_std_r",
+            "tickers_l",
+            "other_names_r",
             "city_std_l",
             "city_std_r",
             "zip5_l",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -33,7 +34,7 @@ def project(tmp_path, monkeypatch):
 
 def errors(check) -> list[str]:
     tables, rels = check.load_model()
-    return check.check_model(tables, rels) + check.check_report(tables)
+    return check.check_model(tables, rels) + check.check_report(tables) + check.schema_errors() + check.layout_errors()
 
 
 def test_generated_project_is_clean(project):
@@ -78,6 +79,41 @@ def test_visual_bound_to_missing_measure_is_an_error(project):
     visual = next((root / "Bilanzwerk.Report" / "definition" / "pages").glob("p01_*/visuals/titel/visual.json"))
     visual.write_text(visual.read_text(encoding="utf-8").replace("Titel 01", "Titel 99"), encoding="utf-8")
     assert any("Sprache[Titel 99] not in the model" in e for e in errors(check))
+
+
+def test_property_outside_the_microsoft_schema_is_an_error(project):
+    check, root = project
+    visual = next((root / "Bilanzwerk.Report" / "definition" / "pages").glob("p09_*/visuals/bruecke/visual.json"))
+    data = json.loads(visual.read_text(encoding="utf-8"))
+    data["visual"]["drawVisualContainerHeader"] = False
+    visual.write_text(json.dumps(data), encoding="utf-8")
+    assert any("bruecke" in e and "drawVisualContainerHeader" in e for e in errors(check))
+
+
+def test_overlapping_visuals_are_an_error(project):
+    check, root = project
+    visual = next((root / "Bilanzwerk.Report" / "definition" / "pages").glob("p09_*/visuals/top20/visual.json"))
+    data = json.loads(visual.read_text(encoding="utf-8"))
+    data["position"]["x"] = 100
+    visual.write_text(json.dumps(data), encoding="utf-8")
+    assert any("top20" in e and "overlap" in e for e in errors(check))
+
+
+def test_every_page_has_main_visuals_with_titles(project):
+    check, root = project
+    pages = sorted((root / "Bilanzwerk.Report" / "definition" / "pages").glob("p*_*"))
+    assert len(pages) == 11
+    for page in pages:
+        names = {v.parent.name for v in page.glob("visuals/*/visual.json")}
+        assert names - check.FRAME, f"{page.name} has no main visuals"
+
+
+def test_layout_field_references_are_parsed():
+    visuals = load("visuals")
+    assert visuals.parse("fact_kpi.[Z'' Score]") == ("fact_kpi", "Z'' Score", "Measure")
+    assert visuals.parse("KPI-Auswahl Y.KPI-Auswahl Y") == ("KPI-Auswahl Y", "KPI-Auswahl Y", "Column")
+    with pytest.raises(ValueError):
+        visuals.parse("no_table")
 
 
 def test_bpa_rule_expressions_parse_in_tabular_editor():

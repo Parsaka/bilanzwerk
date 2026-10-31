@@ -3,6 +3,19 @@ table fact_data_quality
 	lineageTag: 894c6774-dab3-5588-86e9-b79f1115b549
 	sourceLineageTag: [marts].[fact_data_quality]
 
+	/// Diagrammtitel: Pass-Rate der Prüfregeln im letzten Lauf gegen das Ziel, aus den Daten berechnet.
+	measure 'Befund Datenqualität' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _rate = [DQ Pass-Rate]
+			VAR _verletzt = [Regeln verletzt]
+			RETURN
+			    IF ( ISBLANK ( _rate ), BLANK (),
+			        IF ( _en,
+			            FORMAT ( _rate, "0.0%" ) & " of checks passed; " & FORMAT ( COALESCE ( _verletzt, 0 ), "#,0" ) & " rules violated",
+			            FORMAT ( _rate, "0.0%" ) & " der Prüfungen bestanden; " & FORMAT ( COALESCE ( _verletzt, 0 ), "#,0" ) & " Regeln verletzt" ) )
+		displayFolder: Beschriftungen
+		lineageTag: 2add3cd6-9bf3-5a74-813f-0017cd342dfa
+
 	/// Bestandene Prüfungen geteilt durch geprüfte Zeilen im letzten Lauf.
 	measure 'DQ Pass-Rate' =
 			VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )

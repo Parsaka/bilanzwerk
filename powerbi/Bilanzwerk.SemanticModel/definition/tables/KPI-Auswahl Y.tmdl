@@ -1,0 +1,48 @@
+/// Zweiter Feldparameter für den Peer-Vergleich: die Kennzahl auf der y-Achse des Streudiagramms.
+table 'KPI-Auswahl Y'
+	lineageTag: 7a91671b-25ef-54d3-9162-e8ae15a4aeca
+
+	column 'KPI-Auswahl Y'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'KPI-Auswahl Y Reihenfolge'
+		lineageTag: 0ba84702-e61e-5c27-97fc-e8b1f0c9e816
+
+		relatedColumnDetails
+			groupByColumn: 'KPI-Auswahl Y Felder'
+
+	column 'KPI-Auswahl Y Felder'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value2]
+		lineageTag: 9754e861-b75d-5d01-87f7-e9844a1ed35a
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+	column 'KPI-Auswahl Y Reihenfolge'
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value3]
+		lineageTag: b6e1bdd9-733f-5967-9908-6a902ff6fffa
+
+	partition 'KPI-Auswahl Y' = calculated
+		mode: import
+		source =
+				{
+				("EBIT-Marge", NAMEOF('fact_financial_line'[EBIT-Marge]), 0),
+				("DSO", NAMEOF('fact_financial_line'[DSO]), 1),
+				("DIO", NAMEOF('fact_financial_line'[DIO]), 2),
+				("DPO", NAMEOF('fact_financial_line'[DPO]), 3),
+				("CCC", NAMEOF('fact_financial_line'[CCC]), 4),
+				("Eigenkapitalquote", NAMEOF('fact_financial_line'[Eigenkapitalquote]), 5),
+				("Z'' Score", NAMEOF('fact_kpi'[Z'' Score]), 6),
+				("Bruttomarge", NAMEOF('fact_financial_line'[Bruttomarge]), 7),
+				("Verschuldungsgrad", NAMEOF('fact_financial_line'[Verschuldungsgrad]), 8)
+				}

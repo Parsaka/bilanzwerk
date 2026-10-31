@@ -218,6 +218,11 @@ def dax_text(text: str) -> str:
     return '"' + text.replace('"', '""') + '"'
 
 
+def label_name(page_no: int, visual: str) -> str:
+    """Name of the Sprache measure that holds a chart title (shared with generate_report.py)."""
+    return f"Diagramm {page_no:02d} {visual}"
+
+
 def label_measures(pages: dict) -> list[dict]:
     """Bilingual page titles and the footer, switched by the Sprache table (spec: English toggle)."""
     out = []
@@ -232,6 +237,20 @@ def label_measures(pages: dict) -> list[dict]:
                 "folder": "Beschriftungen",
             }
         )
+        # chart titles without a finding measure: a bilingual label per visual
+        for v in page.get("layout", []):
+            if "label" in v:
+                out.append(
+                    {
+                        "name": label_name(i, v["name"]),
+                        "expression": (
+                            f'IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", '
+                            f"{dax_text(v['label']['en'])}, {dax_text(v['label']['de'])} )"
+                        ),
+                        "description": f"Diagrammtitel {v['name']} auf Seite {i:02d} ({page['id']}).",
+                        "folder": "Beschriftungen\\Diagramme",
+                    }
+                )
     src = pages["source_line"]
     out.append(
         {
@@ -293,6 +312,36 @@ def render_language_table(measures: list[dict]) -> str:
     return "\n".join(out)
 
 
+def render_static_table(st: dict) -> str:
+    """A small fixed table (import, DATATABLE), e.g. the steps of the income-statement bridge."""
+    name = st["name"]
+    out = [*description(st["description"], ""), f"table {q(name)}", f"\tlineageTag: {tag('table', name)}", ""]
+    types = {"string": "STRING", "int64": "INTEGER"}
+    for col in st["columns"]:
+        out += [f"\tcolumn {q(col['name'])}", f"\t\tdataType: {col['type']}"]
+        if col.get("sort_by"):
+            out.append(f"\t\tsortByColumn: {q(col['sort_by'])}")
+        if col.get("hidden"):
+            out.append("\t\tisHidden")
+        out += [
+            "\t\tsummarizeBy: none",
+            f"\t\tsourceColumn: [{col['name']}]",
+            f"\t\tlineageTag: {tag('column', name, col['name'])}",
+            "",
+        ]
+    header = ", ".join(f"{dax_text(c['name'])}, {types[c['type']]}" for c in st["columns"])
+    rows = ", ".join(
+        "{ " + ", ".join(dax_text(v) if isinstance(v, str) else str(v) for v in row) + " }" for row in st["rows"]
+    )
+    out += [
+        f"\tpartition {q(name)} = calculated",
+        "\t\tmode: import",
+        f"\t\tsource = DATATABLE ( {header}, {{ {rows} }} )",
+        "",
+    ]
+    return "\n".join(out)
+
+
 def load_columns(name: str, cfg: dict) -> list[dict]:
     if "columns" in cfg:
         return cfg["columns"]
@@ -316,7 +365,7 @@ def main() -> None:
         assert m.get("description") and m.get("folder"), f"measure {m['name']} needs description and folder"
 
     foreign_keys: dict[str, set[str]] = {}
-    for frm, _ in model["relationships"]:
+    for frm, *_ in model["relationships"]:
         tbl, col = frm.split(".", 1)
         foreign_keys.setdefault(tbl, set()).add(col)
 
@@ -334,13 +383,19 @@ def main() -> None:
     for fp in model["field_parameters"]:
         (DEF / "tables" / f"{fp['name']}.tmdl").write_text(render_field_parameter(fp, measure_table), encoding="utf-8")
         table_names.append(fp["name"])
+    for st in model.get("static_tables", []):
+        (DEF / "tables" / f"{st['name']}.tmdl").write_text(render_static_table(st), encoding="utf-8")
+        table_names.append(st["name"])
     labels = label_measures(yaml.safe_load((PBI / "report" / "pages.yml").read_text()))
     (DEF / "tables" / "Sprache.tmdl").write_text(render_language_table(labels), encoding="utf-8")
     table_names.append("Sprache")
 
     rel = []
-    for frm, to in model["relationships"]:
-        rel += [f"relationship {tag('rel', frm, to)}", f"\tfromColumn: {frm}", f"\ttoColumn: {to}", ""]
+    for frm, to, *direction in model["relationships"]:
+        rel += [f"relationship {tag('rel', frm, to)}", f"\tfromColumn: {frm}", f"\ttoColumn: {to}"]
+        if direction == ["both"]:
+            rel.append("\tcrossFilteringBehavior: bothDirections")
+        rel.append("")
     (DEF / "relationships.tmdl").write_text("\n".join(rel), encoding="utf-8")
 
     for role in model["roles"]:

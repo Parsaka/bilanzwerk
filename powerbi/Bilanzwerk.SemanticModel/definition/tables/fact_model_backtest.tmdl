@@ -1,0 +1,115 @@
+/// Gepoolter Out-of-time-Backtest je Modell (PR-AUC, Recall Top 5 %, Brier).
+table fact_model_backtest
+	lineageTag: 4c15fa05-5dad-5ae8-ba42-1c053d6c0d2f
+	sourceLineageTag: [marts].[fact_model_backtest]
+
+	/// Fläche unter der Precision-Recall-Kurve im gepoolten Out-of-time-Backtest.
+	measure 'PR-AUC' = MAX ( fact_model_backtest[pr_auc] )
+		formatString: 0.000
+		displayFolder: Modellgüte
+		lineageTag: 60664f67-cdad-51d4-9819-3c6c98c1c531
+
+	/// Anteil der Insolvenzen unter den 5 % Unternehmen mit dem höchsten Score.
+	measure 'Recall Top 5 %' = MAX ( fact_model_backtest[recall_top5] )
+		formatString: 0%
+		displayFolder: Modellgüte
+		lineageTag: 754a7768-f347-5305-9c11-f253621f1ed2
+
+	/// Mittlerer quadratischer Fehler der Wahrscheinlichkeit (kleiner ist besser).
+	measure 'Brier Score' = MAX ( fact_model_backtest[brier] )
+		formatString: 0.0000
+		displayFolder: Modellgüte
+		lineageTag: a4cf9d25-e286-5381-a2c1-a5ea3815ce0b
+
+	/// Diagrammtitel: bestes Modell nach PR-AUC und sein Abstand zu Z'' allein (M1), aus den Daten berechnet.
+	measure 'Befund Modellgüte' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _best = TOPN ( 1, VALUES ( fact_model_backtest[model_name] ), [PR-AUC], DESC )
+			VAR _name = CALCULATE ( SELECTEDVALUE ( fact_model_backtest[model_name] ), _best )
+			VAR _bestauc = CALCULATE ( [PR-AUC], _best )
+			VAR _m1 = CALCULATE ( [PR-AUC], fact_model_backtest[model_name] = "M1_logit_z" )
+			RETURN
+			    IF ( ISBLANK ( _bestauc ), BLANK (),
+			        IF ( _en,
+			            _name & " ranks best: PR-AUC " & FORMAT ( _bestauc, "0.000" ) & " against " & FORMAT ( _m1, "0.000" ) & " for Z'' alone",
+			            _name & " trennt am besten: PR-AUC " & FORMAT ( _bestauc, "0.000" ) & " gegen " & FORMAT ( _m1, "0.000" ) & " für Z'' allein" ) )
+		displayFolder: Beschriftungen
+		lineageTag: 3428a168-fb3e-57e2-8fb8-b70abec8cb20
+
+	column model_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: model_name
+		lineageTag: 430063d1-2d86-54ca-89c2-765fcdb6ec3d
+		sourceLineageTag: model_name
+
+	column is_champion
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_champion
+		lineageTag: 4de2e9ed-0930-525e-a10e-17b924a47c0a
+		sourceLineageTag: is_champion
+
+	column n_observations
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: n_observations
+		lineageTag: c8c5d4dc-3703-5823-9f0d-f0b751b6647c
+		sourceLineageTag: n_observations
+
+	column n_events
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: n_events
+		lineageTag: aa5b8343-e779-5323-b8a9-efe64b8c8b35
+		sourceLineageTag: n_events
+
+	column pr_auc
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: pr_auc
+		lineageTag: 723a93f5-2755-5f99-a096-5c08b484f42d
+		sourceLineageTag: pr_auc
+
+	column recall_top5
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: recall_top5
+		lineageTag: 57f10e94-1307-5a58-9b74-810ff344f4e8
+		sourceLineageTag: recall_top5
+
+	column brier
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: brier
+		lineageTag: efc985ad-9114-541e-b1d2-17c1503f3d4b
+		sourceLineageTag: brier
+
+	column run_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: run_id
+		lineageTag: 2fcf616b-d9d0-5217-9705-b847326a793c
+		sourceLineageTag: run_id
+
+	column data_version
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: data_version
+		lineageTag: 0cdd64cf-f035-5270-8193-d82408deb07f
+		sourceLineageTag: data_version
+
+	partition fact_model_backtest = entity
+		mode: directLake
+		source
+			entityName: fact_model_backtest
+			schemaName: marts
+			expressionSource: DatabaseQuery

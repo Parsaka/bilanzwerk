@@ -3,6 +3,22 @@ table fact_financial_line
 	lineageTag: 1a5e4a62-1851-5a0e-86ed-ecc6e0aea6d6
 	sourceLineageTag: [marts].[fact_financial_line]
 
+	/// Vorzeichenrichtige Schritte von Umsatz bis EBIT: Umsatz, minus Umsatzkosten, Rest bis EBIT; ohne Schritt das EBIT (Summe des Wasserfalls).
+	measure 'GuV-Brücke Betrag' =
+			IF (
+			    HASONEVALUE ( 'GuV-Brücke'[Reihenfolge] ),
+			    SWITCH (
+			        VALUES ( 'GuV-Brücke'[Reihenfolge] ),
+			        1, [Umsatz],
+			        2, - [COGS],
+			        3, [EBIT] - ( [Umsatz] - [COGS] )
+			    ),
+			    [EBIT]
+			)
+		formatString: #,0,," Mio"
+		displayFolder: GuV
+		lineageTag: 49622978-94e3-5ee8-a9a4-b8aa8b3c43fb
+
 	/// Summe in der gewählten Währung (Berechnungsgruppe Währung). Landeswährung nur bei genau einer Währung im Kontext.
 	measure '_Betrag Roh' =
 			VAR _waehrung = SELECTEDVALUE ( 'Währung'[Währung], "EUR" )

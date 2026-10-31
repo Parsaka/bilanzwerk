@@ -3,6 +3,47 @@ table fact_risk_score
 	lineageTag: c19198bb-03ab-5305-86e6-5a741a04c2ba
 	sourceLineageTag: [marts].[fact_risk_score]
 
+	/// Hintergrundfarbe des Risikobands (rot ab 10 %, gelb ab 3 %, sonst grün; Schwellen wie analysis/config.py). Rot und Grün nur hier.
+	measure 'Risiko Farbe' =
+			VAR _p = [Risiko 12M]
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( _p ), BLANK (),
+			        _p >= 0.10, "#F4C7C3",
+			        _p >= 0.03, "#FCE8B2",
+			        "#C8E6C9"
+			    )
+		displayFolder: Beschriftungen\Farben
+		lineageTag: f653b133-9e8d-5cd0-8318-907ab527c5ea
+
+	/// Kopfzeile der Unternehmensseiten: Unternehmen, Insolvenzrisiko 12 Monate und rote Flaggen, aus den Daten.
+	measure 'Befund Unternehmen' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _p = [Risiko 12M]
+			VAR _flaggen = COALESCE ( [Rote Flaggen], 0 )
+			RETURN
+			    IF ( NOT HASONEVALUE ( dim_company[company_id] ), [Ausgewähltes Unternehmen],
+			        [Ausgewähltes Unternehmen] & " · "
+			            & IF ( _en, "12-month bankruptcy risk ", "Insolvenzrisiko 12 Monate " )
+			            & IF ( ISBLANK ( _p ), "n/a", FORMAT ( _p, "0.0%" ) )
+			            & " · " & FORMAT ( _flaggen, "#,0" ) & IF ( _en, " red flags", " rote Flaggen" ) )
+		displayFolder: Beschriftungen
+		lineageTag: 0297a492-1b8b-5f8a-9cd5-d444637a2a33
+
+	/// Diagrammtitel: Unternehmen im roten Band zum letzten Stichtag (Champion-Modell), aus den Daten berechnet.
+	measure 'Befund Frühwarnung' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _n = [Unternehmen rot]
+			VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+			RETURN
+			    IF ( ISBLANK ( _stichtag ), BLANK (),
+			        IF ( _en,
+			            FORMAT ( COALESCE ( _n, 0 ), "#,0" ) & " companies in the red band on " & FORMAT ( _stichtag, "yyyy-MM-dd" ),
+			            FORMAT ( COALESCE ( _n, 0 ), "#,0" ) & " Unternehmen im roten Band zum " & FORMAT ( _stichtag, "dd.MM.yyyy" ) ) )
+		displayFolder: Beschriftungen
+		lineageTag: 7a5feb26-ada9-50d3-9197-bc50952f6b04
+
 	/// Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten, Champion-Modell (ADR-007), zum letzten Stichtag im Kontext.
 	measure 'Risiko 12M' =
 			VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )

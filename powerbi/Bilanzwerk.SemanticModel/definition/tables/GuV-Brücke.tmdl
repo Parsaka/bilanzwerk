@@ -1,0 +1,21 @@
+/// Schritte der GuV-Brücke von Umsatz bis EBIT (Seite GuV und Margen, Wasserfall).
+table 'GuV-Brücke'
+	lineageTag: 3e938793-45af-518e-8dbf-2838508eb06f
+
+	column Schritt
+		dataType: string
+		sortByColumn: Reihenfolge
+		summarizeBy: none
+		sourceColumn: [Schritt]
+		lineageTag: 66fefae9-2a60-5b26-af00-e40f5d90796a
+
+	column Reihenfolge
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Reihenfolge]
+		lineageTag: 5532bb44-c075-52c1-9f7d-719ad53eeda1
+
+	partition 'GuV-Brücke' = calculated
+		mode: import
+		source = DATATABLE ( "Schritt", STRING, "Reihenfolge", INTEGER, { { "Umsatz", 1 }, { "Umsatzkosten", 2 }, { "Übrige betriebliche Aufwendungen und Erträge", 3 } } )

@@ -120,6 +120,38 @@ models:
       - name: is_champion
         tests: [{accepted_values: {values: [0, 1], quote: false}}]
 
+  - name: fact_hypothesis_result
+    description: H1-H4 as the last model run decided them (answer cards, finding titles).
+    columns:
+      - name: hypothesis_code
+        tests: [unique, not_null, {accepted_values: {values: ['H1', 'H2', 'H3', 'H4']}}]
+      - name: status
+        tests: [{accepted_values: {values: ['held', 'not_held', 'not_determinable']}}]
+
+  - name: fact_model_backtest
+    description: Pooled out-of-time backtest per model; is_champion marks the reported model.
+    columns:
+      - name: model_name
+        tests: [unique, not_null]
+      - name: pr_auc
+        tests: [{values_between: {min_value: 0, max_value: 1}}]
+
+  - name: fact_lead_time
+    description: Lead time of the CCC and Z'' flags per company with a bankruptcy (H1).
+    columns:
+      - name: company_id
+        tests: [unique, not_null]
+      - name: company_key
+        tests: [{relationships: {to: ref('dim_company'), field: company_key}}]
+
+  - name: fact_case_study
+    description: The three case studies of report page 8 (fixed selection rule).
+    columns:
+      - name: case_rank
+        tests: [unique, not_null]
+      - name: company_key
+        tests: [not_null, {relationships: {to: ref('dim_company'), field: company_key}}]
+
   - name: fact_data_quality
     tests:
       - unique_combination: {columns: ['run_id', 'rule_code', 'table_name']}

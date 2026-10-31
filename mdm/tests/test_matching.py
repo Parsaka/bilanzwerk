@@ -61,3 +61,17 @@ def test_precision_recall_counts_only_labelled_rows():
 
 def test_settings_build():
     assert matching.settings() is not None
+
+
+def test_sample_fills_short_bands_from_the_others():
+    from mdm.evaluate import sample
+
+    # 10 pairs in the lowest band, 500 in the top band, nothing in between
+    probs = [0.55] * 10 + [0.995] * 500
+    pairs = pd.DataFrame(
+        {"unique_id_l": range(len(probs)), "unique_id_r": range(len(probs)), "match_probability": probs}
+    )
+    out = sample(pairs, 300)
+    assert len(out) == 300
+    assert (out["match_probability"] < 0.7).sum() == 10
+    assert out["is_match"].eq("").all()

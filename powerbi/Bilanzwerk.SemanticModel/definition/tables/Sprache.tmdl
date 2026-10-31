@@ -8,55 +8,295 @@ table Sprache
 		displayFolder: Beschriftungen
 		lineageTag: 450699b0-b730-56cf-98a3-3843943ef167
 
+	/// Diagrammtitel antworten auf Seite 01 (antwort).
+	measure 'Diagramm 01 antworten' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "The four hypotheses (fixed beforehand, ADR-001), result of the last model run", "Die vier Hypothesen (vorher festgelegt, ADR-001), Ergebnis des letzten Modelllaufs" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 9be1a369-a379-5751-91ad-844b13540d3d
+
+	/// Diagrammtitel cash_potenzial auf Seite 01 (antwort).
+	measure 'Diagramm 01 cash_potenzial' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Working-capital potential to sector median (EUR)", "Working-Capital-Potenzial bis zum Sektormedian (EUR)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 1121bc1c-c98e-5f3d-9cea-00eabfa2ae6c
+
+	/// Diagrammtitel insolvenzen auf Seite 01 (antwort).
+	measure 'Diagramm 01 insolvenzen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Bankruptcies with ratios before the event (H1 population)", "Insolvenzen mit Kennzahlen davor (Grundgesamtheit H1)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 7c444efc-4315-5359-84a8-1e0a55b1b6b3
+
+	/// Diagrammtitel flaggen auf Seite 01 (antwort).
+	measure 'Diagramm 01 flaggen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "How often the flag was red before bankruptcy, and how often the CCC could be computed", "Wie oft die Flagge vor der Insolvenz rot war, und wie oft die CCC berechenbar war" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: eb56f610-fcbd-5151-89f0-90bacffb1ecb
+
 	/// Seitentitel 02 (ueberblick), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 02' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Company overview: How is this company doing?", "Unternehmensüberblick: Wie steht dieses Unternehmen da?" )
 		displayFolder: Beschriftungen
 		lineageTag: c1adde93-26ce-5dce-b3c9-5d05973c3e7a
+
+	/// Diagrammtitel unternehmen auf Seite 02 (ueberblick).
+	measure 'Diagramm 02 unternehmen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Company", "Unternehmen" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 8571f54c-0a0c-5368-92a8-f4839e56660f
+
+	/// Diagrammtitel kennzahlen auf Seite 02 (ueberblick).
+	measure 'Diagramm 02 kennzahlen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Ratios at the latest statement with sector percentile", "Kennzahlen zum letzten Abschluss mit Sektorperzentil" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: a20fc869-93eb-59c7-8c78-fdfb43dbfa68
+
+	/// Diagrammtitel umsatz auf Seite 02 (ueberblick).
+	measure 'Diagramm 02 umsatz' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Revenue by fiscal year", "Umsatz je Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: f2cfe985-1d9a-5f4f-bfa4-df6a9e4408bb
+
+	/// Diagrammtitel margen auf Seite 02 (ueberblick).
+	measure 'Diagramm 02 margen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "EBIT margin and equity ratio by fiscal year", "EBIT-Marge und Eigenkapitalquote je Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 5bf4a844-a10a-5cdc-ab76-b24755d7aaee
+
+	/// Diagrammtitel risiko auf Seite 02 (ueberblick).
+	measure 'Diagramm 02 risiko' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "12-month bankruptcy probability (champion model)", "Insolvenzwahrscheinlichkeit 12 Monate (Champion-Modell)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 75686b65-b77a-5de8-96c4-f1af4b67d690
+
+	/// Diagrammtitel ereignisse auf Seite 02 (ueberblick).
+	measure 'Diagramm 02 ereignisse' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Events and filings (8-K, Form 15/25, NT 10-K/Q)", "Ereignisse und Einreichungen (8-K, Form 15/25, NT 10-K/Q)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 0ff0e734-749b-5b14-9ba1-108f0234a266
 
 	/// Seitentitel 03 (bilanz), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 03' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Balance sheet: Is the balance sheet healthy?", "Bilanzanalyse: Ist die Bilanz gesund?" )
 		displayFolder: Beschriftungen
 		lineageTag: ba71760a-8645-5928-9a48-42c7e1c99daa
 
+	/// Diagrammtitel unternehmen auf Seite 03 (bilanz).
+	measure 'Diagramm 03 unternehmen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Company", "Unternehmen" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 0cb983f1-a0cc-5e3a-a1c2-f8217a6dbcbe
+
+	/// Diagrammtitel aktiva auf Seite 03 (bilanz).
+	measure 'Diagramm 03 aktiva' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Assets by group at fiscal year end", "Aktiva nach Gruppe zum Geschäftsjahresende" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 3a593217-f0f8-5beb-b51f-c354fb8149f9
+
+	/// Diagrammtitel passiva auf Seite 03 (bilanz).
+	measure 'Diagramm 03 passiva' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Liabilities and equity by group at fiscal year end", "Passiva nach Gruppe zum Geschäftsjahresende" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 2b755c08-b90e-56aa-b639-b530e25954a8
+
+	/// Diagrammtitel eigenkapitalquote auf Seite 03 (bilanz).
+	measure 'Diagramm 03 eigenkapitalquote' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Equity ratio by fiscal year", "Eigenkapitalquote je Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: c73f94fe-6b72-5676-a5b9-704d59b5c6ee
+
+	/// Diagrammtitel verschuldungsgrad auf Seite 03 (bilanz).
+	measure 'Diagramm 03 verschuldungsgrad' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Debt-to-equity by fiscal year", "Verschuldungsgrad (Verbindlichkeiten / Eigenkapital) je Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: cfec2ea6-3309-5db3-9a91-937bd22f53b7
+
 	/// Seitentitel 04 (guv), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 04' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Income statement: Where does profit come from?", "GuV und Margen: Woher kommt der Gewinn?" )
 		displayFolder: Beschriftungen
 		lineageTag: 745aa5ba-5eef-5908-b981-f45c724a19e6
+
+	/// Diagrammtitel unternehmen auf Seite 04 (guv).
+	measure 'Diagramm 04 unternehmen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Company", "Unternehmen" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 487db075-6cbc-54e9-b5fb-c7fe2af8c30e
+
+	/// Diagrammtitel geschaeftsjahr auf Seite 04 (guv).
+	measure 'Diagramm 04 geschaeftsjahr' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Fiscal year", "Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 2658fcbe-1af7-5daf-9a20-408c85e0ea7e
+
+	/// Diagrammtitel bruecke auf Seite 04 (guv).
+	measure 'Diagramm 04 bruecke' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "From revenue to EBIT (selected fiscal year)", "Vom Umsatz zum EBIT (gewähltes Geschäftsjahr)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 328b80aa-a72c-5218-b9c5-053a50f8de8d
+
+	/// Diagrammtitel umsatz_bis_ebit auf Seite 04 (guv).
+	measure 'Diagramm 04 umsatz_bis_ebit' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Revenue, cost of sales and EBIT by fiscal year", "Umsatz, Umsatzkosten und EBIT je Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 4712047c-a712-5458-9620-a306a2bd3010
+
+	/// Diagrammtitel margen auf Seite 04 (guv).
+	measure 'Diagramm 04 margen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Gross and EBIT margin by fiscal year", "Brutto- und EBIT-Marge je Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 2f534133-2628-5f64-aa58-4c0d732c0586
 
 	/// Seitentitel 05 (working_capital), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 05' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Cash flow and working capital: Where is cash tied up?", "Cashflow und Working Capital: Wo ist Cash gebunden?" )
 		displayFolder: Beschriftungen
 		lineageTag: a908541c-e4a9-5e68-a6b7-acf776a7d9c7
 
+	/// Diagrammtitel unternehmen auf Seite 05 (working_capital).
+	measure 'Diagramm 05 unternehmen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Company", "Unternehmen" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 8909ccf4-da39-5e8a-999d-e2898a185fe9
+
+	/// Diagrammtitel tage auf Seite 05 (working_capital).
+	measure 'Diagramm 05 tage' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Receivable, inventory and payable days by quarter", "Forderungs-, Lager- und Lieferantentage je Quartal" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 972d9e8e-fae3-5e7f-9d39-24f41571ccbe
+
+	/// Diagrammtitel ccc auf Seite 05 (working_capital).
+	measure 'Diagramm 05 ccc' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Cash conversion cycle against the sector median (days)", "Cash Conversion Cycle gegen den Sektormedian (Tage)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 19e9c04b-5820-5f20-8995-241c98759222
+
+	/// Diagrammtitel cash_conversion auf Seite 05 (working_capital).
+	measure 'Diagramm 05 cash_conversion' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Cash conversion (operating cash flow / EBIT)", "Cash Conversion (operativer Cashflow / EBIT)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: e23c3ba7-103b-5001-9975-b75e62f281c0
+
 	/// Seitentitel 06 (peer), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 06' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Peer benchmark: How do we compare?", "Peer-Benchmark: Wie stehen wir im Vergleich da?" )
 		displayFolder: Beschriftungen
 		lineageTag: 9990a1d1-b9d2-5f0c-bba9-6a43404cadb0
+
+	/// Diagrammtitel sektor auf Seite 06 (peer).
+	measure 'Diagramm 06 sektor' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Sector", "Sektor" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: c0dc0a78-2024-5177-b72c-f6659aeb4316
+
+	/// Diagrammtitel kpi_x auf Seite 06 (peer).
+	measure 'Diagramm 06 kpi_x' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Ratio x-axis", "Kennzahl x-Achse" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 4dc0ec7a-156e-5c7e-97b1-9e831b4940dc
+
+	/// Diagrammtitel kpi_y auf Seite 06 (peer).
+	measure 'Diagramm 06 kpi_y' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Ratio y-axis", "Kennzahl y-Achse" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: d5d37781-527e-5a13-a6d4-fc19e62ecf4d
+
+	/// Diagrammtitel streuung auf Seite 06 (peer).
+	measure 'Diagramm 06 streuung' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Companies of the sector on two ratios of your choice", "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 44081a05-cc61-524c-945a-eea65bf6b612
+
+	/// Diagrammtitel rangliste auf Seite 06 (peer).
+	measure 'Diagramm 06 rangliste' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Ranking with sector percentile", "Rangliste mit Sektorperzentil" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 22409100-99f7-5e93-b3de-493b94bd9aaf
 
 	/// Seitentitel 07 (fruehwarnung), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 07' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Early warning: Which companies need attention now?", "Frühwarnsystem: Welche Unternehmen brauchen jetzt Aufmerksamkeit?" )
 		displayFolder: Beschriftungen
 		lineageTag: 41996dbc-2ca7-58fa-8941-01fc1d547c07
 
+	/// Diagrammtitel sektor auf Seite 07 (fruehwarnung).
+	measure 'Diagramm 07 sektor' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Sector", "Sektor" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 652b9c29-067b-5093-87bc-582198a4f3d8
+
+	/// Diagrammtitel ampel auf Seite 07 (fruehwarnung).
+	measure 'Diagramm 07 ampel' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Companies by 12-month bankruptcy risk, with the three strongest drivers", "Unternehmen nach Insolvenzrisiko 12 Monate, mit den drei stärksten Treibern" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 8d175030-851a-5381-b5b7-6d39610b1f77
+
 	/// Seitentitel 08 (fallstudien), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 08' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Case studies: What did the warning look like before real bankruptcies?", "Fallstudien: Wie sah die Warnung vor echten Insolvenzen aus?" )
 		displayFolder: Beschriftungen
 		lineageTag: 13b1e487-808d-57e4-ad96-bcdae3df6881
+
+	/// Diagrammtitel fall auf Seite 08 (fallstudien).
+	measure 'Diagramm 08 fall' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Case study (rule: the three largest bankruptcies by revenue in the test period, one per sector)", "Fallstudie (Auswahlregel: die drei umsatzstärksten Insolvenzen im Testzeitraum, je Sektor eine)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: b825572f-0f13-5184-a8ea-a4ea05b612f1
+
+	/// Diagrammtitel z_score auf Seite 08 (fallstudien).
+	measure 'Diagramm 08 z_score' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Altman Z'' by quarter (red flag below 1.1)", "Altman Z'' je Quartal (rote Flagge unter 1,1)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 2dde144a-c898-500c-bc07-815f62bd9c20
+
+	/// Diagrammtitel ccc auf Seite 08 (fallstudien).
+	measure 'Diagramm 08 ccc' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Cash conversion cycle against the sector median (days)", "Cash Conversion Cycle gegen den Sektormedian (Tage)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 8c4673f0-87cd-5fc9-ad97-29a32436283b
+
+	/// Diagrammtitel flaggen auf Seite 08 (fallstudien).
+	measure 'Diagramm 08 flaggen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Red flags by quarter", "Rote Flaggen je Quartal" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 6df45444-96f5-5c92-8375-d1c9b8f8d3d3
+
+	/// Diagrammtitel ereignisse auf Seite 08 (fallstudien).
+	measure 'Diagramm 08 ereignisse' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Events up to the bankruptcy", "Ereignisse bis zur Insolvenz" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 36ec2b47-2492-54ca-9087-ca3775a4f84e
 
 	/// Seitentitel 09 (wc_potenzial), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 09' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Working-capital potential: How much cash could be freed?", "Working-Capital-Potenzial: Wie viel Cash ließe sich freisetzen?" )
 		displayFolder: Beschriftungen
 		lineageTag: 599d0206-5635-5ba0-a50e-dc88344e8d56
 
+	/// Diagrammtitel top20 auf Seite 09 (wc_potenzial).
+	measure 'Diagramm 09 top20' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "The 20 companies with the largest potential (latest fiscal year)", "Die 20 Unternehmen mit dem größten Potenzial (letztes Geschäftsjahr)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 096c224a-7600-57e3-836c-80bcee5a6db1
+
+	/// Diagrammtitel stretch auf Seite 09 (wc_potenzial).
+	measure 'Diagramm 09 stretch' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Median against top quartile as target (stretch scenario)", "Median gegen oberes Quartil als Ziel (Stretch-Szenario)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: cfe99820-bf8a-5fc5-83a6-f06188c98472
+
 	/// Seitentitel 10 (plan_ist), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 10' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Plan vs. actual: How far did actuals miss plan?", "Plan-Ist: Wie weit lag das Ist neben dem Plan?" )
 		displayFolder: Beschriftungen
 		lineageTag: be5bd932-bcad-5f98-a1b1-fdd975cd5568
 
+	/// Diagrammtitel sektor auf Seite 10 (plan_ist).
+	measure 'Diagramm 10 sektor' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Sector", "Sektor" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 81178cef-8af3-5009-bf8d-8083b70e151d
+
+	/// Diagrammtitel geschaeftsjahr auf Seite 10 (plan_ist).
+	measure 'Diagramm 10 geschaeftsjahr' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Fiscal year", "Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: f6286de7-3189-5ede-9219-bdb6d789f50b
+
+	/// Diagrammtitel abweichung auf Seite 10 (plan_ist).
+	measure 'Diagramm 10 abweichung' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Revenue actual against plan by sector and company (plan frozen in January)", "Umsatz Ist gegen Plan nach Sektor und Unternehmen (Plan im Januar eingefroren)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: e3238bcf-1900-59f5-a48b-0f63ba8e9c84
+
+	/// Diagrammtitel mape auf Seite 10 (plan_ist).
+	measure 'Diagramm 10 mape' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Forecast error (MAPE) in context", "Prognosefehler (MAPE) im Kontext" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: a66563a3-446d-5f2b-a3f3-e300acfb7856
+
+	/// Diagrammtitel mape_verlauf auf Seite 10 (plan_ist).
+	measure 'Diagramm 10 mape_verlauf' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Forecast error (MAPE) by fiscal year", "Prognosefehler (MAPE) je Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 26ba1841-9454-5729-9048-e254a4cc7211
+
 	/// Seitentitel 11 (datenqualitaet), Deutsch oder Englisch je nach Sprachauswahl.
 	measure 'Titel 11' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Data quality: Can we trust the numbers?", "Datenqualität: Können wir den Zahlen trauen?" )
 		displayFolder: Beschriftungen
 		lineageTag: 456207c5-9ebb-5c87-aa4d-c15209e7490c
+
+	/// Diagrammtitel scorecard auf Seite 11 (datenqualitaet).
+	measure 'Diagramm 11 scorecard' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Scorecard per rule in the last run (balance check target ≥ 98 %)", "Scorecard je Regel im letzten Lauf (Ziel Bilanzprüfung ≥ 98 %)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: fad20e5a-d7d7-5f78-bf4b-75ef37319de7
+
+	/// Diagrammtitel lei_quote auf Seite 11 (datenqualitaet).
+	measure 'Diagramm 11 lei_quote' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "LEI match rate of SEC companies", "LEI-Match-Quote der SEC-Unternehmen" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: fb764ab8-1857-59c8-9056-1d6134232ae1
+
+	/// Diagrammtitel restatements auf Seite 11 (datenqualitaet).
+	measure 'Diagramm 11 restatements' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Restatement rate (first reported against latest)", "Restatement-Quote (erstveröffentlicht gegen letzter Stand)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 6a670d7b-b48e-5fe0-bf24-fdcb74f1a261
+
+	/// Diagrammtitel stewardship_offen auf Seite 11 (datenqualitaet).
+	measure 'Diagramm 11 stewardship_offen' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Open stewardship cases", "Offene Stewardship-Fälle" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 8dc86e85-8e67-57d5-9efe-e9f5d1a5310f
+
+	/// Diagrammtitel stewardship auf Seite 11 (datenqualitaet).
+	measure 'Diagramm 11 stewardship' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Stewardship queue: candidate pairs to review (service level: freshness 24 h, refresh success 99 %)", "Stewardship-Warteschlange: Kandidatenpaare zur Prüfung (Service Level: Frische 24 h, Refresh-Erfolg 99 %)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 1cb6de4f-29fa-5b90-a831-3b4c115e7d12
 
 	/// Fußzeile jeder Seite: Datenstand (letzter verfügbarer Wert im Modell) und Quellen.
 	measure 'Fußzeile' =
