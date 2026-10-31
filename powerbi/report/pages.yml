@@ -285,23 +285,24 @@ pages:
       - name: z_score
         type: lineChart
         pos: [24, 152, 610, 250]
-        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_kpi.[Z'' Score]"]}
+        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_case_study.[Fall Z'' Score]"]}
         label: {de: "Altman Z'' je Quartal (rote Flagge unter 1,1)", en: "Altman Z'' by quarter (red flag below 1.1)"}
       - name: ccc
         type: lineChart
         pos: [646, 152, 610, 250]
-        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_financial_line.[CCC]", "fact_kpi.[CCC Sektor-Median]"]}
+        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_case_study.[Fall CCC]", "fact_case_study.[Fall CCC Sektor-Median]"]}
         label: {de: "Cash Conversion Cycle gegen den Sektormedian (Tage)", en: "Cash conversion cycle against the sector median (days)"}
       - name: flaggen
         type: columnChart
         pos: [24, 414, 610, 250]
-        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_kpi.[Rote Flaggen]"]}
+        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_case_study.[Fall Rote Flaggen]"]}
         label: {de: "Rote Flaggen je Quartal", en: "Red flags by quarter"}
       - name: ereignisse
-        type: tableEx
+        type: card
         pos: [646, 414, 610, 250]
-        fields: {Values: ["fact_event.event_date", "fact_event.event_type", "fact_event.form", "fact_event.item_code"]}
-        sort: ["fact_event.event_date", asc]
+        fields: {Values: ["fact_case_study.[Fall Ereignisse]"]}
+        font_size: 11
+        word_wrap: true
         label: {de: "Ereignisse bis zur Insolvenz", en: "Events up to the bankruptcy"}
   - id: wc_potenzial
     de: {name: "Working-Capital-Potenzial", question: "Wie viel Cash ließe sich freisetzen?"}

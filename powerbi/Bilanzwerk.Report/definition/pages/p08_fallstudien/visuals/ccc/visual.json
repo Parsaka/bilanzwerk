@@ -38,28 +38,28 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "fact_financial_line"
+                      "Entity": "fact_case_study"
                     }
                   },
-                  "Property": "CCC"
+                  "Property": "Fall CCC"
                 }
               },
-              "queryRef": "fact_financial_line.CCC",
-              "nativeQueryRef": "CCC"
+              "queryRef": "fact_case_study.Fall CCC",
+              "nativeQueryRef": "Fall CCC"
             },
             {
               "field": {
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "fact_kpi"
+                      "Entity": "fact_case_study"
                     }
                   },
-                  "Property": "CCC Sektor-Median"
+                  "Property": "Fall CCC Sektor-Median"
                 }
               },
-              "queryRef": "fact_kpi.CCC Sektor-Median",
-              "nativeQueryRef": "CCC Sektor-Median"
+              "queryRef": "fact_case_study.Fall CCC Sektor-Median",
+              "nativeQueryRef": "Fall CCC Sektor-Median"
             }
           ]
         }

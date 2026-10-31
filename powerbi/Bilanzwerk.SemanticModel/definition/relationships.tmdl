@@ -73,4 +73,3 @@ relationship 64a786b0-a4c6-520c-bdcd-0f96b0791d71
 relationship 0049bee5-636c-579f-b30e-dbfdbd6180ba
 	fromColumn: fact_case_study.company_key
 	toColumn: dim_company.company_key
-	crossFilteringBehavior: bothDirections

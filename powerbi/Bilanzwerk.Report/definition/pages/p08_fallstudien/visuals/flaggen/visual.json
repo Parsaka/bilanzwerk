@@ -38,14 +38,14 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "fact_kpi"
+                      "Entity": "fact_case_study"
                     }
                   },
-                  "Property": "Rote Flaggen"
+                  "Property": "Fall Rote Flaggen"
                 }
               },
-              "queryRef": "fact_kpi.Rote Flaggen",
-              "nativeQueryRef": "Rote Flaggen"
+              "queryRef": "fact_case_study.Fall Rote Flaggen",
+              "nativeQueryRef": "Fall Rote Flaggen"
             }
           ]
         }

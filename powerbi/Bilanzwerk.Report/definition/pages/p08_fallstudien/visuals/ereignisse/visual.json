@@ -10,107 +10,60 @@
     "tabOrder": 8
   },
   "visual": {
-    "visualType": "tableEx",
+    "visualType": "card",
     "query": {
       "queryState": {
         "Values": {
           "projections": [
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "fact_event"
+                      "Entity": "fact_case_study"
                     }
                   },
-                  "Property": "event_date"
+                  "Property": "Fall Ereignisse"
                 }
               },
-              "queryRef": "fact_event.event_date",
-              "nativeQueryRef": "event_date"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "fact_event"
-                    }
-                  },
-                  "Property": "event_type"
-                }
-              },
-              "queryRef": "fact_event.event_type",
-              "nativeQueryRef": "event_type"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "fact_event"
-                    }
-                  },
-                  "Property": "form"
-                }
-              },
-              "queryRef": "fact_event.form",
-              "nativeQueryRef": "form"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "fact_event"
-                    }
-                  },
-                  "Property": "item_code"
-                }
-              },
-              "queryRef": "fact_event.item_code",
-              "nativeQueryRef": "item_code"
+              "queryRef": "fact_case_study.Fall Ereignisse",
+              "nativeQueryRef": "Fall Ereignisse"
             }
           ]
         }
-      },
-      "sortDefinition": {
-        "sort": [
-          {
-            "field": {
-              "Column": {
-                "Expression": {
-                  "SourceRef": {
-                    "Entity": "fact_event"
-                  }
-                },
-                "Property": "event_date"
-              }
-            },
-            "direction": "Ascending"
-          }
-        ],
-        "isDefaultSort": true
       }
     },
     "objects": {
-      "values": [
+      "labels": [
         {
           "properties": {
-            "wordWrap": {
+            "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "11D"
                 }
               }
             }
           }
         }
       ],
-      "columnHeaders": [
+      "categoryLabels": [
         {
           "properties": {
-            "wordWrap": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "wordWrap": [
+        {
+          "properties": {
+            "show": {
               "expr": {
                 "Literal": {
                   "Value": "true"

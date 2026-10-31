@@ -47,10 +47,57 @@ relationships:
   - [fact_risk_score.as_of_date, dim_date.date_key]
   - [dim_company.sector_key, dim_sector.sector_key]
   - [fact_lead_time.company_key, dim_company.company_key]
-  # both directions: picking a case on page 8 filters the company and with it every fact table
-  - [fact_case_study.company_key, dim_company.company_key, both]
+  # single direction like every other relationship (BPA rule); page 8 reaches the other facts
+  # through the [Fall ...] measures, which apply the picked case with TREATAS
+  - [fact_case_study.company_key, dim_company.company_key]
 
 measures:
+  - table: fact_case_study
+    name: "Fall Z'' Score"
+    folder: "Fallstudien"
+    format: "0.00"
+    description: "Z'' Score der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung)."
+    expression: |
+      CALCULATE ( [Z'' Score], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+
+  - table: fact_case_study
+    name: "Fall CCC"
+    folder: "Fallstudien"
+    format: "0.0"
+    description: "CCC der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung)."
+    expression: |
+      CALCULATE ( [CCC], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+
+  - table: fact_case_study
+    name: "Fall CCC Sektor-Median"
+    folder: "Fallstudien"
+    format: "0.0"
+    description: "CCC Sektor-Median der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung)."
+    expression: |
+      CALCULATE ( [CCC Sektor-Median], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+
+  - table: fact_case_study
+    name: "Fall Rote Flaggen"
+    folder: "Fallstudien"
+    format: "#,0"
+    description: "Rote Flaggen der gewählten Fallstudie (Filter über das Unternehmen, ohne beidseitige Beziehung)."
+    expression: |
+      CALCULATE ( [Rote Flaggen], TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+
+  - table: fact_case_study
+    name: "Fall Ereignisse"
+    folder: "Beschriftungen\\Fallstudien"
+    description: "Ereignisse der gewählten Fallstudie bis zur Insolvenz, eines je Zeile (Datum, Art, Formular)."
+    expression: |
+      VAR _ereignisse = CALCULATETABLE ( fact_event, TREATAS ( VALUES ( fact_case_study[company_id] ), dim_company[company_id] ) )
+      RETURN
+          CONCATENATEX (
+              _ereignisse,
+              FORMAT ( fact_event[event_date], "dd.MM.yyyy" ) & "  " & fact_event[event_type] & "  " & fact_event[form],
+              UNICHAR ( 10 ),
+              fact_event[event_date], ASC
+          )
+
   - table: fact_financial_line
     name: "GuV-Brücke Betrag"
     folder: "GuV"

@@ -38,14 +38,14 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "fact_kpi"
+                      "Entity": "fact_case_study"
                     }
                   },
-                  "Property": "Z'' Score"
+                  "Property": "Fall Z'' Score"
                 }
               },
-              "queryRef": "fact_kpi.Z'' Score",
-              "nativeQueryRef": "Z'' Score"
+              "queryRef": "fact_case_study.Fall Z'' Score",
+              "nativeQueryRef": "Fall Z'' Score"
             }
           ]
         }
