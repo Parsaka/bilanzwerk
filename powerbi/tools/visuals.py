@@ -26,6 +26,7 @@ ROLES = {
     "columnChart": ["Category", "Series", "Y"],
     "barChart": ["Category", "Series", "Y"],
     "lineChart": ["Category", "Series", "Y"],
+    "waterfallChart": ["Category", "Breakdown", "Y"],
     "scatterChart": ["Category", "Series", "X", "Y", "Size"],
 }
 

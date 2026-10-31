@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
   "name": "umsatz_bis_ebit",
   "position": {
-    "x": 24,
+    "x": 646,
     "y": 152,
-    "z": 4,
-    "width": 1232,
+    "z": 6,
+    "width": 610,
     "height": 250,
-    "tabOrder": 4
+    "tabOrder": 6
   },
   "visual": {
     "visualType": "clusteredColumnChart",

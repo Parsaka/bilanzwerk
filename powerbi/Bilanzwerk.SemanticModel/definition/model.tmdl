@@ -29,6 +29,7 @@ ref table Szenario
 ref table 'Währung'
 ref table 'KPI-Auswahl'
 ref table 'KPI-Auswahl Y'
+ref table 'GuV-Brücke'
 ref table Sprache
 
 ref role 'Sektor-Team'

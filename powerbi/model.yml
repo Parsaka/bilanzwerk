@@ -51,6 +51,23 @@ relationships:
   - [fact_case_study.company_key, dim_company.company_key, both]
 
 measures:
+  - table: fact_financial_line
+    name: "GuV-Brücke Betrag"
+    folder: "GuV"
+    format: "#,0,,\" Mio\""
+    description: "Vorzeichenrichtige Schritte von Umsatz bis EBIT: Umsatz, minus Umsatzkosten, Rest bis EBIT; ohne Schritt das EBIT (Summe des Wasserfalls)."
+    expression: |
+      IF (
+          HASONEVALUE ( 'GuV-Brücke'[Reihenfolge] ),
+          SWITCH (
+              VALUES ( 'GuV-Brücke'[Reihenfolge] ),
+              1, [Umsatz],
+              2, - [COGS],
+              3, [EBIT] - ( [Umsatz] - [COGS] )
+          ),
+          [EBIT]
+      )
+
   - table: fact_hypothesis_result
     name: "Antwort Text"
     folder: "Beschriftungen\\Antwort"
@@ -811,6 +828,17 @@ calculation_groups:
     items:
       - [EUR, "SELECTEDMEASURE ()"]
       - [Lokal, "SELECTEDMEASURE ()"]
+
+static_tables:
+  - name: GuV-Brücke
+    description: "Schritte der GuV-Brücke von Umsatz bis EBIT (Seite GuV und Margen, Wasserfall)."
+    columns:
+      - {name: Schritt, type: string, sort_by: Reihenfolge}
+      - {name: Reihenfolge, type: int64, hidden: true}
+    rows:
+      - ["Umsatz", 1]
+      - ["Umsatzkosten", 2]
+      - ["Übrige betriebliche Aufwendungen und Erträge", 3]
 
 field_parameters:
   - name: KPI-Auswahl

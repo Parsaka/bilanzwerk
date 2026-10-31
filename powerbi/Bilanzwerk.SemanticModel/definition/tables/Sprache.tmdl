@@ -103,6 +103,16 @@ table Sprache
 		displayFolder: Beschriftungen\Diagramme
 		lineageTag: 487db075-6cbc-54e9-b5fb-c7fe2af8c30e
 
+	/// Diagrammtitel geschaeftsjahr auf Seite 04 (guv).
+	measure 'Diagramm 04 geschaeftsjahr' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Fiscal year", "Geschäftsjahr" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 2658fcbe-1af7-5daf-9a20-408c85e0ea7e
+
+	/// Diagrammtitel bruecke auf Seite 04 (guv).
+	measure 'Diagramm 04 bruecke' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "From revenue to EBIT (selected fiscal year)", "Vom Umsatz zum EBIT (gewähltes Geschäftsjahr)" )
+		displayFolder: Beschriftungen\Diagramme
+		lineageTag: 328b80aa-a72c-5218-b9c5-053a50f8de8d
+
 	/// Diagrammtitel umsatz_bis_ebit auf Seite 04 (guv).
 	measure 'Diagramm 04 umsatz_bis_ebit' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Revenue, cost of sales and EBIT by fiscal year", "Umsatz, Umsatzkosten und EBIT je Geschäftsjahr" )
 		displayFolder: Beschriftungen\Diagramme

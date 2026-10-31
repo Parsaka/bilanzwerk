@@ -144,9 +144,20 @@ pages:
         fields: {Values: ["dim_company.company_name"]}
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
+      - name: geschaeftsjahr
+        type: slicer
+        pos: [440, 84, 200, 56]
+        fields: {Values: ["dim_period.fiscal_year"]}
+        label: {de: "Geschäftsjahr", en: "Fiscal year"}
+      - name: bruecke
+        type: waterfallChart
+        pos: [24, 152, 610, 250]
+        fields: {Category: ["GuV-Brücke.Schritt"], Y: ["fact_financial_line.[GuV-Brücke Betrag]"]}
+        data_labels: true
+        label: {de: "Vom Umsatz zum EBIT (gewähltes Geschäftsjahr)", en: "From revenue to EBIT (selected fiscal year)"}
       - name: umsatz_bis_ebit
         type: clusteredColumnChart
-        pos: [24, 152, 1232, 250]
+        pos: [646, 152, 610, 250]
         fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Umsatz]", "fact_financial_line.[COGS]", "fact_financial_line.[EBIT]"]}
         label: {de: "Umsatz, Umsatzkosten und EBIT je Geschäftsjahr", en: "Revenue, cost of sales and EBIT by fiscal year"}
       - name: margen

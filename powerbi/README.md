@@ -5,12 +5,14 @@ powerbi/
   model.yml                       relationships, measures, calculation groups, field parameter, RLS/OLS
   report/pages.yml                the 11 pages: question (DE/EN), main visuals, measures
   tools/generate_tmdl.py          model.yml + docs/data-contracts -> Bilanzwerk.SemanticModel (TMDL)
-  tools/generate_report.py        pages.yml -> Bilanzwerk.Report (PBIR scaffold) + report-pages.md
+  tools/generate_report.py        pages.yml -> Bilanzwerk.Report (all 11 pages) + report-pages.md
+  tools/visuals.py                PBIR visual builder (fields, sort, filters, colours, titles)
+  schemas/                        Microsoft PBIR JSON schemas used by check_pbip.py (MIT licence)
   tools/check_pbip.py             static checks, runs on every pull request (Linux)
   bpa/rules.json                  Tabular Editor Best Practice Analyzer rules (Windows CI job)
   Bilanzwerk.pbip                 open this in Power BI Desktop
   Bilanzwerk.SemanticModel/       generated, do not edit by hand
-  Bilanzwerk.Report/              scaffold generated once, then edited in Desktop
+  Bilanzwerk.Report/              generated from report/pages.yml, do not edit by hand
   report-pages.md                 page spec (generated)
 ```
 
@@ -23,12 +25,19 @@ readable diff in a pull request instead of a binary `.pbix` change.
 
 ```bash
 uv run python powerbi/tools/generate_tmdl.py
-uv run python powerbi/tools/generate_report.py   # keeps pages already edited in Desktop
+uv run python powerbi/tools/generate_report.py
 uv run python powerbi/tools/check_pbip.py
 ```
 
-Edits made in Desktop to the semantic model are overwritten by the generator. Make model changes
-in `model.yml`; report layout changes in Desktop are kept.
+Both generators overwrite what they own: model changes go into `model.yml`, page layout into
+`report/pages.yml` (`layout`: visual type, position, fields as `table.column` or
+`table.[Measure]`, sort, filters, title). A change made in Desktop and saved is lost on the next
+run unless it is carried back into `pages.yml`.
+
+Chart titles never hold a typed number. A title is either a bilingual label (`label`, rendered
+as a measure in `Sprache`) or a finding measure computed from the data (`title`, folder
+`Beschriftungen`), e.g. `[Befund Vorlaufzeit]` or `[Befund Cash-Potenzial]`. The answer page
+reads H1 to H4 from `fact_hypothesis_result`, which the model run writes.
 
 ## Model
 
@@ -88,9 +97,11 @@ where it happens.
 
 ## What still needs Power BI Desktop
 
-The generated scaffold has title, language switch, footer and a grey build note per page. The
-main visuals (listed in `report-pages.md`) are placed by hand, and chart titles state the
-finding, which is only known after the real-data run. Screenshots of all 11 pages go to
-`docs/img/report/`. The PBIR files were written against the published Fabric JSON schemas and
-checked by `check_pbip.py`, not yet opened in Desktop; open and save once in Desktop to let it
-normalise the files before the first commit of hand-made changes.
+All 11 pages carry their main visuals. `check_pbip.py` validates every report file against
+Microsoft's PBIR schemas (`schemas/`), checks that every bound field exists in the model, that
+every chart has a title and that no visual leaves the canvas or overlaps another. What a static
+check cannot do, and what needs Desktop against the deployed model:
+
+* open the project once and look at every page with real data (spacing, axis formats, the
+  stacked balance sheet), then take the screenshots for `docs/img/report/`;
+* run DAX Studio on the slowest visuals before and after (Server Timings) for the README table;

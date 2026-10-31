@@ -312,6 +312,36 @@ def render_language_table(measures: list[dict]) -> str:
     return "\n".join(out)
 
 
+def render_static_table(st: dict) -> str:
+    """A small fixed table (import, DATATABLE), e.g. the steps of the income-statement bridge."""
+    name = st["name"]
+    out = [*description(st["description"], ""), f"table {q(name)}", f"\tlineageTag: {tag('table', name)}", ""]
+    types = {"string": "STRING", "int64": "INTEGER"}
+    for col in st["columns"]:
+        out += [f"\tcolumn {q(col['name'])}", f"\t\tdataType: {col['type']}"]
+        if col.get("sort_by"):
+            out.append(f"\t\tsortByColumn: {q(col['sort_by'])}")
+        if col.get("hidden"):
+            out.append("\t\tisHidden")
+        out += [
+            "\t\tsummarizeBy: none",
+            f"\t\tsourceColumn: [{col['name']}]",
+            f"\t\tlineageTag: {tag('column', name, col['name'])}",
+            "",
+        ]
+    header = ", ".join(f"{dax_text(c['name'])}, {types[c['type']]}" for c in st["columns"])
+    rows = ", ".join(
+        "{ " + ", ".join(dax_text(v) if isinstance(v, str) else str(v) for v in row) + " }" for row in st["rows"]
+    )
+    out += [
+        f"\tpartition {q(name)} = calculated",
+        "\t\tmode: import",
+        f"\t\tsource = DATATABLE ( {header}, {{ {rows} }} )",
+        "",
+    ]
+    return "\n".join(out)
+
+
 def load_columns(name: str, cfg: dict) -> list[dict]:
     if "columns" in cfg:
         return cfg["columns"]
@@ -353,6 +383,9 @@ def main() -> None:
     for fp in model["field_parameters"]:
         (DEF / "tables" / f"{fp['name']}.tmdl").write_text(render_field_parameter(fp, measure_table), encoding="utf-8")
         table_names.append(fp["name"])
+    for st in model.get("static_tables", []):
+        (DEF / "tables" / f"{st['name']}.tmdl").write_text(render_static_table(st), encoding="utf-8")
+        table_names.append(st["name"])
     labels = label_measures(yaml.safe_load((PBI / "report" / "pages.yml").read_text()))
     (DEF / "tables" / "Sprache.tmdl").write_text(render_language_table(labels), encoding="utf-8")
     table_names.append("Sprache")
