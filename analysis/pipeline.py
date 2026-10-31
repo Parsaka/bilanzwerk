@@ -73,6 +73,24 @@ def lead_time_analysis(frame: pd.DataFrame, label: str, cfg: AnalysisConfig) -> 
         "share_z_available_last": float(per_company["z_available_last"].mean()),
         "n_companies": len(pc),
     }
+    if {"lead_months_ccc_valid_obs", "lead_months_z_valid_obs"} <= set(per_company.columns):
+        # Sensitivity, reported next to H1 and not instead of it (ADR-001 fixed the measure above):
+        # the same lead time on the observations where each signal could be computed.
+        pv = per_company.fillna({"lead_months_ccc_valid_obs": 0.0, "lead_months_z_valid_obs": 0.0})
+
+        def stat_valid(d: pd.DataFrame) -> float:
+            return float(d["lead_months_ccc_valid_obs"].median() - d["lead_months_z_valid_obs"].median())
+
+        sens = metrics.bootstrap_by_company(pv, stat_valid, iterations=cfg.bootstrap_iterations, seed=cfg.seed)
+        summary["sensitivity_valid_obs"] = {
+            "estimate": sens["estimate"],
+            "ci_low": sens["ci_low"],
+            "ci_high": sens["ci_high"],
+            "median_ccc": float(pv["lead_months_ccc_valid_obs"].median()),
+            "median_z": float(pv["lead_months_z_valid_obs"].median()),
+            "share_sustained_red_ccc": float(per_company["lead_months_ccc_valid_obs"].notna().mean()),
+            "share_sustained_red_z": float(per_company["lead_months_z_valid_obs"].notna().mean()),
+        }
     return per_company, summary
 
 
@@ -181,6 +199,9 @@ def run(cfg: AnalysisConfig | None = None, log_mlflow: bool = True) -> dict:
     cases.to_csv(results_dir / "case_studies.csv", index=False)
     for case in cases.itertuples():
         case_timeline(con, int(case.cik)).to_csv(results_dir / f"case_{case.case_rank}_{case.cik}.csv", index=False)
+        case_events(con, case.company_id).to_csv(
+            results_dir / f"case_{case.case_rank}_{case.cik}_events.csv", index=False
+        )
     by_sector, top20 = wc_opportunity(con)
     by_sector.to_csv(results_dir / "wc_opportunity_by_sector.csv", index=False)
     top20.to_csv(results_dir / "wc_opportunity_top20.csv", index=False)
@@ -361,6 +382,23 @@ def select_case_studies(
     picked.insert(0, "case_rank", range(1, len(picked) + 1))
     picked["selection_rule"] = CASE_RULE
     return picked[[*cols, "lead_months_ccc", "lead_months_z", "selection_rule"]]
+
+
+def case_events(con: duckdb.DuckDBPyConnection, company_id: str) -> pd.DataFrame:
+    """The events behind a case, with the filing and the CIK that filed it, so a reader can open
+    the 8-K on EDGAR and check that the label is the company's own bankruptcy."""
+    return con.execute(
+        """
+        select e.event_date, e.event_type, e.form, e.all_items, e.filing, hc.company_bk as filer_cik
+        from marts.fact_event as e
+        left join raw_vault.hub_filing as hf on hf.filing_bk = e.filing
+        left join raw_vault.link_filing_company as l on l.hk_filing = hf.hk_filing
+        left join raw_vault.hub_company as hc on hc.hk_company = l.hk_company
+        where e.company_id = ?
+        order by e.event_date, e.event_type
+    """,
+        [company_id],
+    ).df()
 
 
 def case_timeline(con: duckdb.DuckDBPyConnection, cik: int) -> pd.DataFrame:

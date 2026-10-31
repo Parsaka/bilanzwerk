@@ -54,5 +54,12 @@ def lead_times(
             row[f"ever_red_{name}"] = bool(flag.loc[g.index].fillna(False).any())
             if name in inputs:
                 row[f"{name}_available_last"] = bool(last is not None and pd.notna(last[inputs[name]]))
+                # sensitivity (not the pre-registered H1 measure): only observations where the
+                # signal could be computed, so a missing last quarter does not end a red streak
+                valid = g[pd.notna(g[inputs[name]])]
+                start_valid = first_sustained_red(pd.to_datetime(valid["as_of"]), flag.loc[valid.index])
+                row[f"lead_months_{name}_valid_obs"] = (
+                    (event - start_valid).days / 30.4375 if start_valid is not None else np.nan
+                )
         rows.append(row)
     return pd.DataFrame(rows)

@@ -64,3 +64,21 @@ def test_backtest_runs_and_beats_random_on_planted_signal():
     assert pooled.loc["M2_logit_z_wc", "pr_auc"] > base_rate
     diff = backtest.paired_difference(preds, "M2_logit_z_wc", "M1_logit_z", cfg)
     assert diff["ci_low"] <= diff["estimate"] <= diff["ci_high"]
+
+
+def test_lead_time_sensitivity_skips_quarters_without_the_signal():
+    """A missing last quarter ends the red streak in the H1 measure, not in the sensitivity."""
+    frame = pd.DataFrame(
+        {
+            "company_id": ["a"] * 4,
+            "as_of": pd.to_datetime(["2020-01-01", "2020-04-01", "2020-07-01", "2020-10-01"]),
+            "event": pd.to_datetime(["2021-01-01"] * 4),
+            "ZPP__value": [0.5, 0.4, 0.3, None],
+        }
+    )
+    out = leadtime.lead_times(frame, "event", {"z": leadtime.z_flag(frame)}, inputs={"z": "ZPP__value"})
+    row = out.iloc[0]
+    assert pd.isna(row["lead_months_z"]) and not row["z_available_last"]
+    assert round(row["lead_months_z_valid_obs"], 1) == round(
+        (pd.Timestamp("2021-01-01") - pd.Timestamp("2020-01-01")).days / 30.4375, 1
+    )
