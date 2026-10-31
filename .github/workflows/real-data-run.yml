@@ -117,6 +117,9 @@ jobs:
           # the hand labels (drawn from model v1) scored against this run's probabilities
           uv run python -m mdm.cli rescore --out data/results/mdm_evaluation_rescored.json \
             --rescored data/results/mdm_labelled_pairs_rescored.csv
+          # the holdout labels (drawn from model v2, never used in training)
+          uv run python -m mdm.cli rescore --labelled mdm/labelled_pairs_holdout.csv \
+            --out data/results/mdm_evaluation_holdout.json --rescored data/results/mdm_holdout_rescored.csv
           # a fresh sample the labels have not seen, for the out-of-sample check of this model
           uv run python -m mdm.cli sample --out data/results/mdm_pairs_to_label.csv --n 150 \
             --exclude mdm/labelled_pairs.csv

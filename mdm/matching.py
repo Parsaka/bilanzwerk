@@ -19,19 +19,27 @@ import splink.comparison_level_library as cll
 import splink.comparison_library as cl
 from splink import DuckDBAPI, Linker, SettingsCreator, block_on
 
-from mdm.standardise import name_marks, sec_country, standardise_city, standardise_name, standardise_postal_code
+from mdm.standardise import (
+    legal_form,
+    name_marks,
+    sec_country,
+    standardise_city,
+    standardise_name,
+    standardise_postal_code,
+)
 
 log = logging.getLogger(__name__)
 
 UPPER = 0.90
 LOWER = 0.50
-MODEL_VERSION = "splink4-v2"
-# Fixed m probabilities for the two name rules (see mdm/README.md, "Model v2"). They are judgements
-# about how rarely the same legal entity shows the pattern in SEC vs GLEIF names, not fitted
-# values, and are kept out of EM so that the many fund families sharing one address cannot
-# teach the model that "Fund VII" and "Fund IX" are the same entity.
-M_MARKS_DIFFER = 0.005
-M_NAME_EXTENDS = 0.02
+MODEL_VERSION = "splink4-v3"
+# An automatic "match" needs strong name evidence: the same standardised name or a near-typo.
+# Every other name level (series marks differ, one name is the other plus words, looser
+# Jaro-Winkler) goes to the stewardship queue however close the address is: fund families and
+# subsidiaries share addresses, which breaks the independence the Fellegi-Sunter weights assume.
+# Of the 85 hand-labelled matches none sat on those levels (README, "Model v3").
+AUTO_MATCH_LEVELS = ("exact (spaces ignored)", "Jaro-Winkler >= 0.97")
+LABELLED_PAIRS = Path("mdm/labelled_pairs.csv")
 
 COLUMNS = [
     "unique_id",
@@ -40,6 +48,7 @@ COLUMNS = [
     "name_std",
     "name_prefix3",
     "name_marks",
+    "legal_form",
     "city_std",
     "zip5",
     "zip3",
@@ -64,6 +73,7 @@ def prepare_sec(df: pd.DataFrame) -> pd.DataFrame:
             "source": "sec",
             "name_orig": df["company_name"],
             "name_std": df["company_name"].map(standardise_name),
+            "legal_form": df["company_name"].map(legal_form),
             "city_std": df["business_city"].map(standardise_city),
             "country": df["business_state"].map(sec_country),
         }
@@ -85,6 +95,7 @@ def prepare_gleif(df: pd.DataFrame) -> pd.DataFrame:
             "source": "gleif",
             "name_orig": df["legal_name"],
             "name_std": df["legal_name"].map(standardise_name),
+            "legal_form": df["legal_name"].map(legal_form),
             "city_std": df["hq_city"].map(standardise_city),
             "country": df["hq_country"],
         }
@@ -114,15 +125,11 @@ def name_comparison() -> cl.CustomComparison:
         comparison_levels=[
             cll.NullLevel("name_std"),
             cll.CustomLevel(f"name_std_l = name_std_r or {compact}", label_for_charts="exact (spaces ignored)"),
-            cll.CustomLevel(
-                "name_marks_l <> name_marks_r", label_for_charts="series or vehicle marks differ"
-            ).configure(m_probability=M_MARKS_DIFFER, fix_m_probability=True),
-            cll.CustomLevel(extends, label_for_charts="one name is the other plus words").configure(
-                m_probability=M_NAME_EXTENDS, fix_m_probability=True
-            ),
-            cll.JaroWinklerLevel("name_std", 0.97),
-            cll.JaroWinklerLevel("name_std", 0.92),
-            cll.JaroWinklerLevel("name_std", 0.85),
+            cll.CustomLevel("name_marks_l <> name_marks_r", label_for_charts="series or vehicle marks differ"),
+            cll.CustomLevel(extends, label_for_charts="one name is the other plus words"),
+            cll.JaroWinklerLevel("name_std", 0.97).configure(label_for_charts="Jaro-Winkler >= 0.97"),
+            cll.JaroWinklerLevel("name_std", 0.92).configure(label_for_charts="Jaro-Winkler >= 0.92"),
+            cll.JaroWinklerLevel("name_std", 0.85).configure(label_for_charts="Jaro-Winkler >= 0.85"),
             cll.ElseLevel(),
         ],
     )
@@ -163,6 +170,7 @@ def settings() -> SettingsCreator:
             cl.JaroWinklerAtThresholds("city_std", [0.92]),
             postal,
             cl.ExactMatch("country"),
+            cl.ExactMatch("legal_form"),
             ticker_in_other_names,
         ],
         retain_intermediate_calculation_columns=True,
@@ -173,16 +181,39 @@ def settings() -> SettingsCreator:
 
 
 def train_and_predict(
-    sec: pd.DataFrame, gleif: pd.DataFrame, report_dir: Path | None = None, max_pairs: float = 5e6
+    sec: pd.DataFrame,
+    gleif: pd.DataFrame,
+    report_dir: Path | None = None,
+    max_pairs: float = 3e7,
+    labels: pd.DataFrame | None = None,
 ) -> MatchResult:
+    """Train and predict.
+
+    With hand labels (mdm/labelled_pairs.csv), the name m probabilities come from the labelled
+    matches (Laplace +1 per level) and EM, blocked on the exact name, trains the address and legal
+    form comparisons. Unsupervised EM alone learned the name m from fund families sharing one
+    address and gave an exact name less weight than a shared ZIP code (model v2, see README).
+    Without labels (CI fixture) the model falls back to EM on two blockings.
+    """
     con = duckdb.connect()
     db_api = DuckDBAPI(connection=con)
-    linker = Linker([sec, gleif], settings(), db_api, input_table_aliases=["sec", "gleif"])
+    aliases = ["sec", "gleif"]
+    linker = Linker([sec, gleif], settings(), db_api, input_table_aliases=aliases)
     linker.training.estimate_probability_two_random_records_match([block_on("name_std", "country")], recall=0.7)
     linker.training.estimate_u_using_random_sampling(max_pairs=max_pairs, seed=42)
-    # EM twice with different blocking, so every comparison gets m estimates (spec step 4)
-    linker.training.estimate_parameters_using_expectation_maximisation(block_on("country", "name_prefix3"))
-    linker.training.estimate_parameters_using_expectation_maximisation(block_on("zip5"))
+    positives = _labelled_matches(labels)
+    if positives is not None:
+        linker.table_management.register_table(positives, "bw_labelled_matches", overwrite=True)
+        linker.training.estimate_m_from_pairwise_labels("bw_labelled_matches")
+        model = linker.misc.save_model_to_json()
+        smooth_name_m(model, len(positives))
+        # a fresh connection: the first linker has registered the input tables under these aliases
+        linker = Linker([sec, gleif], model, DuckDBAPI(connection=duckdb.connect()), input_table_aliases=aliases)
+        linker.training.estimate_parameters_using_expectation_maximisation(block_on("name_std"))
+    else:
+        # EM twice with different blocking, so every comparison gets m estimates (spec step 4)
+        linker.training.estimate_parameters_using_expectation_maximisation(block_on("country", "name_prefix3"))
+        linker.training.estimate_parameters_using_expectation_maximisation(block_on("zip5"))
     predictions = linker.inference.predict(threshold_match_probability=LOWER).as_pandas_dataframe()
     if report_dir:
         report_dir.mkdir(parents=True, exist_ok=True)
@@ -191,8 +222,52 @@ def train_and_predict(
     return MatchResult(predictions, to_matches(predictions), linker)
 
 
+def _labelled_matches(labels: pd.DataFrame | None) -> pd.DataFrame | None:
+    """Pairs labelled 1, in the shape Splink's estimate_m_from_pairwise_labels reads."""
+    if labels is None:
+        return None
+    pos = labels[labels["is_match"].astype(str).str.replace(r"\.0$", "", regex=True) == "1"]
+    if pos.empty:
+        return None
+
+    def side(uid: pd.Series) -> pd.Series:
+        return uid.str.startswith("CIK:").map({True: "sec", False: "gleif"})
+
+    return pd.DataFrame(
+        {
+            "source_dataset_l": side(pos["unique_id_l"]).to_numpy(),
+            "unique_id_l": pos["unique_id_l"].to_numpy(),
+            "source_dataset_r": side(pos["unique_id_r"]).to_numpy(),
+            "unique_id_r": pos["unique_id_r"].to_numpy(),
+        }
+    )
+
+
+def smooth_name_m(model: dict, n_matches: int) -> None:
+    """Laplace +1 on the name levels: a level no labelled match fell into gets a small m instead
+    of none (which Splink would treat as no evidence at all)."""
+    levels = [
+        lvl
+        for comp in model["comparisons"]
+        if comp["output_column_name"] == "name_std"
+        for lvl in comp["comparison_levels"]
+        if not lvl.get("is_null_level")
+    ]
+    counts = [round((lvl.get("m_probability") or 0.0) * n_matches) for lvl in levels]
+    for lvl, count in zip(levels, counts, strict=True):
+        lvl["m_probability"] = (count + 1) / (n_matches + len(levels))
+
+
+def _auto_match_gammas() -> set[int]:
+    """gamma_name_std values of AUTO_MATCH_LEVELS (Splink numbers levels from the bottom, null = -1)."""
+    levels = name_comparison().get_comparison("duckdb").as_dict()["comparison_levels"]
+    non_null = [lvl for lvl in levels if not lvl.get("is_null_level")]
+    return {len(non_null) - 1 - i for i, lvl in enumerate(non_null) if lvl.get("label_for_charts") in AUTO_MATCH_LEVELS}
+
+
 def to_matches(predictions: pd.DataFrame) -> pd.DataFrame:
-    """One best LEI per SEC filer; status 'match' above UPPER, 'review' between thresholds."""
+    """One best LEI per SEC filer; status 'match' above UPPER, 'review' between thresholds.
+    A pair that needs a steward (`needs_review`) is 'review' at most."""
     if predictions.empty:
         return pd.DataFrame(
             columns=[
@@ -218,10 +293,32 @@ def to_matches(predictions: pd.DataFrame) -> pd.DataFrame:
             "lei": best["lei_uid"].str.removeprefix("LEI:"),
             "match_probability": best["match_probability"],
             "match_weight": best["match_weight"],
-            "match_status": ["match" if v >= UPPER else "review" for v in best["match_probability"]],
+            "match_status": [
+                "match" if v >= UPPER and not ruled else "review"
+                for v, ruled in zip(best["match_probability"], needs_review(best), strict=True)
+            ],
             "model_version": MODEL_VERSION,
         }
     ).reset_index(drop=True)
+
+
+def needs_review(pairs: pd.DataFrame) -> list[bool]:
+    """True where a person must decide whatever the probability: the name is not on an
+    AUTO_MATCH_LEVELS level, or both legal forms are known and differ ("Amazon.com, LLC" vs
+    "Amazon.com, Inc."; of the 9 labelled exact-name pairs like that, 4 were matches, 5 not)."""
+    if "gamma_name_std" not in pairs.columns:
+        return [False] * len(pairs)
+    auto = _auto_match_gammas()
+    weak_name = ~pairs["gamma_name_std"].astype(int).isin(auto)
+    if {"legal_form_l", "legal_form_r"} <= set(pairs.columns):
+        forms_differ = (
+            pairs["legal_form_l"].notna()
+            & pairs["legal_form_r"].notna()
+            & (pairs["legal_form_l"] != pairs["legal_form_r"])
+        )
+    else:
+        forms_differ = pd.Series(False, index=pairs.index)
+    return (weak_name | forms_differ).tolist()
 
 
 def load_inputs(warehouse: Path, gleif_countries: tuple[str, ...] = ("US",)) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -259,7 +356,8 @@ def run(warehouse: Path, out_dir: Path, inputs: Path | None = None) -> pd.DataFr
         (out_dir / "inputs").mkdir(parents=True, exist_ok=True)
         sec_raw.to_parquet(out_dir / "inputs" / "sec.parquet", index=False)
         gleif_raw.to_parquet(out_dir / "inputs" / "gleif.parquet", index=False)
-    result = train_and_predict(prepare_sec(sec_raw), prepare_gleif(gleif_raw), out_dir / "reports")
+    labels = pd.read_csv(LABELLED_PAIRS, dtype={"is_match": str}) if LABELLED_PAIRS.exists() else None
+    result = train_and_predict(prepare_sec(sec_raw), prepare_gleif(gleif_raw), out_dir / "reports", labels=labels)
     out_dir.mkdir(parents=True, exist_ok=True)
     result.matches.to_parquet(out_dir / "company_matches.parquet", index=False)
     result.predictions.to_parquet(out_dir / "candidate_pairs.parquet", index=False)

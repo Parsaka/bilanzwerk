@@ -31,11 +31,15 @@ def _pair_key(df: pd.DataFrame) -> pd.Series:
 
 def rescore(labelled: pd.DataFrame, candidate_pairs: pd.DataFrame) -> pd.DataFrame:
     """The labelled pairs with match_probability from `candidate_pairs` (0 where it is absent)."""
-    newer = candidate_pairs.assign(_key=_pair_key(candidate_pairs)).drop_duplicates("_key")
-    probs = newer.set_index("_key")["match_probability"]
+    from mdm.matching import needs_review
+
+    newer = candidate_pairs.assign(_key=_pair_key(candidate_pairs), _ruled=needs_review(candidate_pairs))
+    newer = newer.drop_duplicates("_key").set_index("_key")
     out = labelled.copy()
+    key = _pair_key(out)
     out["match_probability_before"] = out["match_probability"]
-    out["match_probability"] = _pair_key(out).map(probs).fillna(0.0).to_numpy()
+    out["match_probability"] = key.map(newer["match_probability"]).fillna(0.0).to_numpy()
+    out["needs_review"] = key.map(newer["_ruled"]).fillna(False).astype(bool).to_numpy()
     return out
 
 
@@ -100,7 +104,10 @@ def precision_recall(labelled: pd.DataFrame, threshold: float) -> dict[str, floa
     known = labelled["is_match"].astype(str).str.replace(r"\.0$", "", regex=True).isin(["0", "1"])
     df = labelled[known]
     y = df["is_match"].astype(int).to_numpy()
-    pred = (df["match_probability"].to_numpy() >= threshold).astype(int)
+    pred = df["match_probability"].to_numpy() >= threshold
+    if "needs_review" in df.columns:  # such pairs never become "match" (matching.to_matches)
+        pred &= ~df["needs_review"].astype(bool).to_numpy()
+    pred = pred.astype(int)
     tp = int(((pred == 1) & (y == 1)).sum())
     fp = int(((pred == 1) & (y == 0)).sum())
     fn = int(((pred == 0) & (y == 1)).sum())

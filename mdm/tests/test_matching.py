@@ -153,3 +153,34 @@ def test_sample_can_exclude_labelled_pairs():
     )
     out = evaluate.sample(pairs, 30, exclude=pairs.head(5))
     assert len(out) == 15 and not set(out["unique_id_l"]) & {f"LEI:{i}" for i in range(5)}
+
+
+def test_smooth_name_m_gives_every_level_a_small_m():
+    model = {
+        "comparisons": [
+            {
+                "output_column_name": "name_std",
+                "comparison_levels": [
+                    {"is_null_level": True},
+                    {"m_probability": 0.9},
+                    {"m_probability": 0.1},
+                    {"m_probability": None},
+                ],
+            }
+        ]
+    }
+    matching.smooth_name_m(model, 10)
+    ms = [lvl["m_probability"] for lvl in model["comparisons"][0]["comparison_levels"][1:]]
+    assert ms == [10 / 13, 2 / 13, 1 / 13]
+
+
+def test_needs_review_for_weak_names_and_differing_legal_forms():
+    exact = max(matching._auto_match_gammas())
+    pairs = pd.DataFrame(
+        {
+            "gamma_name_std": [exact, exact, 0],
+            "legal_form_l": ["CORP", "LLC", "CORP"],
+            "legal_form_r": ["CORP", "CORP", "CORP"],
+        }
+    )
+    assert matching.needs_review(pairs) == [False, True, True]

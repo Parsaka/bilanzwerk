@@ -116,6 +116,15 @@ def ascii_upper(text: str) -> str:
 
 def standardise_name(name: str | None) -> str | None:
     """'Apple Inc.' -> 'APPLE'; 'Siemens Aktiengesellschaft' -> 'SIEMENS'; 'ACME CORP /DE/' -> 'ACME'."""
+    text = _normalised(name)
+    if text is None:
+        return None
+    stripped = _SUFFIX_RE.sub("", text).strip()
+    return stripped or text
+
+
+def _normalised(name: str | None) -> str | None:
+    """Upper case, tags and punctuation removed, abbreviations expanded; legal form still on."""
     name = _text(name)
     if name is None:
         return None
@@ -124,12 +133,38 @@ def standardise_name(name: str | None) -> str | None:
     text = text.replace("&", " AND ")
     text = _NON_ALNUM.sub(" ", _APOSTROPHE.sub("", text.replace(".", "")))
     text = _LETTER_RUN.sub(lambda m: m.group(0).replace(" ", ""), _SPACES.sub(" ", text).strip())
-    tokens = [ABBREVIATIONS.get(t, t) for t in text.split(" ")]
-    text = " ".join(tokens)
-    if text.startswith("THE "):
-        text = text[4:]
-    stripped = _SUFFIX_RE.sub("", text).strip()
-    return stripped or text
+    text = " ".join(ABBREVIATIONS.get(t, t) for t in text.split(" "))
+    return text[4:] if text.startswith("THE ") else text
+
+
+# Legal forms grouped into families: "Inc", "Corp" and "Co" are one US corporation form, an LLC or
+# an LP is another entity type. Holding words are not a form. A different family with the same
+# name is the typical subsidiary pattern ("Amazon.com, LLC" vs "Amazon.com, Inc.").
+_FORM_FAMILY = {
+    "INCORPORATED": "CORP", "CORPORATION": "CORP", "INC": "CORP", "CORP": "CORP", "CO": "CORP",
+    "LLC": "LLC", "LIMITED LIABILITY COMPANY": "LLC",
+    "LP": "LP", "LLP": "LP", "LIMITED PARTNERSHIP": "LP",
+    "LIMITED": "LTD", "LTD": "LTD", "PLC": "PLC", "PUBLIC LIMITED COMPANY": "PLC",
+    "AKTIENGESELLSCHAFT": "AG", "AG": "AG", "SOCIETAS EUROPAEA": "SE", "SE": "SE",
+    "NAAMLOZE VENNOOTSCHAP": "NV", "NV": "NV", "BV": "BV", "SOCIETE ANONYME": "SA", "SA": "SA",
+}  # fmt: skip
+_FORM_RE = re.compile(r"\s(" + "|".join(re.escape(s) for s in sorted(_FORM_FAMILY, key=len, reverse=True)) + r")$")
+_HOLDING_TAIL = re.compile(r"\s(?:HOLDINGS|HOLDING|AND CO)$")
+
+
+def legal_form(name: str | None) -> str | None:
+    """Family of the legal form at the end of a name: 'Amazon.com, LLC' -> 'LLC', 'Apple Inc.' -> 'CORP'."""
+    text = _normalised(name)
+    if text is None:
+        return None
+    while True:
+        m = _FORM_RE.search(text)
+        if m:
+            return _FORM_FAMILY[m.group(1)]
+        shorter = _HOLDING_TAIL.sub("", text)
+        if shorter == text:
+            return None
+        text = shorter
 
 
 def name_marks(name_std: str | None) -> str:
