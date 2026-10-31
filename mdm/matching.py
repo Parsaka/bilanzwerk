@@ -19,13 +19,19 @@ import splink.comparison_level_library as cll
 import splink.comparison_library as cl
 from splink import DuckDBAPI, Linker, SettingsCreator, block_on
 
-from mdm.standardise import sec_country, standardise_city, standardise_name, standardise_postal_code
+from mdm.standardise import name_marks, sec_country, standardise_city, standardise_name, standardise_postal_code
 
 log = logging.getLogger(__name__)
 
 UPPER = 0.90
 LOWER = 0.50
-MODEL_VERSION = "splink4-v1"
+MODEL_VERSION = "splink4-v2"
+# Fixed m probabilities for the two name rules (see mdm/README.md, "Model v2"). They are judgements
+# about how rarely the same legal entity shows the pattern in SEC vs GLEIF names, not fitted
+# values, and are kept out of EM so that the many fund families sharing one address cannot
+# teach the model that "Fund VII" and "Fund IX" are the same entity.
+M_MARKS_DIFFER = 0.005
+M_NAME_EXTENDS = 0.02
 
 COLUMNS = [
     "unique_id",
@@ -33,6 +39,7 @@ COLUMNS = [
     "name_orig",
     "name_std",
     "name_prefix3",
+    "name_marks",
     "city_std",
     "zip5",
     "zip3",
@@ -90,8 +97,35 @@ def prepare_gleif(df: pd.DataFrame) -> pd.DataFrame:
 
 def _finish(out: pd.DataFrame) -> pd.DataFrame:
     out["name_prefix3"] = out["name_std"].str[:3]
+    out["name_marks"] = out["name_std"].map(name_marks)
     out["zip3"] = out["zip5"].str[:3]
     return out[COLUMNS]
+
+
+def name_comparison() -> cl.CustomComparison:
+    """Name levels, strongest first. Exact also accepts the same letters without spaces
+    ("AMAZONCOM" vs "AMAZON COM"). Different series/vehicle marks and one name being the other
+    plus trailing words (a subsidiary or fund of it) come before the fuzzy levels, so a high
+    Jaro-Winkler score cannot outvote them."""
+    compact = "replace(name_std_l, ' ', '') = replace(name_std_r, ' ', '')"
+    extends = "(starts_with(name_std_l || ' ', name_std_r || ' ') or starts_with(name_std_r || ' ', name_std_l || ' '))"
+    return cl.CustomComparison(
+        output_column_name="name_std",
+        comparison_levels=[
+            cll.NullLevel("name_std"),
+            cll.CustomLevel(f"name_std_l = name_std_r or {compact}", label_for_charts="exact (spaces ignored)"),
+            cll.CustomLevel(
+                "name_marks_l <> name_marks_r", label_for_charts="series or vehicle marks differ"
+            ).configure(m_probability=M_MARKS_DIFFER, fix_m_probability=True),
+            cll.CustomLevel(extends, label_for_charts="one name is the other plus words").configure(
+                m_probability=M_NAME_EXTENDS, fix_m_probability=True
+            ),
+            cll.JaroWinklerLevel("name_std", 0.97),
+            cll.JaroWinklerLevel("name_std", 0.92),
+            cll.JaroWinklerLevel("name_std", 0.85),
+            cll.ElseLevel(),
+        ],
+    )
 
 
 def settings() -> SettingsCreator:
@@ -125,7 +159,7 @@ def settings() -> SettingsCreator:
             block_on("zip5"),
         ],
         comparisons=[
-            cl.JaroWinklerAtThresholds("name_std", [0.97, 0.92, 0.85]),
+            name_comparison(),
             cl.JaroWinklerAtThresholds("city_std", [0.92]),
             postal,
             cl.ExactMatch("country"),

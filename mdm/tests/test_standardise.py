@@ -1,6 +1,6 @@
 import pytest
 
-from mdm.standardise import sec_country, standardise_city, standardise_name, standardise_postal_code
+from mdm.standardise import name_marks, sec_country, standardise_city, standardise_name, standardise_postal_code
 
 
 @pytest.mark.parametrize(
@@ -17,6 +17,12 @@ from mdm.standardise import sec_country, standardise_city, standardise_name, sta
         ("Müller GmbH & Co. KG", "MULLER"),
         ("Intl Business Machines Corp", "INTERNATIONAL BUSINESS MACHINES"),
         ("Holding", "HOLDING"),  # never strip a name to nothing
+        ("KINDER MORGAN ENERGY PARTNERS L P", "KINDER MORGAN ENERGY PARTNERS"),
+        ("CANADIAN IMPERIAL BANK OF COMMERCE /CAN/", "CANADIAN IMPERIAL BANK OF COMMERCE"),
+        ("Alight, Inc. / Delaware", "ALIGHT"),
+        ("California BanCorp \\ CA", "CALIFORNIA BANCORPORATION"),
+        ("Nate's Foods Co.", "NATES FOODS"),
+        ("NOVO NORDISK A/S", "NOVO NORDISK"),
         (None, None),
     ],
 )
@@ -41,3 +47,11 @@ def test_missing_values_from_pandas_are_none():
     assert standardise_postal_code("10001-1234", nan) == "100011234"
     assert sec_country(nan) is None
     assert standardise_postal_code(10001, "US") == "10001"
+
+
+def test_name_marks():
+    assert name_marks("ATLAS RESOURCES PUBLIC 18 2009 C") == "18|2009|C"
+    assert name_marks("VENTURE LENDING AND LEASING IX") == "IX"
+    assert name_marks("WASTE CONNECTIONS US") == "US"
+    assert name_marks("APPLE") == ""
+    assert name_marks(None) == ""

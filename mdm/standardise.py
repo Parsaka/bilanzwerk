@@ -67,12 +67,37 @@ ABBREVIATIONS = {
     "GRP": "GROUP",
     "SYS": "SYSTEMS",
     "NATL": "NATIONAL",
+    "COMPANY": "CO",
 }
 _SUFFIX_RE = re.compile(r"(?:\s(?:" + "|".join(re.escape(s) for s in LEGAL_SUFFIXES) + r"))+$")
 _NON_ALNUM = re.compile(r"[^A-Z0-9 ]+")
 _SPACES = re.compile(r"\s+")
-# SEC conformed names sometimes carry a state or a former-name hint: "ACME CORP /DE/"
-_SEC_STATE_TAG = re.compile(r"\s*/[A-Z]{2}/?\s*$")
+# SEC conformed names sometimes carry a state or country tag: "ACME CORP /DE/", "BANK /CAN/",
+# "ALIGHT, INC. / DELAWARE", "CALIFORNIA BANCORP \\ CA". One letter after a slash is part of the
+# name ("NOVO NORDISK A/S"), so a tag needs two letters or more.
+_SEC_STATE_TAG = re.compile(r"\s*(?:/\s*[A-Z]{2,}\s*/?|\\\s*[A-Z]{2,})\s*$")
+# Letters spelled one by one ("L P", "J P MORGAN") are joined, so they meet "LP", "JPMORGAN".
+_LETTER_RUN = re.compile(r"\b(?:[A-Z] )+[A-Z]\b")
+_APOSTROPHE = re.compile(r"['\u2019`]")
+# Tokens that tell series, vehicles and country units apart: roman numerals, anything with a
+# digit, single letters and a few vehicle words (REVIEW.md rule N1/N2). If both names do not carry
+# the same set, the pair is not the same legal entity.
+_ROMAN = re.compile(r"^(?=[IVXL])(?:XL|L?X{0,3})(?:IX|IV|V?I{0,3})$")
+MARK_WORDS = {
+    "US",
+    "USA",
+    "NA",
+    "UK",
+    "PE",
+    "TE",
+    "SPV",
+    "FEEDER",
+    "MASTER",
+    "OFFSHORE",
+    "ONSHORE",
+    "INTERMEDIATE",
+    "SERIES",
+}
 
 
 def _text(value: object) -> str | None:
@@ -97,13 +122,22 @@ def standardise_name(name: str | None) -> str | None:
     text = ascii_upper(name)
     text = _SEC_STATE_TAG.sub("", text)
     text = text.replace("&", " AND ")
-    text = _NON_ALNUM.sub(" ", text.replace(".", ""))
-    tokens = [ABBREVIATIONS.get(t, t) for t in _SPACES.sub(" ", text).strip().split(" ")]
+    text = _NON_ALNUM.sub(" ", _APOSTROPHE.sub("", text.replace(".", "")))
+    text = _LETTER_RUN.sub(lambda m: m.group(0).replace(" ", ""), _SPACES.sub(" ", text).strip())
+    tokens = [ABBREVIATIONS.get(t, t) for t in text.split(" ")]
     text = " ".join(tokens)
     if text.startswith("THE "):
         text = text[4:]
     stripped = _SUFFIX_RE.sub("", text).strip()
     return stripped or text
+
+
+def name_marks(name_std: str | None) -> str:
+    """The distinguishing tokens of a standardised name, sorted and joined: 'FUND II 2008' -> '2008|II'."""
+    if not name_std:
+        return ""
+    marks = {t for t in name_std.split(" ") if _ROMAN.match(t) or any(ch.isdigit() for ch in t) or len(t) == 1}
+    return "|".join(sorted(marks | (set(name_std.split(" ")) & MARK_WORDS)))
 
 
 def standardise_postal_code(code: str | None, country: str | None) -> str | None:
