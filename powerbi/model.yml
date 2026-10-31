@@ -281,7 +281,7 @@ measures:
       VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
       VAR _top = TOPN ( 1, VALUES ( dim_sector[sector_key] ), [Cash-Potenzial aktuell], DESC )
       VAR _name = IF ( _en, CALCULATE ( SELECTEDVALUE ( dim_sector[sector_en] ), _top ), CALCULATE ( SELECTEDVALUE ( dim_sector[sector_de] ), _top ) )
-      VAR _wert = FORMAT ( CALCULATE ( [Cash-Potenzial aktuell], _top ) / 1e9, "#,0.0" )
+      VAR _wert = FORMAT ( DIVIDE ( CALCULATE ( [Cash-Potenzial aktuell], _top ), 1e9 ), "#,0.0" )
       RETURN
           IF ( ISBLANK ( [Cash-Potenzial aktuell] ), BLANK (),
               IF ( _en,
