@@ -1,0 +1,92 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "cash_potenzial",
+  "position": {
+    "x": 860,
+    "y": 84,
+    "z": 5,
+    "width": 396,
+    "height": 140,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_wc_opportunity"
+                    }
+                  },
+                  "Property": "Cash-Potenzial aktuell"
+                }
+              },
+              "queryRef": "fact_wc_opportunity.Cash-Potenzial aktuell",
+              "nativeQueryRef": "Cash-Potenzial aktuell"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "24D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "categoryLabels": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 01 cash_potenzial"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

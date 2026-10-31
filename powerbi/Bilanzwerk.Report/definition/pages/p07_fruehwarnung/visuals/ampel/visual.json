@@ -1,0 +1,210 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "ampel",
+  "position": {
+    "x": 24,
+    "y": 152,
+    "z": 5,
+    "width": 820,
+    "height": 512,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_company"
+                    }
+                  },
+                  "Property": "company_name"
+                }
+              },
+              "queryRef": "dim_company.company_name",
+              "nativeQueryRef": "company_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_sector"
+                    }
+                  },
+                  "Property": "sector_de"
+                }
+              },
+              "queryRef": "dim_sector.sector_de",
+              "nativeQueryRef": "sector_de"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_risk_score"
+                    }
+                  },
+                  "Property": "Risiko 12M"
+                }
+              },
+              "queryRef": "fact_risk_score.Risiko 12M",
+              "nativeQueryRef": "Risiko 12M"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_risk_score"
+                    }
+                  },
+                  "Property": "Risiko Veränderung zum Vorquartal"
+                }
+              },
+              "queryRef": "fact_risk_score.Risiko Veränderung zum Vorquartal",
+              "nativeQueryRef": "Risiko Veränderung zum Vorquartal"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_kpi"
+                    }
+                  },
+                  "Property": "Rote Flaggen"
+                }
+              },
+              "queryRef": "fact_kpi.Rote Flaggen",
+              "nativeQueryRef": "Rote Flaggen"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_risk_score"
+                    }
+                  },
+                  "Property": "top_3_drivers"
+                }
+              },
+              "queryRef": "fact_risk_score.top_3_drivers",
+              "nativeQueryRef": "top_3_drivers"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_risk_score"
+                  }
+                },
+                "Property": "Risiko 12M"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "fact_risk_score"
+                        }
+                      },
+                      "Property": "Risiko Farbe"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "fact_risk_score.Risiko 12M"
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 07 ampel"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -10,6 +10,9 @@ Two parts:
 2. Report smoke test: the report has the 11 pages of the spec, each with title and footer, and
    every field a visual binds to exists in the model. Rendering a page needs the Power BI
    service; this test catches the broken bindings that would make a page fail to render.
+3. Report files against Microsoft's published JSON schemas (vendored in powerbi/schemas, MIT
+   licence, from github.com/microsoft/json-schemas), and the layout rules: every page has main
+   visuals, every chart has a title, visuals stay on the 1280 x 720 canvas and do not overlap.
 """
 
 from __future__ import annotations
@@ -24,6 +27,10 @@ ROOT = Path(__file__).resolve().parents[2]
 MODEL = ROOT / "powerbi" / "Bilanzwerk.SemanticModel" / "definition"
 REPORT = ROOT / "powerbi" / "Bilanzwerk.Report" / "definition"
 EXPECTED_PAGES = 11
+SCHEMAS = ROOT / "powerbi" / "schemas"
+SCHEMA_URL = "https://developer.microsoft.com/json-schemas/fabric/"
+CANVAS = (1280, 720)
+FRAME = {"titel", "sprache", "fusszeile"}
 
 NAME = r"(?:'(?:[^']|'')+'|[^\s=']+)"
 DAX_QUALIFIED = re.compile(r"(?:'((?:[^']|'')+)'|\b([A-Za-z_][\w\-]*))\[([^\]]+)\]")
@@ -147,7 +154,8 @@ def check_model(tables: dict[str, Table], rels: list[tuple[str, str, str, str]])
             errors.append(f"{where}: no description")
         if not m.folder:
             errors.append(f"{where}: no display folder")
-        if not m.format and m.table != "Sprache":
+        # text measures (titles, answer sentences) live in the folder Beschriftungen
+        if not m.format and m.table != "Sprache" and not (m.folder or "").startswith("Beschriftungen"):
             errors.append(f"{where}: no format string")
         if re.search(r"\bIFERROR\s*\(", m.expression, re.IGNORECASE):
             errors.append(f"{where}: IFERROR (use DIVIDE or explicit checks)")
@@ -236,9 +244,66 @@ def check_report(tables: dict[str, Table]) -> list[str]:
     return errors
 
 
+def schema_errors() -> list[str]:
+    """Every report JSON file against the schema its `$schema` names (local copies only)."""
+    from jsonschema import Draft7Validator
+    from referencing import Registry, Resource
+
+    def retrieve(uri: str) -> Resource:
+        if not uri.startswith(SCHEMA_URL):
+            raise LookupError(f"schema {uri} is not vendored")
+        path = SCHEMAS / uri.removeprefix(SCHEMA_URL)
+        return Resource.from_contents(json.loads(path.read_text(encoding="utf-8")))
+
+    registry = Registry(retrieve=retrieve)
+    errors = []
+    for path in sorted(REPORT.rglob("*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        uri = data.get("$schema", "")
+        if not uri.startswith(SCHEMA_URL) or not (SCHEMAS / uri.removeprefix(SCHEMA_URL)).exists():
+            errors.append(f"{path.relative_to(REPORT)}: schema {uri or '(none)'} is not vendored in powerbi/schemas")
+            continue
+        schema = registry.get_or_retrieve(uri).value.contents
+        for e in Draft7Validator(schema, registry=registry).iter_errors(data):
+            where = "/".join(str(p) for p in e.absolute_path)
+            errors.append(f"{path.relative_to(REPORT)}: {where}: {e.message[:200]}")
+    return errors
+
+
+def layout_errors() -> list[str]:
+    errors = []
+    meta = json.loads((REPORT / "pages" / "pages.json").read_text(encoding="utf-8"))
+    for name in meta["pageOrder"]:
+        visuals = [
+            json.loads(v.read_text(encoding="utf-8")) for v in (REPORT / "pages" / name).glob("visuals/*/visual.json")
+        ]
+        main = [v for v in visuals if v["name"] not in FRAME]
+        if not main:
+            errors.append(f"page {name}: no main visuals")
+        boxes = []
+        for v in visuals:
+            p = v["position"]
+            x0, y0, x1, y1 = p["x"], p["y"], p["x"] + p["width"], p["y"] + p["height"]
+            if x0 < 0 or y0 < 0 or x1 > CANVAS[0] or y1 > CANVAS[1]:
+                errors.append(f"page {name}, visual {v['name']}: outside the {CANVAS[0]} x {CANVAS[1]} canvas")
+            for other, (a0, b0, a1, b1) in boxes:
+                if x0 < a1 and a0 < x1 and y0 < b1 and b0 < y1:
+                    errors.append(f"page {name}: visuals {v['name']} and {other} overlap")
+            boxes.append((v["name"], (x0, y0, x1, y1)))
+            vis = v["visual"]
+            is_headline = vis["visualType"] == "card" and "title" not in json.dumps(
+                vis.get("visualContainerObjects", {})
+            )
+            titled = '"text"' in json.dumps(vis.get("visualContainerObjects", {}).get("title", []))
+            if v["name"] not in FRAME and vis["visualType"] != "card" and not titled:
+                errors.append(f"page {name}, visual {v['name']}: chart without a title")
+            del is_headline
+    return errors
+
+
 def main() -> int:
     tables, rels = load_model()
-    errors = check_model(tables, rels) + check_report(tables)
+    errors = check_model(tables, rels) + check_report(tables) + schema_errors() + layout_errors()
     n_measures = sum(len(t.measures) for t in tables.values())
     for e in errors:
         print(f"ERROR {e}")

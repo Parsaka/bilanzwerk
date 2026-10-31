@@ -1,0 +1,30 @@
+table: fact_case_study
+schema: marts
+owner: Credit Risk
+grain: one row per case study (three, fixed selection rule)
+freshness: after each model run (quarterly)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: case_rank
+  type: integer
+- name: company_key
+  type: string
+- name: company_id
+  type: string
+- name: cik
+  type: integer
+- name: company_name
+  type: string
+- name: sector_de
+  type: string
+- name: event_date
+  type: date
+- name: revenue_ttm_eur
+  type: float
+- name: lead_months_ccc
+  type: float
+- name: lead_months_z
+  type: float
+- name: run_id
+  type: string

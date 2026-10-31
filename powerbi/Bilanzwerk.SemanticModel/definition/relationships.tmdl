@@ -65,3 +65,12 @@ relationship a3df8354-d09b-5389-9442-6fb753903939
 relationship e99ac3b4-7826-5c12-8158-6912061da401
 	fromColumn: dim_company.sector_key
 	toColumn: dim_sector.sector_key
+
+relationship 64a786b0-a4c6-520c-bdcd-0f96b0791d71
+	fromColumn: fact_lead_time.company_key
+	toColumn: dim_company.company_key
+
+relationship 0049bee5-636c-579f-b30e-dbfdbd6180ba
+	fromColumn: fact_case_study.company_key
+	toColumn: dim_company.company_key
+	crossFilteringBehavior: bothDirections

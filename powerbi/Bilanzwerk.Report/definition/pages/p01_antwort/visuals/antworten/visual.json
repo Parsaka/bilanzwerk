@@ -1,0 +1,124 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "antworten",
+  "position": {
+    "x": 24,
+    "y": 84,
+    "z": 3,
+    "width": 820,
+    "height": 300,
+    "tabOrder": 3
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_hypothesis_result"
+                    }
+                  },
+                  "Property": "hypothesis_code"
+                }
+              },
+              "queryRef": "fact_hypothesis_result.hypothesis_code",
+              "nativeQueryRef": "hypothesis_code"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_hypothesis_result"
+                    }
+                  },
+                  "Property": "Antwort Text"
+                }
+              },
+              "queryRef": "fact_hypothesis_result.Antwort Text",
+              "nativeQueryRef": "Antwort Text"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_hypothesis_result"
+                  }
+                },
+                "Property": "hypothesis_code"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 01 antworten"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

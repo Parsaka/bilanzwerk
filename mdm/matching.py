@@ -133,6 +133,8 @@ def settings() -> SettingsCreator:
         ],
         retain_intermediate_calculation_columns=True,
         retain_matching_columns=True,
+        # the reviewer needs the names as filed, not only the standardised ones
+        additional_columns_to_retain=["name_orig", "tickers", "other_names"],
     )
 
 

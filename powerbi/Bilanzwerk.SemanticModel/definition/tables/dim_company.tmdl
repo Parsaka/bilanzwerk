@@ -3,6 +3,16 @@ table dim_company
 	lineageTag: 60b3252d-f6dc-5108-ae88-9e466e47d995
 	sourceLineageTag: [marts].[dim_company]
 
+	/// Name des gewählten Unternehmens für Diagrammtitel der Unternehmensseiten.
+	measure 'Ausgewähltes Unternehmen' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			RETURN
+			    IF ( HASONEVALUE ( dim_company[company_id] ),
+			        SELECTEDVALUE ( dim_company[company_name] ),
+			        IF ( _en, "All companies (pick one)", "Alle Unternehmen (bitte eines wählen)" ) )
+		displayFolder: Beschriftungen
+		lineageTag: 35411c86-0f44-5966-97f9-efe02ae72132
+
 	/// Anteil der aktuellen Unternehmen mit LEI.
 	measure 'LEI-Match-Quote' = DIVIDE ( CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, dim_company[is_lei_matched] = 1 ), CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1 ) )
 		formatString: 0.0%

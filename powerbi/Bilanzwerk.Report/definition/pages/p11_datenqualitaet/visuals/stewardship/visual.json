@@ -1,0 +1,166 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "stewardship",
+  "position": {
+    "x": 24,
+    "y": 464,
+    "z": 8,
+    "width": 1232,
+    "height": 200,
+    "tabOrder": 8
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_stewardship_queue"
+                    }
+                  },
+                  "Property": "sec_name"
+                }
+              },
+              "queryRef": "fact_stewardship_queue.sec_name",
+              "nativeQueryRef": "sec_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_stewardship_queue"
+                    }
+                  },
+                  "Property": "gleif_legal_name"
+                }
+              },
+              "queryRef": "fact_stewardship_queue.gleif_legal_name",
+              "nativeQueryRef": "gleif_legal_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_stewardship_queue"
+                    }
+                  },
+                  "Property": "gleif_city"
+                }
+              },
+              "queryRef": "fact_stewardship_queue.gleif_city",
+              "nativeQueryRef": "gleif_city"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_stewardship_queue"
+                    }
+                  },
+                  "Property": "gleif_country"
+                }
+              },
+              "queryRef": "fact_stewardship_queue.gleif_country",
+              "nativeQueryRef": "gleif_country"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_stewardship_queue"
+                    }
+                  },
+                  "Property": "match_probability"
+                }
+              },
+              "queryRef": "fact_stewardship_queue.match_probability",
+              "nativeQueryRef": "match_probability"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_stewardship_queue"
+                  }
+                },
+                "Property": "match_probability"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 11 stewardship"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

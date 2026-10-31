@@ -1,0 +1,30 @@
+table: fact_lead_time
+schema: marts
+owner: Credit Risk
+grain: one row per company with a bankruptcy (main label)
+freshness: after each model run (quarterly)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: company_key
+  type: string
+- name: company_id
+  type: string
+- name: event_date
+  type: date
+- name: n_observations
+  type: integer
+- name: lead_months_ccc
+  type: float
+- name: lead_months_z
+  type: float
+- name: ever_red_ccc
+  type: integer
+- name: ever_red_z
+  type: integer
+- name: ccc_available_last
+  type: integer
+- name: z_available_last
+  type: integer
+- name: run_id
+  type: string

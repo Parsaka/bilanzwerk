@@ -18,6 +18,9 @@ def _status(held: bool, *values) -> tuple[str, str]:
     return ("held", "bestätigt") if held else ("not_held", "nicht bestätigt")
 
 
+_WORD_EN = {"held": "held", "not_held": "not held", "not_determinable": "not determinable"}
+
+
 def _fmt(x: float, digits: int = 1) -> str:
     return "n/a" if x is None or (isinstance(x, float) and math.isnan(x)) else f"{x:.{digits}f}"
 
@@ -35,6 +38,11 @@ def h1(lead: dict) -> dict:
             f"{_fmt(lead['median_z'])} Monate; Differenz {_fmt(lead['estimate'])} Monate "
             f"(95%-KI {_fmt(lead['ci_low'])} bis {_fmt(lead['ci_high'])})."
         ),
+        "text_en": (
+            f"H1 {_WORD_EN[status]}: the CCC flag turned red a median {_fmt(lead['median_ccc'])} months "
+            f"before bankruptcy, the Z'' flag {_fmt(lead['median_z'])} months; difference "
+            f"{_fmt(lead['estimate'])} months (95% CI {_fmt(lead['ci_low'])} to {_fmt(lead['ci_high'])})."
+        ),
         **lead,
     }
 
@@ -50,6 +58,10 @@ def h2(diff: dict) -> dict:
             f"H2 {word}: PR-AUC M2 minus M1 = "
             f"{_fmt(diff['estimate'], 3)} (95%-KI {_fmt(diff['ci_low'], 3)} bis {_fmt(diff['ci_high'], 3)})."
         ),
+        "text_en": (
+            f"H2 {_WORD_EN[status]}: PR-AUC M2 minus M1 = "
+            f"{_fmt(diff['estimate'], 3)} (95% CI {_fmt(diff['ci_low'], 3)} to {_fmt(diff['ci_high'], 3)})."
+        ),
         **diff,
     }
 
@@ -64,6 +76,10 @@ def h3(diff: dict) -> dict:
         "text_de": (
             f"H3 {word}: PR-AUC sektorrelativ minus absolut = "
             f"{_fmt(diff['estimate'], 3)} (95%-KI {_fmt(diff['ci_low'], 3)} bis {_fmt(diff['ci_high'], 3)})."
+        ),
+        "text_en": (
+            f"H3 {_WORD_EN[status]}: PR-AUC sector-relative minus absolute = "
+            f"{_fmt(diff['estimate'], 3)} (95% CI {_fmt(diff['ci_low'], 3)} to {_fmt(diff['ci_high'], 3)})."
         ),
         **diff,
     }
@@ -86,5 +102,10 @@ def h4(by_sector: pd.DataFrame, material_eur_bn: float = 1.0) -> dict:
             f"{_fmt(total)} Mrd. EUR; größter Hebel "
             f"{'n/a' if top is None else top['sector_de']} mit "
             f"{'n/a' if top is None else _fmt(float(top['cash_opportunity_eur_bn']))} Mrd. EUR."
+        ),
+        "text_en": (
+            f"H4 {_WORD_EN[status]}: working-capital potential EUR {_fmt(total)} bn in total; largest lever "
+            f"{'n/a' if top is None else top['sector_en']} with EUR "
+            f"{'n/a' if top is None else _fmt(float(top['cash_opportunity_eur_bn']))} bn."
         ),
     }

@@ -56,5 +56,5 @@ ignore = ["PLC0415", "PLR0913", "PLR0917", "PLR2004", "PLR0912", "PLR0915"]
 "excel/*.py" = ["RUF001"]
 
 [tool.pytest.ini_options]
-testpaths = ["ingestion/tests", "mdm/tests", "analysis/tests", "powerbi/tests", "fabric/tests"]
+testpaths = ["ingestion/tests", "mdm/tests", "analysis/tests", "powerbi/tests", "fabric/tests", "tableau/tests"]
 addopts = "-q"

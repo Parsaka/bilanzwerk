@@ -1,15 +1,14 @@
-"""Render the report scaffold (PBIR format) and powerbi/report-pages.md from report/pages.yml.
+"""Render the report (PBIR format) and powerbi/report-pages.md from report/pages.yml.
 
   python powerbi/tools/generate_report.py
 
 Every page gets the parts that the spec fixes for all pages: the title that states the page's
-question (bilingual measure from the Sprache table), a synced language slicer, the footer with
-data cut-off and sources, and a grey build note that lists the main visuals for that page.
-The main visuals themselves are placed in Power BI Desktop: their layout is design work that
-has to be checked by eye against real data, so it is not generated. Delete the build note on a
-page once its visuals are in place; a rerun of this script only recreates missing scaffolds and
-never overwrites a page that has been edited (it skips pages whose folder already holds more
-than the scaffold visuals).
+question (bilingual measure from the Sprache table), a synced language slicer and the footer
+with data cut-off and sources. The main visuals come from the page's `layout` in pages.yml
+(tools/visuals.py builds the JSON). The report is generated as a whole: change the layout in
+pages.yml and rerun, rather than editing the page in Power BI Desktop, so the next run does not
+overwrite the change. What still needs Desktop is the look against real data (screenshots,
+spacing) and the DAX Studio timings; see powerbi/README.md.
 """
 
 from __future__ import annotations
@@ -22,13 +21,16 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from generate_tmdl import label_name
+from visuals import build
+
 ROOT = Path(__file__).resolve().parents[2]
 PBI = ROOT / "powerbi"
 REPORT = PBI / "Bilanzwerk.Report"
 DEF = REPORT / "definition"
 SCHEMA = "https://developer.microsoft.com/json-schemas/fabric"
 WIDTH, HEIGHT = 1280, 720
-SCAFFOLD = {"titel", "sprache", "fusszeile", "bauplan"}
 
 # Design rules (spec): one accent colour for the item the title talks about, grey for the rest,
 # red and green only for risk bands.
@@ -85,7 +87,7 @@ def measure_card(name: str, measure: str, pos: dict, font_size: int, color: str)
                 ],
                 "categoryLabels": [{"properties": {"show": lit("false")}}],
             },
-            "drawVisualContainerHeader": False,
+            "visualContainerObjects": {"visualHeader": [{"properties": {"show": lit("false")}}]},
         },
     }
 
@@ -122,32 +124,7 @@ def language_slicer(pos: dict) -> dict:
                 "header": [{"properties": {"show": lit("false")}}],
             },
             "syncGroup": {"groupName": "Sprache", "fieldChanges": True, "filterChanges": True},
-            "drawVisualContainerHeader": False,
-        },
-    }
-
-
-def build_note(page: dict, pos: dict) -> dict:
-    lines = ["Bauplan (nach dem Platzieren der Visuals löschen):", *[f"• {v}" for v in page["visuals"]]]
-    return {
-        "$schema": f"{SCHEMA}/item/report/definition/visualContainer/1.3.0/schema.json",
-        "name": "bauplan",
-        "position": pos,
-        "visual": {
-            "visualType": "textbox",
-            "objects": {
-                "general": [
-                    {
-                        "properties": {
-                            "paragraphs": [
-                                {"textRuns": [{"value": line, "textStyle": {"fontSize": "11pt", "color": "#8C8C8C"}}]}
-                                for line in lines
-                            ]
-                        }
-                    }
-                ]
-            },
-            "drawVisualContainerHeader": False,
+            "visualContainerObjects": {"visualHeader": [{"properties": {"show": lit("false")}}]},
         },
     }
 
@@ -161,18 +138,13 @@ def write_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def page_is_edited(page_dir: Path) -> bool:
-    visuals = page_dir / "visuals"
-    return visuals.exists() and any(p.name not in SCAFFOLD for p in visuals.iterdir())
-
-
 def render_markdown(spec: dict) -> str:
     out = [
         "# Berichtsseiten / Report pages",
         "",
         "Generated from `powerbi/report/pages.yml` by `powerbi/tools/generate_report.py`. Each page answers one",
-        "question, printed in its title. Title, language switch and footer are generated; the main visuals",
-        "are placed in Power BI Desktop as listed here.",
+        "question, printed in its title. The whole page is generated from `layout` in pages.yml: title,",
+        "language switch, footer and the main visuals listed here.",
         "",
         "Design rules: one accent colour (#1F5AA6) for the item the title talks about, grey for the rest,",
         "red and green only for risk bands; every chart title states the finding (written after the real-data",
@@ -191,17 +163,16 @@ def render_markdown(spec: dict) -> str:
         "",
         "## Status",
         "",
-        "Pages with a build note (`bauplan` visual) still need their main visuals. Screenshots of all 11 pages",
-        "go to `docs/img/report/` once the report runs on real data.",
+        "All 11 pages carry their main visuals (generated, checked against the Microsoft PBIR schemas and",
+        "the model by `check_pbip.py`). Open in Power BI Desktop: screenshots of all 11 pages for",
+        "`docs/img/report/` and the DAX Studio timings, both against the deployed model.",
         "",
     ]
     return "\n".join(out)
 
 
-def main(force: bool = False) -> None:
+def main() -> None:
     spec = yaml.safe_load((PBI / "report" / "pages.yml").read_text(encoding="utf-8"))
-    if force and DEF.exists():
-        shutil.rmtree(DEF)
 
     write_json(
         PBI / "Bilanzwerk.pbip",
@@ -236,6 +207,7 @@ def main(force: bool = False) -> None:
         DEF / "report.json",
         {
             "$schema": f"{SCHEMA}/item/report/definition/report/1.2.0/schema.json",
+            "layoutOptimization": "None",
             "themeCollection": {
                 "customTheme": {
                     "name": "Bilanzwerk.json",
@@ -260,13 +232,13 @@ def main(force: bool = False) -> None:
     )
     write_json(REPORT / "StaticResources" / "RegisteredResources" / "Bilanzwerk.json", THEME)
 
-    names, created = [], 0
+    names = []
     for i, page in enumerate(spec["pages"], start=1):
         name = f"p{i:02d}_{page['id']}"
         names.append(name)
         page_dir = DEF / "pages" / name
-        if page_is_edited(page_dir):
-            continue
+        if page_dir.exists():
+            shutil.rmtree(page_dir)
         write_json(
             page_dir / "page.json",
             {
@@ -281,12 +253,15 @@ def main(force: bool = False) -> None:
         visuals = [
             measure_card("titel", f"Titel {i:02d}", pos(24, 12, 1060, 56, 0), 20, "#262626"),
             language_slicer(pos(1100, 16, 156, 48, 1)),
-            build_note(page, pos(24, 88, 1232, 560, 2)),
-            measure_card("fusszeile", "Fußzeile", pos(24, 676, 1232, 32, 3), 9, "#8C8C8C"),
+            measure_card("fusszeile", "Fußzeile", pos(24, 676, 1232, 32, 2), 9, "#8C8C8C"),
         ]
+        for z, v in enumerate(page.get("layout", []), start=len(visuals)):
+            entry = dict(v)
+            if "label" in entry and "title" not in entry:
+                entry["title"] = f"Sprache.[{label_name(i, v['name'])}]"
+            visuals.append(build(entry, z))
         for v in visuals:
             write_json(page_dir / "visuals" / v["name"] / "visual.json", v)
-        created += 1
     write_json(
         DEF / "pages" / "pages.json",
         {
@@ -296,8 +271,8 @@ def main(force: bool = False) -> None:
         },
     )
     (PBI / "report-pages.md").write_text(render_markdown(spec), encoding="utf-8")
-    print(f"{len(names)} pages, {created} scaffolds written, {len(names) - created} edited pages kept")
+    print(f"{len(names)} pages written")
 
 
 if __name__ == "__main__":
-    main(force="--force" in sys.argv)
+    main()

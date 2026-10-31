@@ -1,0 +1,114 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "stretch",
+  "position": {
+    "x": 646,
+    "y": 426,
+    "z": 5,
+    "width": 610,
+    "height": 238,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_sector"
+                    }
+                  },
+                  "Property": "sector_de"
+                }
+              },
+              "queryRef": "dim_sector.sector_de",
+              "nativeQueryRef": "sector_de"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_wc_opportunity"
+                    }
+                  },
+                  "Property": "Cash-Potenzial aktuell"
+                }
+              },
+              "queryRef": "fact_wc_opportunity.Cash-Potenzial aktuell",
+              "nativeQueryRef": "Cash-Potenzial aktuell"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_wc_opportunity"
+                    }
+                  },
+                  "Property": "Cash-Potenzial Stretch aktuell"
+                }
+              },
+              "queryRef": "fact_wc_opportunity.Cash-Potenzial Stretch aktuell",
+              "nativeQueryRef": "Cash-Potenzial Stretch aktuell"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_wc_opportunity"
+                  }
+                },
+                "Property": "Cash-Potenzial Stretch aktuell"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 09 stretch"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

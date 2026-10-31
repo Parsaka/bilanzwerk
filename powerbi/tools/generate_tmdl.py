@@ -218,6 +218,11 @@ def dax_text(text: str) -> str:
     return '"' + text.replace('"', '""') + '"'
 
 
+def label_name(page_no: int, visual: str) -> str:
+    """Name of the Sprache measure that holds a chart title (shared with generate_report.py)."""
+    return f"Diagramm {page_no:02d} {visual}"
+
+
 def label_measures(pages: dict) -> list[dict]:
     """Bilingual page titles and the footer, switched by the Sprache table (spec: English toggle)."""
     out = []
@@ -232,6 +237,20 @@ def label_measures(pages: dict) -> list[dict]:
                 "folder": "Beschriftungen",
             }
         )
+        # chart titles without a finding measure: a bilingual label per visual
+        for v in page.get("layout", []):
+            if "label" in v:
+                out.append(
+                    {
+                        "name": label_name(i, v["name"]),
+                        "expression": (
+                            f'IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", '
+                            f"{dax_text(v['label']['en'])}, {dax_text(v['label']['de'])} )"
+                        ),
+                        "description": f"Diagrammtitel {v['name']} auf Seite {i:02d} ({page['id']}).",
+                        "folder": "Beschriftungen\\Diagramme",
+                    }
+                )
     src = pages["source_line"]
     out.append(
         {
@@ -316,7 +335,7 @@ def main() -> None:
         assert m.get("description") and m.get("folder"), f"measure {m['name']} needs description and folder"
 
     foreign_keys: dict[str, set[str]] = {}
-    for frm, _ in model["relationships"]:
+    for frm, *_ in model["relationships"]:
         tbl, col = frm.split(".", 1)
         foreign_keys.setdefault(tbl, set()).add(col)
 
@@ -339,8 +358,11 @@ def main() -> None:
     table_names.append("Sprache")
 
     rel = []
-    for frm, to in model["relationships"]:
-        rel += [f"relationship {tag('rel', frm, to)}", f"\tfromColumn: {frm}", f"\ttoColumn: {to}", ""]
+    for frm, to, *direction in model["relationships"]:
+        rel += [f"relationship {tag('rel', frm, to)}", f"\tfromColumn: {frm}", f"\ttoColumn: {to}"]
+        if direction == ["both"]:
+            rel.append("\tcrossFilteringBehavior: bothDirections")
+        rel.append("")
     (DEF / "relationships.tmdl").write_text("\n".join(rel), encoding="utf-8")
 
     for role in model["roles"]:

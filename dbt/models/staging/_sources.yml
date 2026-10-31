@@ -92,7 +92,7 @@ sources:
         description: One row per scored SEC/ESEF-to-GLEIF candidate pair above the review threshold.
 
   - name: analysis
-    description: Risk scores written back by the early-warning model (analysis/).
+    description: Tables written back by the early-warning model (analysis/), one Parquet file each.
     database: "{{ env_var('BW_LAKEHOUSE', 'lh_bilanzwerk') if target.type == 'fabric' else none }}"
     schema: "{{ 'dbo' if target.type == 'fabric' else 'main' }}"
     meta:
@@ -100,3 +100,15 @@ sources:
     tables:
       - name: risk_scores
         identifier: "{{ 'analysis_risk_scores' if target.type == 'fabric' else 'risk_scores' }}"
+      - name: hypothesis_results
+        identifier: "{{ 'analysis_hypothesis_results' if target.type == 'fabric' else 'hypothesis_results' }}"
+        description: One row per hypothesis H1-H4 with status, estimate and 95 % interval.
+      - name: model_backtest
+        identifier: "{{ 'analysis_model_backtest' if target.type == 'fabric' else 'model_backtest' }}"
+        description: Pooled out-of-time backtest per model (PR-AUC, recall in the top 5 %, Brier).
+      - name: lead_times
+        identifier: "{{ 'analysis_lead_times' if target.type == 'fabric' else 'lead_times' }}"
+        description: "One row per company with a bankruptcy, with the lead time of the CCC and Z'' flags."
+      - name: case_studies
+        identifier: "{{ 'analysis_case_studies' if target.type == 'fabric' else 'case_studies' }}"
+        description: The three case-study companies, chosen by the fixed rule in analysis/pipeline.py.

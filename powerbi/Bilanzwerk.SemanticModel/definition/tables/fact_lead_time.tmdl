@@ -1,0 +1,148 @@
+/// H1: Vorlaufzeit der CCC- und Z''-Flagge je Unternehmen mit Insolvenz.
+table fact_lead_time
+	lineageTag: f08bbd9d-b054-5f04-a8e9-89c0d35f70ae
+	sourceLineageTag: [marts].[fact_lead_time]
+
+	/// Median der Monate zwischen der dauerhaft roten CCC-Flagge und der Insolvenz; nie rot zählt als 0 (wie in H1).
+	measure 'Vorlaufzeit CCC (Median)' = MEDIANX ( fact_lead_time, COALESCE ( fact_lead_time[lead_months_ccc], 0 ) )
+		formatString: 0.0
+		displayFolder: Antwort
+		lineageTag: c51dadc2-f729-5d3e-831b-076a1b0457c5
+
+	/// Median der Monate zwischen der dauerhaft roten Z''-Flagge und der Insolvenz; nie rot zählt als 0 (wie in H1).
+	measure 'Vorlaufzeit Z'''' (Median)' = MEDIANX ( fact_lead_time, COALESCE ( fact_lead_time[lead_months_z], 0 ) )
+		formatString: 0.0
+		displayFolder: Antwort
+		lineageTag: 45932b3d-0168-513d-bace-3b63e07d67ff
+
+	/// Anteil der Unternehmen mit Insolvenz, deren CCC-Flagge vor dem Ereignis dauerhaft rot war.
+	measure 'Anteil CCC-Flagge rot' = DIVIDE ( COUNTROWS ( FILTER ( fact_lead_time, NOT ISBLANK ( fact_lead_time[lead_months_ccc] ) ) ), COUNTROWS ( fact_lead_time ) )
+		formatString: 0%
+		displayFolder: Antwort
+		lineageTag: 92c2069b-7692-53de-a518-816d2f277dda
+
+	/// Anteil der Unternehmen mit Insolvenz, deren Z''-Flagge vor dem Ereignis dauerhaft rot war.
+	measure 'Anteil Z''''-Flagge rot' = DIVIDE ( COUNTROWS ( FILTER ( fact_lead_time, NOT ISBLANK ( fact_lead_time[lead_months_z] ) ) ), COUNTROWS ( fact_lead_time ) )
+		formatString: 0%
+		displayFolder: Antwort
+		lineageTag: dcde4f89-e1db-5c2a-8321-18c73ed9a7a4
+
+	/// Anteil der Unternehmen mit Insolvenz, für die die CCC-Flagge an der letzten Beobachtung vor dem Ereignis berechenbar war.
+	measure 'Anteil CCC berechenbar' = AVERAGE ( fact_lead_time[ccc_available_last] )
+		formatString: 0%
+		displayFolder: Antwort
+		lineageTag: c7f32a38-211a-582e-b501-6e4d9d764b9d
+
+	/// Unternehmen mit Insolvenz und Kennzahlen vor dem Ereignis (Grundgesamtheit von H1).
+	measure 'Insolvenzen mit Kennzahlen' = COUNTROWS ( fact_lead_time )
+		formatString: #,0
+		displayFolder: Antwort
+		lineageTag: 92b262f6-589c-59b7-a1a7-74abd2e305ce
+
+	/// Diagrammtitel mit dem Befund zu H1, aus den Daten berechnet.
+	measure 'Befund Vorlaufzeit' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _z = FORMAT ( [Vorlaufzeit Z'' (Median)], "0.0" )
+			VAR _c = FORMAT ( [Vorlaufzeit CCC (Median)], "0.0" )
+			RETURN
+			    IF ( ISBLANK ( [Insolvenzen mit Kennzahlen] ), BLANK (),
+			        IF ( _en,
+			            "Z'' warned a median " & _z & " months before bankruptcy, the CCC flag " & _c,
+			            "Z'' warnte im Median " & _z & " Monate vor der Insolvenz, die CCC-Flagge " & _c ) )
+		displayFolder: Beschriftungen
+		lineageTag: 03c16b50-299f-54e5-9bba-72214cb96602
+
+	column company_key
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_key
+		lineageTag: 7a702088-0790-572a-9ac6-abb5d83c75d8
+		sourceLineageTag: company_key
+
+	column company_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: company_id
+		lineageTag: d2cf8f2e-c7e4-516e-9f08-f19a6b5dde42
+		sourceLineageTag: company_id
+
+	column event_date
+		dataType: dateTime
+		formatString: dd.MM.yyyy
+		summarizeBy: none
+		sourceColumn: event_date
+		lineageTag: 01be3ad5-5718-51dc-9f12-deff7e1863d3
+		sourceLineageTag: event_date
+
+	column n_observations
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: n_observations
+		lineageTag: 268de192-43c9-5101-80a7-18a9c729229c
+		sourceLineageTag: n_observations
+
+	column lead_months_ccc
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: lead_months_ccc
+		lineageTag: 450913b1-bce0-5601-acab-529fe2e3f85d
+		sourceLineageTag: lead_months_ccc
+
+	column lead_months_z
+		dataType: double
+		formatString: #,0.00
+		summarizeBy: none
+		sourceColumn: lead_months_z
+		lineageTag: 5a23fc74-b97a-56d2-b6c9-bb8bb17970f5
+		sourceLineageTag: lead_months_z
+
+	column ever_red_ccc
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ever_red_ccc
+		lineageTag: eea36f56-ad1b-5b2c-b946-23826d1a2727
+		sourceLineageTag: ever_red_ccc
+
+	column ever_red_z
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ever_red_z
+		lineageTag: 5ec84964-8869-518e-af34-760b1fdbf617
+		sourceLineageTag: ever_red_z
+
+	column ccc_available_last
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ccc_available_last
+		lineageTag: bdb044ca-68bd-5bdb-8a51-7d3c404f79f6
+		sourceLineageTag: ccc_available_last
+
+	column z_available_last
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: z_available_last
+		lineageTag: 0229a370-d005-59eb-86bf-8eebc0da8837
+		sourceLineageTag: z_available_last
+
+	column run_id
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: run_id
+		lineageTag: 420c509d-b55d-54be-9cfa-7e327b46ca8b
+		sourceLineageTag: run_id
+
+	partition fact_lead_time = entity
+		mode: directLake
+		source
+			entityName: fact_lead_time
+			schemaName: marts
+			expressionSource: DatabaseQuery

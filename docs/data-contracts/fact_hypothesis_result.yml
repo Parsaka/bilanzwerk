@@ -1,0 +1,32 @@
+table: fact_hypothesis_result
+schema: marts
+owner: Credit Risk
+grain: one row per hypothesis (H1-H4) of the last model run
+freshness: after each model run (quarterly)
+breaking_change_rule: Removing or retyping a column needs a new major version and
+  an ADR; adding a column is allowed.
+columns:
+- name: hypothesis_code
+  type: string
+- name: hypothesis
+  type: string
+- name: status
+  type: string
+- name: is_held
+  type: integer
+- name: estimate
+  type: float
+- name: ci_low
+  type: float
+- name: ci_high
+  type: float
+- name: unit
+  type: string
+- name: text_de
+  type: string
+- name: text_en
+  type: string
+- name: run_id
+  type: string
+- name: data_version
+  type: string

@@ -3,6 +3,50 @@ table fact_wc_opportunity
 	lineageTag: 6f293c44-b6cb-5e1c-88fe-5f102a1915a0
 	sourceLineageTag: [marts].[fact_wc_opportunity]
 
+	/// Akzentfarbe für den Sektor mit dem größten Cash-Potenzial, Grau für die übrigen (Designregel).
+	measure 'Farbe Sektor-Hebel' =
+			VAR _alle = CALCULATETABLE ( VALUES ( dim_sector[sector_key] ), ALLSELECTED ( dim_sector ) )
+			VAR _top = TOPN ( 1, _alle, CALCULATE ( [Cash-Potenzial aktuell] ), DESC )
+			RETURN IF ( SELECTEDVALUE ( dim_sector[sector_key] ) IN _top, "#1F5AA6", "#B3B3B3" )
+		displayFolder: Beschriftungen\Farben
+		lineageTag: 041874ac-9f9a-5beb-9321-b5f30b3c00bb
+
+	/// Cash-Potenzial im letzten Geschäftsjahr je Unternehmen (wie H4), summiert über die Unternehmen im Kontext.
+	measure 'Cash-Potenzial aktuell' =
+			SUMX (
+			    VALUES ( fact_wc_opportunity[company_id] ),
+			    VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+			    RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
+			)
+		formatString: #,0.0,,," Mrd"
+		displayFolder: Working Capital
+		lineageTag: 396d95ea-fbba-5a44-8e04-304437203b28
+
+	/// Wie Cash-Potenzial aktuell, Ziel ist das 25. Perzentil des Sektors (DPO: 75.).
+	measure 'Cash-Potenzial Stretch aktuell' =
+			SUMX (
+			    VALUES ( fact_wc_opportunity[company_id] ),
+			    VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+			    RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
+			)
+		formatString: #,0.0,,," Mrd"
+		displayFolder: Working Capital
+		lineageTag: 1a4a64a3-e553-5e52-a53c-90355c4c0453
+
+	/// Diagrammtitel mit dem größten Working-Capital-Hebel nach Sektor, aus den Daten berechnet.
+	measure 'Befund Cash-Potenzial' =
+			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
+			VAR _top = TOPN ( 1, VALUES ( dim_sector[sector_key] ), [Cash-Potenzial aktuell], DESC )
+			VAR _name = IF ( _en, CALCULATE ( SELECTEDVALUE ( dim_sector[sector_en] ), _top ), CALCULATE ( SELECTEDVALUE ( dim_sector[sector_de] ), _top ) )
+			VAR _wert = FORMAT ( CALCULATE ( [Cash-Potenzial aktuell], _top ) / 1e9, "#,0.0" )
+			RETURN
+			    IF ( ISBLANK ( [Cash-Potenzial aktuell] ), BLANK (),
+			        IF ( _en,
+			            _name & " has the largest lever: EUR " & _wert & " bn to sector median",
+			            _name & " hat den größten Hebel: " & _wert & " Mrd. EUR bis zum Sektormedian" ) )
+		displayFolder: Beschriftungen
+		lineageTag: dab98a1b-ece0-593f-bb90-17c8fb021faa
+
 	/// Freisetzbare Liquidität in EUR, wenn DSO und DIO auf den Sektormedian sinken und DPO auf ihn steigt.
 	measure 'Cash-Potenzial' = SUM ( fact_wc_opportunity[cash_opportunity_eur] )
 		formatString: #,0.0,,," Mrd"

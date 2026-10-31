@@ -1,0 +1,138 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "rangliste",
+  "position": {
+    "x": 760,
+    "y": 152,
+    "z": 7,
+    "width": 496,
+    "height": 512,
+    "tabOrder": 7
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_company"
+                    }
+                  },
+                  "Property": "company_name"
+                }
+              },
+              "queryRef": "dim_company.company_name",
+              "nativeQueryRef": "company_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPI-Auswahl"
+                    }
+                  },
+                  "Property": "KPI-Auswahl"
+                }
+              },
+              "queryRef": "KPI-Auswahl.KPI-Auswahl",
+              "nativeQueryRef": "KPI-Auswahl"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_kpi"
+                    }
+                  },
+                  "Property": "Sektorperzentil"
+                }
+              },
+              "queryRef": "fact_kpi.Sektorperzentil",
+              "nativeQueryRef": "Sektorperzentil"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_kpi"
+                  }
+                },
+                "Property": "Sektorperzentil"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 06 rangliste"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

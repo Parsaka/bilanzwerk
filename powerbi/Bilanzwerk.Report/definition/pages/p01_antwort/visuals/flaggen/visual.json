@@ -1,0 +1,107 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "flaggen",
+  "position": {
+    "x": 860,
+    "y": 388,
+    "z": 7,
+    "width": 396,
+    "height": 276,
+    "tabOrder": 7
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_lead_time"
+                    }
+                  },
+                  "Property": "Anteil Z''-Flagge rot"
+                }
+              },
+              "queryRef": "fact_lead_time.Anteil Z''-Flagge rot",
+              "nativeQueryRef": "Anteil Z''-Flagge rot"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_lead_time"
+                    }
+                  },
+                  "Property": "Anteil CCC-Flagge rot"
+                }
+              },
+              "queryRef": "fact_lead_time.Anteil CCC-Flagge rot",
+              "nativeQueryRef": "Anteil CCC-Flagge rot"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_lead_time"
+                    }
+                  },
+                  "Property": "Anteil CCC berechenbar"
+                }
+              },
+              "queryRef": "fact_lead_time.Anteil CCC berechenbar",
+              "nativeQueryRef": "Anteil CCC berechenbar"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 01 flaggen"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

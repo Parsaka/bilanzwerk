@@ -1,7 +1,9 @@
 # The eleven report pages: one question per page, printed in the title (spec "Report pages").
 # tools/generate_report.py renders the PBIR scaffold (title, language switch, footer per page)
 # and powerbi/report-pages.md from this file; tools/generate_tmdl.py renders the bilingual
-# title measures. Main visuals are placed by hand in Power BI Desktop following the "visuals" list.
+# title measures. `layout` places the main visuals (fields as table.column or table.[Measure]);
+# every chart title is either a finding measure computed from the data (`title`) or a bilingual
+# label (`label`), so no number in a title is typed by hand.
 
 source_line:
   de: "Quelle: SEC EDGAR (Financial Statement Data Sets, Submissions), ESEF über filings.xbrl.org, GLEIF, EZB-Referenzkurse"
@@ -16,6 +18,35 @@ pages:
       - "Vorlaufzeit-Diagramm Z'' gegen CCC (Monate vor dem Ereignis, Median und Interquartil)"
       - "Summe Cash-Potenzial in Mrd. EUR ([Cash-Potenzial])"
     measures: ["Cash-Potenzial", "Insolvenzen", "Unternehmen rot"]
+    layout:
+      - name: antworten
+        type: tableEx
+        pos: [24, 84, 820, 300]
+        fields: {Values: ["fact_hypothesis_result.hypothesis_code", "fact_hypothesis_result.[Antwort Text]"]}
+        sort: ["fact_hypothesis_result.hypothesis_code", asc]
+        label: {de: "Die vier Hypothesen (vorher festgelegt, ADR-001), Ergebnis des letzten Modelllaufs", en: "The four hypotheses (fixed beforehand, ADR-001), result of the last model run"}
+      - name: vorlaufzeit
+        type: clusteredBarChart
+        pos: [24, 396, 820, 268]
+        fields: {Y: ["fact_lead_time.[Vorlaufzeit Z'' (Median)]", "fact_lead_time.[Vorlaufzeit CCC (Median)]"]}
+        data_labels: true
+        title: "fact_lead_time.[Befund Vorlaufzeit]"
+      - name: cash_potenzial
+        type: card
+        pos: [860, 84, 396, 140]
+        fields: {Values: ["fact_wc_opportunity.[Cash-Potenzial aktuell]"]}
+        label: {de: "Working-Capital-Potenzial bis zum Sektormedian (EUR)", en: "Working-capital potential to sector median (EUR)"}
+      - name: insolvenzen
+        type: card
+        pos: [860, 236, 396, 140]
+        fields: {Values: ["fact_lead_time.[Insolvenzen mit Kennzahlen]"]}
+        label: {de: "Insolvenzen mit Kennzahlen davor (Grundgesamtheit H1)", en: "Bankruptcies with ratios before the event (H1 population)"}
+      - name: flaggen
+        type: clusteredBarChart
+        pos: [860, 388, 396, 276]
+        fields: {Y: ["fact_lead_time.[Anteil Z''-Flagge rot]", "fact_lead_time.[Anteil CCC-Flagge rot]", "fact_lead_time.[Anteil CCC berechenbar]"]}
+        data_labels: true
+        label: {de: "Wie oft die Flagge vor der Insolvenz rot war, und wie oft die CCC berechenbar war", en: "How often the flag was red before bankruptcy, and how often the CCC could be computed"}
   - id: ueberblick
     de: {name: "Unternehmensüberblick", question: "Wie steht dieses Unternehmen da?"}
     en: {name: "Company overview", question: "How is this company doing?"}
@@ -25,6 +56,44 @@ pages:
       - "Risikoband (Ampel) aus [Risiko 12M]"
       - "Einreichungshistorie (fact_event und Filings) als Zeitleiste"
     measures: ["KPI Wert", "Sektorperzentil", "Risiko 12M", "Umsatz", "EBIT-Marge", "Eigenkapitalquote"]
+    layout:
+      - name: unternehmen
+        type: slicer
+        pos: [24, 84, 400, 56]
+        fields: {Values: ["dim_company.company_name"]}
+        sync_group: Unternehmen
+        label: {de: "Unternehmen", en: "Company"}
+      - name: kopfzeile
+        type: card
+        pos: [440, 84, 816, 56]
+        fields: {Values: ["fact_risk_score.[Befund Unternehmen]"]}
+        font_size: 14
+      - name: kennzahlen
+        type: tableEx
+        pos: [24, 152, 400, 512]
+        fields: {Values: ["dim_kpi.name_de", "fact_kpi.[KPI Wert]", "fact_kpi.[Sektorperzentil]", "fact_kpi.[Rote Flaggen]"]}
+        label: {de: "Kennzahlen zum letzten Abschluss mit Sektorperzentil", en: "Ratios at the latest statement with sector percentile"}
+      - name: umsatz
+        type: lineChart
+        pos: [440, 152, 400, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Umsatz]"]}
+        label: {de: "Umsatz je Geschäftsjahr", en: "Revenue by fiscal year"}
+      - name: margen
+        type: lineChart
+        pos: [440, 414, 400, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[EBIT-Marge]", "fact_financial_line.[Eigenkapitalquote]"]}
+        label: {de: "EBIT-Marge und Eigenkapitalquote je Geschäftsjahr", en: "EBIT margin and equity ratio by fiscal year"}
+      - name: risiko
+        type: card
+        pos: [856, 152, 400, 110]
+        fields: {Values: ["fact_risk_score.[Risiko 12M]"]}
+        label: {de: "Insolvenzwahrscheinlichkeit 12 Monate (Champion-Modell)", en: "12-month bankruptcy probability (champion model)"}
+      - name: ereignisse
+        type: tableEx
+        pos: [856, 274, 400, 390]
+        fields: {Values: ["fact_event.event_date", "fact_event.event_type", "fact_event.form", "fact_event.item_code"]}
+        sort: ["fact_event.event_date", desc]
+        label: {de: "Ereignisse und Einreichungen (8-K, Form 15/25, NT 10-K/Q)", en: "Events and filings (8-K, Form 15/25, NT 10-K/Q)"}
   - id: bilanz
     de: {name: "Bilanzanalyse", question: "Ist die Bilanz gesund?"}
     en: {name: "Balance sheet", question: "Is the balance sheet healthy?"}
@@ -32,6 +101,35 @@ pages:
       - "Aktiva- und Passiva-Struktur als gestapelte Balken über die Zeit (dim_line_item Hierarchie)"
       - "Eigenkapitalquote und Verschuldungsgrad als Linien gegen den Sektormedian"
     measures: ["Bestand", "Bilanzsumme", "Eigenkapitalquote", "Verschuldungsgrad"]
+    layout:
+      - name: unternehmen
+        type: slicer
+        pos: [24, 84, 400, 56]
+        fields: {Values: ["dim_company.company_name"]}
+        sync_group: Unternehmen
+        label: {de: "Unternehmen", en: "Company"}
+      - name: aktiva
+        type: columnChart
+        pos: [24, 152, 610, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Series: ["dim_line_item.group_de"], Y: ["fact_financial_line.[Bestand]"]}
+        filters: [{field: "dim_line_item.line_item_code", in: ["CASH", "STI", "AR", "INV", "OCA", "PPE", "GW", "INTAN", "ROU", "LTI", "DTA", "ONCA"]}]
+        label: {de: "Aktiva nach Gruppe zum Geschäftsjahresende", en: "Assets by group at fiscal year end"}
+      - name: passiva
+        type: columnChart
+        pos: [646, 152, 610, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Series: ["dim_line_item.group_de"], Y: ["fact_financial_line.[Bestand]"]}
+        filters: [{field: "dim_line_item.line_item_code", in: ["AP", "ACCR", "STD", "DEFREV", "OCL", "LTD", "LEASE", "DTL", "PROV", "ONCL", "EQ"]}]
+        label: {de: "Passiva nach Gruppe zum Geschäftsjahresende", en: "Liabilities and equity by group at fiscal year end"}
+      - name: eigenkapitalquote
+        type: lineChart
+        pos: [24, 414, 610, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Eigenkapitalquote]"]}
+        label: {de: "Eigenkapitalquote je Geschäftsjahr", en: "Equity ratio by fiscal year"}
+      - name: verschuldungsgrad
+        type: lineChart
+        pos: [646, 414, 610, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Verschuldungsgrad]"]}
+        label: {de: "Verschuldungsgrad (Verbindlichkeiten / Eigenkapital) je Geschäftsjahr", en: "Debt-to-equity by fiscal year"}
   - id: guv
     de: {name: "GuV und Margen", question: "Woher kommt der Gewinn?"}
     en: {name: "Income statement", question: "Where does profit come from?"}
@@ -39,6 +137,23 @@ pages:
       - "Wasserfall Umsatz bis EBIT"
       - "Margentrends (Brutto, EBIT) gegen den Sektor"
     measures: ["Umsatz", "COGS", "EBIT", "Bruttomarge", "EBIT-Marge"]
+    layout:
+      - name: unternehmen
+        type: slicer
+        pos: [24, 84, 400, 56]
+        fields: {Values: ["dim_company.company_name"]}
+        sync_group: Unternehmen
+        label: {de: "Unternehmen", en: "Company"}
+      - name: umsatz_bis_ebit
+        type: clusteredColumnChart
+        pos: [24, 152, 1232, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Umsatz]", "fact_financial_line.[COGS]", "fact_financial_line.[EBIT]"]}
+        label: {de: "Umsatz, Umsatzkosten und EBIT je Geschäftsjahr", en: "Revenue, cost of sales and EBIT by fiscal year"}
+      - name: margen
+        type: lineChart
+        pos: [24, 414, 1232, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Bruttomarge]", "fact_financial_line.[EBIT-Marge]"]}
+        label: {de: "Brutto- und EBIT-Marge je Geschäftsjahr", en: "Gross and EBIT margin by fiscal year"}
   - id: working_capital
     de: {name: "Cashflow und Working Capital", question: "Wo ist Cash gebunden?"}
     en: {name: "Cash flow and working capital", question: "Where is cash tied up?"}
@@ -46,6 +161,28 @@ pages:
       - "DSO, DIO, DPO, CCC über die Zeit gegen den Sektormedian"
       - "Cash Conversion (CFO / EBIT)"
     measures: ["DSO", "DIO", "DPO", "CCC", "CCC Sektor-Median", "Cash Conversion (CFO / EBIT)"]
+    layout:
+      - name: unternehmen
+        type: slicer
+        pos: [24, 84, 400, 56]
+        fields: {Values: ["dim_company.company_name"]}
+        sync_group: Unternehmen
+        label: {de: "Unternehmen", en: "Company"}
+      - name: tage
+        type: lineChart
+        pos: [24, 152, 1232, 250]
+        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_financial_line.[DSO]", "fact_financial_line.[DIO]", "fact_financial_line.[DPO]"]}
+        label: {de: "Forderungs-, Lager- und Lieferantentage je Quartal", en: "Receivable, inventory and payable days by quarter"}
+      - name: ccc
+        type: lineChart
+        pos: [24, 414, 820, 250]
+        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_financial_line.[CCC]", "fact_kpi.[CCC Sektor-Median]"]}
+        label: {de: "Cash Conversion Cycle gegen den Sektormedian (Tage)", en: "Cash conversion cycle against the sector median (days)"}
+      - name: cash_conversion
+        type: lineChart
+        pos: [860, 414, 396, 250]
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Cash Conversion (CFO / EBIT)]"]}
+        label: {de: "Cash Conversion (operativer Cashflow / EBIT)", en: "Cash conversion (operating cash flow / EBIT)"}
   - id: peer
     de: {name: "Peer-Benchmark", question: "Wie stehen wir im Vergleich da?"}
     en: {name: "Peer benchmark", question: "How do we compare?"}
@@ -54,6 +191,34 @@ pages:
       - "Sektorperzentile als Balken"
       - "Rangliste (Tabelle) mit Sektorperzentil"
     measures: ["KPI Wert", "Sektorperzentil"]
+    layout:
+      - name: sektor
+        type: slicer
+        pos: [24, 84, 300, 56]
+        fields: {Values: ["dim_sector.sector_de"]}
+        sync_group: Sektor
+        label: {de: "Sektor", en: "Sector"}
+      - name: kpi_x
+        type: slicer
+        pos: [340, 84, 300, 56]
+        fields: {Values: ["KPI-Auswahl.KPI-Auswahl"]}
+        label: {de: "Kennzahl x-Achse", en: "Ratio x-axis"}
+      - name: kpi_y
+        type: slicer
+        pos: [656, 84, 300, 56]
+        fields: {Values: ["KPI-Auswahl Y.KPI-Auswahl Y"]}
+        label: {de: "Kennzahl y-Achse", en: "Ratio y-axis"}
+      - name: streuung
+        type: scatterChart
+        pos: [24, 152, 720, 512]
+        fields: {Category: ["dim_company.company_name"], X: ["KPI-Auswahl.KPI-Auswahl"], Y: ["KPI-Auswahl Y.KPI-Auswahl Y"]}
+        label: {de: "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen", en: "Companies of the sector on two ratios of your choice"}
+      - name: rangliste
+        type: tableEx
+        pos: [760, 152, 496, 512]
+        fields: {Values: ["dim_company.company_name", "KPI-Auswahl.KPI-Auswahl", "fact_kpi.[Sektorperzentil]"]}
+        sort: ["fact_kpi.[Sektorperzentil]", desc]
+        label: {de: "Rangliste mit Sektorperzentil", en: "Ranking with sector percentile"}
   - id: fruehwarnung
     de: {name: "Frühwarnsystem", question: "Welche Unternehmen brauchen jetzt Aufmerksamkeit?"}
     en: {name: "Early warning", question: "Which companies need attention now?"}
@@ -62,12 +227,71 @@ pages:
       - "Treiber je Unternehmen aus SHAP (fact_risk_score.top_3_drivers, per OLS für Reporting verborgen)"
       - "Veränderung zum Vorquartal"
     measures: ["Risiko 12M", "Unternehmen rot", "Risiko Veränderung zum Vorquartal", "Rote Flaggen"]
+    layout:
+      - name: sektor
+        type: slicer
+        pos: [24, 84, 300, 56]
+        fields: {Values: ["dim_sector.sector_de"]}
+        sync_group: Sektor
+        label: {de: "Sektor", en: "Sector"}
+      - name: rot
+        type: card
+        pos: [340, 84, 916, 56]
+        fields: {Values: ["fact_risk_score.[Befund Frühwarnung]"]}
+        font_size: 14
+      - name: ampel
+        type: tableEx
+        pos: [24, 152, 820, 512]
+        fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_risk_score.[Risiko 12M]", "fact_risk_score.[Risiko Veränderung zum Vorquartal]", "fact_kpi.[Rote Flaggen]", "fact_risk_score.top_3_drivers"]}
+        sort: ["fact_risk_score.[Risiko 12M]", desc]
+        conditional_back: ["fact_risk_score.[Risiko 12M]", "fact_risk_score.[Risiko Farbe]"]
+        label: {de: "Unternehmen nach Insolvenzrisiko 12 Monate, mit den drei stärksten Treibern", en: "Companies by 12-month bankruptcy risk, with the three strongest drivers"}
+      - name: modellguete
+        type: clusteredBarChart
+        pos: [860, 152, 396, 512]
+        fields: {Category: ["fact_model_backtest.model_name"], Y: ["fact_model_backtest.[PR-AUC]"]}
+        sort: ["fact_model_backtest.[PR-AUC]", desc]
+        data_labels: true
+        title: "fact_model_backtest.[Befund Modellgüte]"
   - id: fallstudien
     de: {name: "Fallstudien", question: "Wie sah die Warnung vor echten Insolvenzen aus?"}
     en: {name: "Case studies", question: "What did the warning look like before real bankruptcies?"}
     visuals:
       - "Drei Unternehmens-Zeitleisten mit Kennzahlen, roten Flaggen und markiertem Ereignis (Auswahl nach dem Echtdatenlauf, bw-analysis case)"
     measures: ["Z'' Score", "CCC", "Rote Flaggen", "Risiko 12M", "Insolvenzen"]
+    layout:
+      - name: fall
+        type: slicer
+        pos: [24, 84, 400, 56]
+        fields: {Values: ["fact_case_study.company_name"]}
+        slicer_mode: Basic
+        label: {de: "Fallstudie (Auswahlregel: die drei umsatzstärksten Insolvenzen im Testzeitraum, je Sektor eine)", en: "Case study (rule: the three largest bankruptcies by revenue in the test period, one per sector)"}
+      - name: befund
+        type: card
+        pos: [440, 84, 816, 56]
+        fields: {Values: ["fact_case_study.[Befund Fallstudie]"]}
+        font_size: 14
+      - name: z_score
+        type: lineChart
+        pos: [24, 152, 610, 250]
+        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_kpi.[Z'' Score]"]}
+        label: {de: "Altman Z'' je Quartal (rote Flagge unter 1,1)", en: "Altman Z'' by quarter (red flag below 1.1)"}
+      - name: ccc
+        type: lineChart
+        pos: [646, 152, 610, 250]
+        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_financial_line.[CCC]", "fact_kpi.[CCC Sektor-Median]"]}
+        label: {de: "Cash Conversion Cycle gegen den Sektormedian (Tage)", en: "Cash conversion cycle against the sector median (days)"}
+      - name: flaggen
+        type: columnChart
+        pos: [24, 414, 610, 250]
+        fields: {Category: ["dim_period.period_end_date"], Y: ["fact_kpi.[Rote Flaggen]"]}
+        label: {de: "Rote Flaggen je Quartal", en: "Red flags by quarter"}
+      - name: ereignisse
+        type: tableEx
+        pos: [646, 414, 610, 250]
+        fields: {Values: ["fact_event.event_date", "fact_event.event_type", "fact_event.form", "fact_event.item_code"]}
+        sort: ["fact_event.event_date", asc]
+        label: {de: "Ereignisse bis zur Insolvenz", en: "Events up to the bankruptcy"}
   - id: wc_potenzial
     de: {name: "Working-Capital-Potenzial", question: "Wie viel Cash ließe sich freisetzen?"}
     en: {name: "Working-capital potential", question: "How much cash could be freed?"}
@@ -76,6 +300,28 @@ pages:
       - "Top 20 Unternehmen"
       - "Stretch-Szenario (oberes Quartil statt Median)"
     measures: ["Cash-Potenzial", "Cash-Potenzial Stretch"]
+    layout:
+      - name: bruecke
+        type: clusteredBarChart
+        pos: [24, 84, 610, 580]
+        fields: {Category: ["dim_sector.sector_de"], Y: ["fact_wc_opportunity.[Cash-Potenzial aktuell]"]}
+        sort: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", desc]
+        colour_by: "fact_wc_opportunity.[Farbe Sektor-Hebel]"
+        data_labels: true
+        title: "fact_wc_opportunity.[Befund Cash-Potenzial]"
+      - name: top20
+        type: tableEx
+        pos: [646, 84, 610, 330]
+        fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_wc_opportunity.[Cash-Potenzial aktuell]"]}
+        sort: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", desc]
+        filters: [{field: "dim_company.company_name", by: "fact_wc_opportunity.[Cash-Potenzial aktuell]", top: 20}]
+        label: {de: "Die 20 Unternehmen mit dem größten Potenzial (letztes Geschäftsjahr)", en: "The 20 companies with the largest potential (latest fiscal year)"}
+      - name: stretch
+        type: clusteredBarChart
+        pos: [646, 426, 610, 238]
+        fields: {Category: ["dim_sector.sector_de"], Y: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", "fact_wc_opportunity.[Cash-Potenzial Stretch aktuell]"]}
+        sort: ["fact_wc_opportunity.[Cash-Potenzial Stretch aktuell]", desc]
+        label: {de: "Median gegen oberes Quartil als Ziel (Stretch-Szenario)", en: "Median against top quartile as target (stretch scenario)"}
   - id: plan_ist
     de: {name: "Plan-Ist", question: "Wie weit lag das Ist neben dem Plan?"}
     en: {name: "Plan vs. actual", question: "How far did actuals miss plan?"}
@@ -83,6 +329,34 @@ pages:
       - "Abweichung nach Sektor und Unternehmen, absolut und in % (Berechnungsgruppe Szenario)"
       - "Prognosefehler (MAPE)"
     measures: ["Umsatz", "Prognosefehler MAPE"]
+    layout:
+      - name: sektor
+        type: slicer
+        pos: [24, 84, 300, 56]
+        fields: {Values: ["dim_sector.sector_de"]}
+        sync_group: Sektor
+        label: {de: "Sektor", en: "Sector"}
+      - name: geschaeftsjahr
+        type: slicer
+        pos: [340, 84, 200, 56]
+        fields: {Values: ["dim_period.fiscal_year"]}
+        label: {de: "Geschäftsjahr", en: "Fiscal year"}
+      - name: abweichung
+        type: pivotTable
+        pos: [24, 152, 820, 512]
+        fields: {Rows: ["dim_sector.sector_de", "dim_company.company_name"], Columns: ["Szenario.Szenario"], Values: ["fact_financial_line.[Umsatz]"]}
+        filters: [{field: "Szenario.Szenario", in: ["Ist", "Plan", "Plan-Ist-Abweichung", "Plan-Ist-Abweichung %"]}]
+        label: {de: "Umsatz Ist gegen Plan nach Sektor und Unternehmen (Plan im Januar eingefroren)", en: "Revenue actual against plan by sector and company (plan frozen in January)"}
+      - name: mape
+        type: card
+        pos: [860, 152, 396, 140]
+        fields: {Values: ["fact_financial_line.[Prognosefehler MAPE]"]}
+        label: {de: "Prognosefehler (MAPE) im Kontext", en: "Forecast error (MAPE) in context"}
+      - name: mape_verlauf
+        type: lineChart
+        pos: [860, 304, 396, 360]
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Prognosefehler MAPE]"]}
+        label: {de: "Prognosefehler (MAPE) je Geschäftsjahr", en: "Forecast error (MAPE) by fiscal year"}
   - id: datenqualitaet
     de: {name: "Datenqualität", question: "Können wir den Zahlen trauen?"}
     en: {name: "Data quality", question: "Can we trust the numbers?"}
@@ -92,3 +366,36 @@ pages:
       - "Stewardship-Warteschlange"
       - "Service Levels aus docs/runbook.md: Frische 24 h, Bilanzprüfung ≥ 98 %, Refresh-Erfolg 99 %"
     measures: ["DQ Pass-Rate", "Regeln verletzt", "LEI-Match-Quote", "Restatement-Quote", "Offene Stewardship-Fälle"]
+    layout:
+      - name: befund
+        type: card
+        pos: [24, 84, 1232, 56]
+        fields: {Values: ["fact_data_quality.[Befund Datenqualität]"]}
+        font_size: 14
+      - name: scorecard
+        type: tableEx
+        pos: [24, 152, 820, 300]
+        fields: {Values: ["fact_data_quality.rule_code", "fact_data_quality.dq_dimension", "fact_data_quality.table_name", "fact_data_quality.pass_rate", "fact_data_quality.target_pass_rate", "fact_data_quality.status"]}
+        sort: ["fact_data_quality.pass_rate", asc]
+        label: {de: "Scorecard je Regel im letzten Lauf (Ziel Bilanzprüfung ≥ 98 %)", en: "Scorecard per rule in the last run (balance check target ≥ 98 %)"}
+      - name: lei_quote
+        type: card
+        pos: [860, 152, 396, 92]
+        fields: {Values: ["dim_company.[LEI-Match-Quote]"]}
+        label: {de: "LEI-Match-Quote der SEC-Unternehmen", en: "LEI match rate of SEC companies"}
+      - name: restatements
+        type: card
+        pos: [860, 256, 396, 92]
+        fields: {Values: ["fact_kpi.[Restatement-Quote]"]}
+        label: {de: "Restatement-Quote (erstveröffentlicht gegen letzter Stand)", en: "Restatement rate (first reported against latest)"}
+      - name: stewardship_offen
+        type: card
+        pos: [860, 360, 396, 92]
+        fields: {Values: ["fact_stewardship_queue.[Offene Stewardship-Fälle]"]}
+        label: {de: "Offene Stewardship-Fälle", en: "Open stewardship cases"}
+      - name: stewardship
+        type: tableEx
+        pos: [24, 464, 1232, 200]
+        fields: {Values: ["fact_stewardship_queue.sec_name", "fact_stewardship_queue.gleif_legal_name", "fact_stewardship_queue.gleif_city", "fact_stewardship_queue.gleif_country", "fact_stewardship_queue.match_probability"]}
+        sort: ["fact_stewardship_queue.match_probability", desc]
+        label: {de: "Stewardship-Warteschlange: Kandidatenpaare zur Prüfung (Service Level: Frische 24 h, Refresh-Erfolg 99 %)", en: "Stewardship queue: candidate pairs to review (service level: freshness 24 h, refresh success 99 %)"}

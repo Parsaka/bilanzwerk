@@ -1,0 +1,110 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.3.0/schema.json",
+  "name": "tage",
+  "position": {
+    "x": 24,
+    "y": 152,
+    "z": 4,
+    "width": 1232,
+    "height": 250,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_period"
+                    }
+                  },
+                  "Property": "period_end_date"
+                }
+              },
+              "queryRef": "dim_period.period_end_date",
+              "nativeQueryRef": "period_end_date"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_financial_line"
+                    }
+                  },
+                  "Property": "DSO"
+                }
+              },
+              "queryRef": "fact_financial_line.DSO",
+              "nativeQueryRef": "DSO"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_financial_line"
+                    }
+                  },
+                  "Property": "DIO"
+                }
+              },
+              "queryRef": "fact_financial_line.DIO",
+              "nativeQueryRef": "DIO"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_financial_line"
+                    }
+                  },
+                  "Property": "DPO"
+                }
+              },
+              "queryRef": "fact_financial_line.DPO",
+              "nativeQueryRef": "DPO"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Sprache"
+                    }
+                  },
+                  "Property": "Diagramm 05 tage"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
