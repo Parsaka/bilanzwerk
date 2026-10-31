@@ -17,9 +17,12 @@ DATA = Path(os.environ.get("BW_DATA_ROOT", "data"))
 
 
 @app.command()
-def match(warehouse: Path = DATA / "bilanzwerk.duckdb", out_dir: Path = DATA / "mdm") -> None:
+def match(
+    warehouse: Path = DATA / "bilanzwerk.duckdb", out_dir: Path = DATA / "mdm", inputs: Path | None = None
+) -> None:
+    """`--inputs results/mdm_inputs` reruns on the SEC and GLEIF rows a real-data run saved."""
     logging.basicConfig(level=logging.INFO)
-    matches = matching.run(warehouse, out_dir)
+    matches = matching.run(warehouse, out_dir, inputs)
     typer.echo(matches["match_status"].value_counts().to_string())
 
 

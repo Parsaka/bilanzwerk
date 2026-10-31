@@ -249,8 +249,16 @@ def load_inputs(warehouse: Path, gleif_countries: tuple[str, ...] = ("US",)) -> 
     return sec, gleif
 
 
-def run(warehouse: Path, out_dir: Path) -> pd.DataFrame:
-    sec_raw, gleif_raw = load_inputs(warehouse)
+def run(warehouse: Path, out_dir: Path, inputs: Path | None = None) -> pd.DataFrame:
+    """Match from the warehouse, or from the inputs a real-data run saved (`inputs/sec.parquet`,
+    `inputs/gleif.parquet`), so the model can be changed and rerun without rebuilding the vault."""
+    if inputs:
+        sec_raw, gleif_raw = pd.read_parquet(inputs / "sec.parquet"), pd.read_parquet(inputs / "gleif.parquet")
+    else:
+        sec_raw, gleif_raw = load_inputs(warehouse)
+        (out_dir / "inputs").mkdir(parents=True, exist_ok=True)
+        sec_raw.to_parquet(out_dir / "inputs" / "sec.parquet", index=False)
+        gleif_raw.to_parquet(out_dir / "inputs" / "gleif.parquet", index=False)
     result = train_and_predict(prepare_sec(sec_raw), prepare_gleif(gleif_raw), out_dir / "reports")
     out_dir.mkdir(parents=True, exist_ok=True)
     result.matches.to_parquet(out_dir / "company_matches.parquet", index=False)
