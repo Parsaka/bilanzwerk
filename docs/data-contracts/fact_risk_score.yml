@@ -22,6 +22,8 @@ columns:
   type: float
 - name: risk_band
   type: string
+- name: is_latest_for_company
+  type: integer
 - name: top_3_drivers
   type: string
 - name: run_id

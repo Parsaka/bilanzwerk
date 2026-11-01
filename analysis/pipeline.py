@@ -24,6 +24,27 @@ from analysis.models import GBM, Logit, calibrate
 
 log = logging.getLogger(__name__)
 
+_KPI_SEED = Path(__file__).resolve().parents[1] / "dbt" / "seeds" / "kpi_definitions.csv"
+_STAT_DE = {"value": "", "chg1q": " (Δ Quartal)", "chg4q": " (Δ Jahr)", "pct": " (Sektorperzentil)"}
+
+
+def _kpi_names_de() -> dict[str, str]:
+    return dict(pd.read_csv(_KPI_SEED, usecols=["kpi_code", "name_de"]).itertuples(index=False, name=None))
+
+
+def driver_label(feature: str, names: dict[str, str]) -> str:
+    """Readable driver for the report: EQUITY_RATIO__chg4q -> Eigenkapitalquote (Δ Jahr).
+    An unknown feature keeps its code."""
+    kpi, _, stat = feature.partition("__")
+    if kpi not in names or stat not in _STAT_DE:
+        return feature.replace("__", " ")
+    return names[kpi] + _STAT_DE[stat]
+
+
+def driver_labels(features, k: int = 3) -> str:
+    names = _kpi_names_de()
+    return ", ".join(driver_label(f, names) for f in list(features)[:k])
+
 
 def data_version(con: duckdb.DuckDBPyConnection) -> str:
     """Fingerprint of what the warehouse was built from: the latest data quality run id plus row counts."""
@@ -109,9 +130,7 @@ def fit_final(frame: pd.DataFrame, label: str, cfg: AnalysisConfig) -> dict[str,
 
 def top_drivers_logit(model: Logit, X: pd.DataFrame, k: int = 3) -> list[str]:
     contrib = model.contributions(X)
-    return [
-        ", ".join(row.sort_values(ascending=False).index[:k].str.replace("__", " ")) for _, row in contrib.iterrows()
-    ]
+    return [driver_labels(row.sort_values(ascending=False).index, k) for _, row in contrib.iterrows()]
 
 
 def shap_explain(model: GBM, X: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
@@ -123,7 +142,7 @@ def shap_explain(model: GBM, X: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     sv = pd.DataFrame(values, columns=model.features, index=X.index)
     importance = sv.abs().mean().sort_values(ascending=False).rename("mean_abs_shap").reset_index()
     importance.columns = ["feature", "mean_abs_shap"]
-    drivers = [", ".join(row.sort_values(ascending=False).index[:3].str.replace("__", " ")) for _, row in sv.iterrows()]
+    drivers = [driver_labels(row.sort_values(ascending=False).index) for _, row in sv.iterrows()]
     return importance, drivers
 
 

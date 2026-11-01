@@ -9,6 +9,12 @@ select
     case when r.model_name = '{{ var("risk_champion_model") }}' then 1 else 0 end as is_champion,
     r.probability_12m,
     r.risk_band,
+    -- 1 on each company's latest as-of date per model: the report filters on it instead of
+    -- finding the latest date per company in DAX (risk table on page 7)
+    case
+        when r.as_of_date = max(r.as_of_date) over (partition by g.golden_company_id, r.model_name) then 1
+        else 0
+    end as is_latest_for_company,
     r.top_3_drivers,
     r.run_id
 from {{ ref('stg_analysis__risk_scores') }} as r

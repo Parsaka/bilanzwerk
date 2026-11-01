@@ -9,7 +9,22 @@ with source as (
 latest as (
     select
         source.*,
-        row_number() over (partition by source.accession_number order by source.load_date desc) as rn
+        -- one CIK per accession. A Form 25-NSE is filed by the exchange (the CIK in the
+        -- accession prefix) and also listed under the delisted company: keep the company
+        row_number() over (
+            partition by source.accession_number
+            order by
+                source.load_date desc,
+                case
+                    when
+                        source.form like '25-NSE%'
+                        and cast(source.cik as {{ dbt.type_bigint() }})
+                        = cast(left(source.accession_number, 10) as {{ dbt.type_bigint() }})
+                        then 1
+                    else 0
+                end,
+                source.cik
+        ) as rn
     from source
 ),
 
