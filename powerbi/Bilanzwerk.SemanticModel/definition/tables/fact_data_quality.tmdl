@@ -28,6 +28,21 @@ table fact_data_quality
 		displayFolder: Datenqualität
 		lineageTag: d966f9d5-df36-5d71-890f-18c5da527f47
 
+	/// Ziel-Pass-Rate der Regel im letzten Lauf.
+	measure 'DQ Ziel' =
+			VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+			RETURN CALCULATE ( MAX ( fact_data_quality[target_pass_rate] ), fact_data_quality[run_at] = _lauf )
+		formatString: 0.0%
+		displayFolder: Datenqualität
+		lineageTag: 41471831-4dfb-5d5d-8ba9-2ef6cb4d98e3
+
+	/// Status der Regel im letzten Lauf (pass, fail, info, no_data); leer für Regeln, die der letzte Lauf nicht geprüft hat.
+	measure 'DQ Status' =
+			VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+			RETURN CALCULATE ( SELECTEDVALUE ( fact_data_quality[status] ), fact_data_quality[run_at] = _lauf )
+		displayFolder: Beschriftungen\Datenqualität
+		lineageTag: f2587260-831e-5d53-bd92-b91662f907d5
+
 	/// Anzahl Regeln mit Status fail im letzten Lauf.
 	measure 'Regeln verletzt' =
 			VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )

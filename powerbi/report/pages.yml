@@ -377,7 +377,7 @@ pages:
       - "LEI-Match-Quote, Restatement-Quote"
       - "Stewardship-Warteschlange"
       - "Service Levels aus docs/runbook.md: Frische 24 h, Bilanzprüfung ≥ 98 %, Refresh-Erfolg 99 %"
-    measures: ["DQ Pass-Rate", "Regeln verletzt", "LEI-Match-Quote", "Restatement-Quote", "Offene Stewardship-Fälle"]
+    measures: ["DQ Pass-Rate", "DQ Ziel", "DQ Status", "Regeln verletzt", "LEI-Match-Quote", "Restatement-Quote", "Offene Stewardship-Fälle"]
     layout:
       - name: befund
         type: card
@@ -387,8 +387,9 @@ pages:
       - name: scorecard
         type: tableEx
         pos: [24, 152, 820, 300]
-        fields: {Values: ["fact_data_quality.rule_code", "fact_data_quality.dq_dimension", "fact_data_quality.table_name", "fact_data_quality.pass_rate", "fact_data_quality.target_pass_rate", "fact_data_quality.status"]}
-        sort: ["fact_data_quality.pass_rate", asc]
+        # measures, not columns: the mart appends one row per rule and dbt run, the measures read the last run
+        fields: {Values: ["fact_data_quality.rule_code", "fact_data_quality.dq_dimension", "fact_data_quality.table_name", "fact_data_quality.[DQ Pass-Rate]", "fact_data_quality.[DQ Ziel]", "fact_data_quality.[DQ Status]"]}
+        sort: ["fact_data_quality.[DQ Pass-Rate]", asc]
         label: {de: "Scorecard je Regel im letzten Lauf (Ziel Bilanzprüfung ≥ 98 %)", en: "Scorecard per rule in the last run (balance check target ≥ 98 %)"}
       - name: lei_quote
         type: card

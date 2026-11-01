@@ -65,7 +65,15 @@ with_percentile as (
         with_changes.*,
         percent_rank() over (
             partition by with_changes.version, with_changes.sector_key, year(with_changes.period_end), month(with_changes.period_end), with_changes.kpi_code order by with_changes.value
-        ) as sector_percentile
+        ) as sector_percentile,
+        -- restatement: the latest value differs from the first-reported one by more than 0.5 %;
+        -- set on both versions of the pair, 0 where one of the two is missing
+        max(case when with_changes.version = '{{ var("version_first_reported") }}' then with_changes.value end) over (
+            partition by with_changes.company_id, with_changes.period_key, with_changes.kpi_code
+        ) as first_reported_value,
+        max(case when with_changes.version = '{{ var("version_latest") }}' then with_changes.value end) over (
+            partition by with_changes.company_id, with_changes.period_key, with_changes.kpi_code
+        ) as latest_value
     from with_changes
 )
 
@@ -91,6 +99,12 @@ select
             and p.value > k.threshold_red then 1
         else 0
     end as red_flag,
+    case
+        when
+            p.first_reported_value is not null and p.latest_value is not null
+            and abs(p.latest_value - p.first_reported_value) > 0.005 * abs(p.first_reported_value) then 1
+        else 0
+    end as is_restated,
     p.available_at
 from with_percentile as p
 inner join {{ ref('kpi_definitions') }} as k

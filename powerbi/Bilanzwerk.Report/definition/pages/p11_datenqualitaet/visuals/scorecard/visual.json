@@ -59,45 +59,45 @@
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
                       "Entity": "fact_data_quality"
                     }
                   },
-                  "Property": "pass_rate"
+                  "Property": "DQ Pass-Rate"
                 }
               },
-              "queryRef": "fact_data_quality.pass_rate",
-              "nativeQueryRef": "pass_rate"
+              "queryRef": "fact_data_quality.DQ Pass-Rate",
+              "nativeQueryRef": "DQ Pass-Rate"
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
                       "Entity": "fact_data_quality"
                     }
                   },
-                  "Property": "target_pass_rate"
+                  "Property": "DQ Ziel"
                 }
               },
-              "queryRef": "fact_data_quality.target_pass_rate",
-              "nativeQueryRef": "target_pass_rate"
+              "queryRef": "fact_data_quality.DQ Ziel",
+              "nativeQueryRef": "DQ Ziel"
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
                       "Entity": "fact_data_quality"
                     }
                   },
-                  "Property": "status"
+                  "Property": "DQ Status"
                 }
               },
-              "queryRef": "fact_data_quality.status",
-              "nativeQueryRef": "status"
+              "queryRef": "fact_data_quality.DQ Status",
+              "nativeQueryRef": "DQ Status"
             }
           ]
         }
@@ -106,13 +106,13 @@
         "sort": [
           {
             "field": {
-              "Column": {
+              "Measure": {
                 "Expression": {
                   "SourceRef": {
                     "Entity": "fact_data_quality"
                   }
                 },
-                "Property": "pass_rate"
+                "Property": "DQ Pass-Rate"
               }
             },
             "direction": "Ascending"
