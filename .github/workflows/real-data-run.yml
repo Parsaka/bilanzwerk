@@ -153,7 +153,9 @@ jobs:
       - name: Tableau extract
         run: uv run python scripts/export_tableau.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb"
       - name: Tableau workbook (packaged with the extract)
-        run: uv run python tableau/build_workbook.py --out data/results/tableau/Bilanzwerk_Working_Capital.twbx
+        run: |
+          uv run python tableau/build_workbook.py --out data/results/tableau/Bilanzwerk_Working_Capital.twbx \
+            --check-answer data/analysis/results/answer.json
 
       - name: Collect results
         if: always()

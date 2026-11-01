@@ -24,7 +24,7 @@ vars:
   # Data quality thresholds (docs/runbook.md, service levels)
   balance_check_tolerance: 0.005
   balance_check_target_pass_rate: 0.98
-  scale_outlier_factor: 1000
+  scale_outlier_jump: 500
   # KPI red flag: CCC above this sector percentile and rising
   ccc_red_flag_percentile: 0.80
   zscore_distress_threshold: 1.1
