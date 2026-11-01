@@ -150,11 +150,11 @@ measures:
   - table: fact_risk_score
     name: "Befund Unternehmen"
     folder: "Beschriftungen"
-    description: "Kopfzeile der Unternehmensseiten: Unternehmen, Insolvenzrisiko 12 Monate und rote Flaggen, aus den Daten."
+    description: "Kopfzeile der Unternehmensseiten: Unternehmen, Insolvenzrisiko 12 Monate und rote Flaggen zum letzten Abschluss, aus den Daten."
     expression: |
       VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
       VAR _p = [Risiko 12M]
-      VAR _flaggen = COALESCE ( [Rote Flaggen], 0 )
+      VAR _flaggen = COALESCE ( [Rote Flaggen letzter Abschluss], 0 )
       RETURN
           IF ( NOT HASONEVALUE ( dim_company[company_id] ), [Ausgewähltes Unternehmen],
               [Ausgewähltes Unternehmen] & " · "
@@ -557,9 +557,9 @@ measures:
     name: "Eigenkapitalquote"
     folder: "Bilanz"
     format: "0.0%"
-    description: "Eigenkapital geteilt durch Bilanzsumme."
+    description: "Eigenkapital geteilt durch Bilanzsumme, aus fact_kpi (dbt, je Stichtag), letzte Version. Die Summen der Bilanzzeilen über ein Geschäftsjahr mischten Stichtage mit und ohne Bilanzsumme (Microsoft 2009: 190 %)."
     expression: |
-      DIVIDE ( [Eigenkapital], [Bilanzsumme] )
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "EQUITY_RATIO" )
 
   - table: fact_financial_line
     name: "Verschuldungsgrad"
@@ -662,15 +662,21 @@ measures:
     name: "CCC Sektor-Median"
     folder: "Working Capital"
     format: "0.0"
-    description: "Median des CCC über alle Unternehmen mit CCC im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version)."
+    description: "Median des CCC über die Unternehmen mit CCC zwischen -730 und 730 Tagen im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version); leer bei weniger als fünf solchen Unternehmen."
     expression: |
       -- the sector of the companies in context (dim_sector is not filtered by a company pick,
       -- the relationship runs from dim_company to dim_sector); MEDIANX only over companies that
-      -- have a CCC: most keys have none, and MEDIANX returns blank when they dominate
+      -- have a CCC within the display bounds of page 6 (-730 to 730 days); fewer than five such
+      -- peers (dbt var wc_min_sector_peers) give no median
       VAR _sektoren = VALUES ( dim_company[sector_key] )
       RETURN
           CALCULATE (
-              MEDIANX ( FILTER ( VALUES ( dim_company[company_key] ), NOT ISBLANK ( [KPI Wert] ) ), [KPI Wert] ),
+              VAR _peers =
+                  FILTER (
+                      ADDCOLUMNS ( VALUES ( dim_company[company_key] ), "@ccc", [KPI Wert] ),
+                      NOT ISBLANK ( [@ccc] ) && [@ccc] >= -730 && [@ccc] <= 730
+                  )
+              RETURN IF ( COUNTROWS ( _peers ) >= 5, MEDIANX ( _peers, [@ccc] ) ),
               REMOVEFILTERS ( dim_company ),
               TREATAS ( _sektoren, dim_company[sector_key] ),
               dim_kpi[kpi_code] = "CCC"
@@ -709,6 +715,41 @@ measures:
       CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "first_reported" )
 
   - table: fact_kpi
+    name: "Letzter Abschluss"
+    folder: "Kennzahlen"
+    format: "dd.MM.yyyy"
+    description: "Letzter Periodenstichtag mit Kennzahlen (letzte Version) für die Unternehmen im Kontext, über alle Kennzahlen."
+    expression: |
+      CALCULATE ( MAX ( fact_kpi[period_end_date] ), fact_kpi[version] = "latest", REMOVEFILTERS ( dim_kpi ) )
+
+  - table: fact_kpi
+    name: "KPI Wert letzter Abschluss"
+    folder: "Kennzahlen"
+    format: "0.00"
+    description: "Kennzahlenwert zum letzten Abschluss des Unternehmens (statt Durchschnitt über alle Perioden im Kontext)."
+    expression: |
+      VAR _ende = [Letzter Abschluss]
+      RETURN CALCULATE ( [KPI Wert], fact_kpi[period_end_date] = _ende )
+
+  - table: fact_kpi
+    name: "Sektorperzentil letzter Abschluss"
+    folder: "Kennzahlen"
+    format: "0%"
+    description: "Sektorperzentil der Kennzahl zum letzten Abschluss des Unternehmens."
+    expression: |
+      VAR _ende = [Letzter Abschluss]
+      RETURN CALCULATE ( [Sektorperzentil], fact_kpi[period_end_date] = _ende )
+
+  - table: fact_kpi
+    name: "Rote Flaggen letzter Abschluss"
+    folder: "Kennzahlen"
+    format: "#,0"
+    description: "Rote Flaggen zum letzten Abschluss des Unternehmens (die Kopfzeile zählte vorher alle Perioden zusammen)."
+    expression: |
+      VAR _ende = [Letzter Abschluss]
+      RETURN CALCULATE ( [Rote Flaggen], fact_kpi[period_end_date] = _ende )
+
+  - table: fact_kpi
     name: "Sektorperzentil"
     folder: "Kennzahlen"
     format: "0%"
@@ -740,17 +781,28 @@ measures:
     expression: |
       -- one (company, latest as-of date) pair per company: a single latest date across the
       -- context would keep only the few companies scored on exactly that day
-      VAR _letzte =
-          CALCULATETABLE (
-              ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
-              fact_risk_score[is_champion] = 1
-          )
-      RETURN
-          CALCULATE (
-              AVERAGE ( fact_risk_score[probability_12m] ),
-              TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
-              fact_risk_score[is_champion] = 1
-          )
+      -- one company in context (table rows, company pages): its latest date is a plain filter
+      IF (
+          HASONEVALUE ( dim_company[company_id] ),
+          VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+          RETURN
+              CALCULATE (
+                  AVERAGE ( fact_risk_score[probability_12m] ),
+                  fact_risk_score[is_champion] = 1,
+                  fact_risk_score[as_of_date] = _stichtag
+              ),
+          VAR _letzte =
+              CALCULATETABLE (
+                  ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
+                  fact_risk_score[is_champion] = 1
+              )
+          RETURN
+              CALCULATE (
+                  AVERAGE ( fact_risk_score[probability_12m] ),
+                  TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
+                  fact_risk_score[is_champion] = 1
+              )
+      )
 
   - table: fact_risk_score
     name: "Unternehmen rot"

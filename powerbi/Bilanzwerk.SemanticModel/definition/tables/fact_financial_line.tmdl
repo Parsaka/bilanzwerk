@@ -135,8 +135,8 @@ table fact_financial_line
 		displayFolder: Bilanz
 		lineageTag: 8011fa11-3d8b-50d5-ba40-6bc765c6c5b2
 
-	/// Eigenkapital geteilt durch Bilanzsumme.
-	measure Eigenkapitalquote = DIVIDE ( [Eigenkapital], [Bilanzsumme] )
+	/// Eigenkapital geteilt durch Bilanzsumme, aus fact_kpi (dbt, je Stichtag), letzte Version. Die Summen der Bilanzzeilen über ein Geschäftsjahr mischten Stichtage mit und ohne Bilanzsumme (Microsoft 2009: 190 %).
+	measure Eigenkapitalquote = CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "EQUITY_RATIO" )
 		formatString: 0.0%
 		displayFolder: Bilanz
 		lineageTag: b1c9fbfe-bfed-5616-98a3-eae8f42222aa

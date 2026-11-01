@@ -3,15 +3,21 @@ table fact_kpi
 	lineageTag: 9cc15d74-9159-523f-a2ce-0ae943d485dd
 	sourceLineageTag: [marts].[fact_kpi]
 
-	/// Median des CCC über alle Unternehmen mit CCC im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version).
+	/// Median des CCC über die Unternehmen mit CCC zwischen -730 und 730 Tagen im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version); leer bei weniger als fünf solchen Unternehmen.
 	measure 'CCC Sektor-Median' =
 			-- the sector of the companies in context (dim_sector is not filtered by a company pick,
 			-- the relationship runs from dim_company to dim_sector); MEDIANX only over companies that
-			-- have a CCC: most keys have none, and MEDIANX returns blank when they dominate
+			-- have a CCC within the display bounds of page 6 (-730 to 730 days); fewer than five such
+			-- peers (dbt var wc_min_sector_peers) give no median
 			VAR _sektoren = VALUES ( dim_company[sector_key] )
 			RETURN
 			    CALCULATE (
-			        MEDIANX ( FILTER ( VALUES ( dim_company[company_key] ), NOT ISBLANK ( [KPI Wert] ) ), [KPI Wert] ),
+			        VAR _peers =
+			            FILTER (
+			                ADDCOLUMNS ( VALUES ( dim_company[company_key] ), "@ccc", [KPI Wert] ),
+			                NOT ISBLANK ( [@ccc] ) && [@ccc] >= -730 && [@ccc] <= 730
+			            )
+			        RETURN IF ( COUNTROWS ( _peers ) >= 5, MEDIANX ( _peers, [@ccc] ) ),
 			        REMOVEFILTERS ( dim_company ),
 			        TREATAS ( _sektoren, dim_company[sector_key] ),
 			        dim_kpi[kpi_code] = "CCC"
@@ -31,6 +37,36 @@ table fact_kpi
 		formatString: 0.00
 		displayFolder: Kennzahlen
 		lineageTag: 5672502a-cde8-59bd-96f9-8f5067fd4d95
+
+	/// Letzter Periodenstichtag mit Kennzahlen (letzte Version) für die Unternehmen im Kontext, über alle Kennzahlen.
+	measure 'Letzter Abschluss' = CALCULATE ( MAX ( fact_kpi[period_end_date] ), fact_kpi[version] = "latest", REMOVEFILTERS ( dim_kpi ) )
+		formatString: dd.MM.yyyy
+		displayFolder: Kennzahlen
+		lineageTag: bf96248e-c701-5561-a2da-da14aa1fc5e8
+
+	/// Kennzahlenwert zum letzten Abschluss des Unternehmens (statt Durchschnitt über alle Perioden im Kontext).
+	measure 'KPI Wert letzter Abschluss' =
+			VAR _ende = [Letzter Abschluss]
+			RETURN CALCULATE ( [KPI Wert], fact_kpi[period_end_date] = _ende )
+		formatString: 0.00
+		displayFolder: Kennzahlen
+		lineageTag: 27a98038-bb23-58b1-ba91-ca8a0e97f5b3
+
+	/// Sektorperzentil der Kennzahl zum letzten Abschluss des Unternehmens.
+	measure 'Sektorperzentil letzter Abschluss' =
+			VAR _ende = [Letzter Abschluss]
+			RETURN CALCULATE ( [Sektorperzentil], fact_kpi[period_end_date] = _ende )
+		formatString: 0%
+		displayFolder: Kennzahlen
+		lineageTag: a0bf82ef-5690-5e25-811e-78187f3c554f
+
+	/// Rote Flaggen zum letzten Abschluss des Unternehmens (die Kopfzeile zählte vorher alle Perioden zusammen).
+	measure 'Rote Flaggen letzter Abschluss' =
+			VAR _ende = [Letzter Abschluss]
+			RETURN CALCULATE ( [Rote Flaggen], fact_kpi[period_end_date] = _ende )
+		formatString: #,0
+		displayFolder: Kennzahlen
+		lineageTag: fc62b984-cd0b-5c72-8607-56b37910aba5
 
 	/// Perzentil der Kennzahl innerhalb von Sektor und Jahr.
 	measure Sektorperzentil = CALCULATE ( AVERAGE ( fact_kpi[sector_percentile] ), fact_kpi[version] = "latest" )
