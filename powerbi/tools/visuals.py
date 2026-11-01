@@ -302,9 +302,11 @@ def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
     title = spec.get("title")
     container: dict = {}
     if title:
-        # findings are sentences; wrapped instead of cut off with "..."
+        # findings are sentences; wrapped instead of cut off with "...". Not on slicers: their box is one
+        # line high and a second title line would push the dropdown out of it.
+        wrap = "false" if vtype == "slicer" else "true"
         container["title"] = [
-            {"properties": {"show": lit("true"), "text": measure_expr(title), "titleWrap": lit("true")}}
+            {"properties": {"show": lit("true"), "text": measure_expr(title), "titleWrap": lit(wrap)}}
         ]
     else:
         container["title"] = [{"properties": {"show": lit("false")}}]
