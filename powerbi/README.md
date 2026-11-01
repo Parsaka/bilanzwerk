@@ -71,14 +71,19 @@ reads H1 to H4 from `fact_hypothesis_result`, which the model run writes.
 * `[Risiko 12M]` averages calibrated probabilities. It is a mean probability, not a share of
   companies; the share of red companies is `[Unternehmen rot]`.
 
-## Performance (to be measured on real data)
+## Performance
 
-Procedure from the spec: record the five slowest visuals with DAX Studio (server timings,
-cold cache) and VertiPaq Analyzer, tune, record again. The table goes into the main README.
+Measured in Power BI Desktop with DAX Studio (server timings, cold cache) on the local import
+copy of run 41328368604, not on Direct Lake. Every page, the before/after of each change and
+the machine: [docs/performance-local.md](../docs/performance-local.md).
 
 | Visual (page) | Before (ms) | Change | After (ms) |
 |---|---|---|---|
-| _not measured yet: needs the real data in Fabric_ | | | |
+| Restatement-Quote card (P11) | 67 449 | `fact_kpi.is_restated` computed in dbt instead of iterating versions in DAX | 101 |
+| Risk table (P7) | 22 099 | latest as_of_date per company via TREATAS pairs, HASONEVALUE fast path | 11 801 |
+
+The risk table is still formula-engine bound; an `is_latest_for_company` flag in dbt is the
+next step.
 
 Candidate changes, in the order to try: remove high-cardinality text columns from facts
 (`source_filing` is already hidden; drop it from the model if VertiPaq shows a large
@@ -95,16 +100,13 @@ where it happens.
 * Tabular Editor 2 BPA with `bpa/rules.json` (Windows job in `ci.yml`): the build fails on any
   severity-3 rule.
 
-## What still needs Power BI Desktop
+## Checked in Power BI Desktop
 
-All 11 pages carry their main visuals. `check_pbip.py` validates every report file against
-Microsoft's PBIR schemas (`schemas/`), checks that every bound field exists in the model, that
-every chart has a title and that no visual leaves the canvas or overlaps another. What a static
-check cannot do, and what needs Desktop against the deployed model:
-
-* open the project once and look at every page with real data (spacing, axis formats, the
-  stacked balance sheet), then take the screenshots for `docs/img/report/`;
-* run DAX Studio on the slowest visuals before and after (Server Timings) for the README table;
+All 11 pages were opened against the real data and compared with `answer.json` of the run;
+the screenshots are in [docs/images](../docs/images/) (`powerbi_01_antwort.png` …
+`powerbi_11_datenqualitaet.png`). Known cosmetic points: the waterfall legend uses Power BI's
+default names (Increase/Decrease/Total), the risk drivers on P7 show raw codes, and Desktop
+with an English UI shows "bn"/"M" instead of "Mrd."/"Mio.".
 
 ## Local copy without Fabric
 
@@ -120,3 +122,6 @@ Fabric workspace exists:
 
 Measures, relationships, roles and pages are the ones of the Direct Lake model; only the
 partitions differ. Timings measured here are import-mode timings on a PC, not Direct Lake.
+
+After regenerating with `--local`, delete `powerbi/local/*/.pbi` (Desktop's cache) so Desktop
+reads the new model instead of the cached one.

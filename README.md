@@ -42,9 +42,20 @@
 ![PR-AUC je Testjahr](docs/images/backtest_by_year.png)
 
 Die Bilder rendert `scripts/portfolio_charts.py` mit matplotlib aus den Ergebnisdateien
-desselben Laufs (keine Power-BI-Screenshots). Alle Ergebnisse als Excel-Datei ohne
+desselben Laufs. Alle Ergebnisse als Excel-Datei ohne
 Fabric-Verbindung: [excel/Bilanzwerk_Ergebnisse.xlsx](excel/Bilanzwerk_Ergebnisse.xlsx)
 (`scripts/results_workbook.py`).
+
+**Power-BI-Bericht** (lokale Importkopie in Power BI Desktop, alle 11 Seiten in
+[docs/images](docs/images/), Abfragezeiten in [docs/performance-local.md](docs/performance-local.md)):
+
+![Power BI: Antwort](docs/images/powerbi_01_antwort.png)
+![Power BI: Frühwarnsystem](docs/images/powerbi_07_fruehwarnsystem.png)
+![Power BI: Working-Capital-Potenzial](docs/images/powerbi_09_wc_potenzial.png)
+
+Die Screenshots zeigen den späteren Lauf 41328368604 mit neueren SEC-Daten; die Zahlen in
+diesem README stammen aus Lauf 41282080293. Die Aussagen sind gleich, einzelne Werte weichen
+leicht ab. Tableau Public: [Working-Capital-Potenzial nach Sektor](https://public.tableau.com/app/profile/parsa.kamali/viz/BilanzwerkWorking-Capital-PotenzialnachSektor/Working-Capital-Potenzial).
 
 **Wie man H1 lesen muss.** Von 645 Insolvenzen mit Kennzahlen hatten nur 29 (4 %) eine
 CCC-Flagge, die bis zum Ereignis rot blieb, aber 439 (68 %) eine solche Z''-Flagge. Wo die
@@ -87,7 +98,7 @@ und eine zweite, die der Antwort einen Euro-Wert gibt:
 | Stammdaten | Abgleich SEC ↔ GLEIF mit Splink, Golden Record, Survivorship, Stewardship-Queue, SCD Typ 2. |
 | Marts | Kimball-Sternschema: Finanzzeilen (Ist/Plan/Forecast), 25 KPIs mit Sektorperzentil und roter Flagge, Ereignisse, Working-Capital-Potenzial, Risikoscores, Datenqualität. |
 | Analyse | Labels mit Zensierung, Leakage-Schutz, Modelle M0–M3 und Survival-Modell S1, rollierender Backtest, Bootstrap, SHAP, MLflow. |
-| Reporting | Power-BI-Projekt (PBIP): Semantikmodell aus `model.yml` und den Datenverträgen generiert (141 Measures, Berechnungsgruppen, Feldparameter, RLS/OLS, DE/EN), 11 Seiten mit Titel, Sprachumschalter und Fußzeile, BPA-Regeln. Excel-Monatsbericht (CUBE-Formeln, XVERWEIS, Power Query, Pivot mit Datenschnitten, VBA-Export als PDF). Tableau: Extrakt und daraus gepackte Arbeitsmappe (`.twbx`, Titel aus den Daten berechnet und gegen H4 geprüft). |
+| Reporting | Power-BI-Projekt (PBIP): Semantikmodell aus `model.yml` und den Datenverträgen generiert (149 Measures, Berechnungsgruppen, Feldparameter, RLS/OLS, DE/EN), 11 Seiten mit Titel, Sprachumschalter und Fußzeile, BPA-Regeln. Excel-Monatsbericht (CUBE-Formeln, XVERWEIS, Power Query, Pivot mit Datenschnitten, VBA-Export als PDF). Tableau: Extrakt und daraus gepackte Arbeitsmappe (`.twbx`, Titel aus den Daten berechnet und gegen H4 geprüft). |
 | Betrieb | Fabric-Pipelines und Notebooks (je Quelle, Transform, Master, E-Mail-Alarme), Veröffentlichung nach dev/prod mit fabric-cicd, GitHub Actions (CI, dbt-Build, Quartals- und Tageslauf, Kapazität pausieren, Terraform), Terraform für Azure und Fabric (OIDC, keine Secrets), Runbook, Incident-Drill, Datenverträge. |
 
 ### Ergebnisse in Zahlen
@@ -107,7 +118,7 @@ Aus dem Lauf auf echten Daten [41282080293](https://github.com/Parsaka/bilanzwer
 | PR-AUC M0 / M1 / M2 / M3 (gepoolt 2014–2025, 1 463 Ereignisse) | 0,018 / 0,019 / 0,017 / 0,053 |
 | PR-AUC M2r (sektorrelativ) / S1 (Hazard) | 0,021 / 0,016 |
 | Recall in den riskantesten 5 % M0 / M1 / M2 / M3 | 6 % / 10 % / 10 % / 34 % |
-| Abfragezeit langsamste Visuals vorher → nachher | – |
+| Abfragezeit langsamste Visuals vorher → nachher (Importmodus, lokaler PC, Median) | Restatement-Quote 67,4 s → 0,1 s; Risikotabelle Frühwarnsystem 22,1 s → 11,8 s |
 | Monatliche Kosten (Kapazität + Speicher) | – |
 
 Alle Datenqualitätsregeln des Laufs: [docs/data-quality-results.md](docs/data-quality-results.md).
@@ -126,20 +137,25 @@ Vollständiger Lauf mit echten Daten: [docs/runbook.md](docs/runbook.md).
 ### Was noch fehlt
 
 Ehrlich aufgeführt, damit niemand eine Zahl für gemessen hält, die es nicht ist. Alles Übrige
-ist gebaut und auf echten Daten gelaufen; offen ist nur, was ein Gerät oder ein Konto braucht:
+ist gebaut und auf echten Daten gelaufen:
 
-- **Power BI Desktop:** Hauptvisuals je Seite nach `powerbi/report-pages.md` prüfen,
-  Screenshots, DAX-Studio-Messung vorher/nachher (Zeile „Abfragezeit“ oben).
-- **Excel unter Windows:** `excel/finalize_workbook.ps1` erzeugt die `.xlsm` mit Verbindung,
-  Power Query, Pivot und VBA.
-- **Tableau Public:** die gepackte Arbeitsmappe aus dem Lauf
-  (`results/tableau/Bilanzwerk_Working_Capital.twbx`) öffnen und veröffentlichen, Link in
-  `tableau/README.md` eintragen.
+- **Excel-Arbeitsmappe `.xlsm`:** `excel/finalize_workbook.ps1` (Verbindung, Power Query,
+  Pivot, VBA) wurde nicht ausgeführt, weil keine Excel-Lizenz vorhanden war. Die Ergebnisse
+  gibt es als [excel/Bilanzwerk_Ergebnisse.xlsx](excel/Bilanzwerk_Ergebnisse.xlsx).
 - **Azure/Fabric:** Repository-Variablen `AZURE_CLIENT_ID` und `TF_STATE_ACCOUNT` mit OIDC
   setzen, Terraform anwenden; die Fabric-Items wurden gegen das Git-Format und fabric-cicd
-  geprüft, aber noch in keinem Workspace ausgeführt (Zeile „Monatliche Kosten“ oben).
+  geprüft, aber noch in keinem Workspace ausgeführt (Zeile „Monatliche Kosten“ oben). Die
+  Abfragezeiten oben sind Importmodus auf einem PC, nicht Direct Lake.
 - **Stichprobe durch einen Menschen:** die Stammdaten-Labels (`mdm/labelled_pairs*.csv`, von
   Claude nach `mdm/REVIEW.md` gesetzt) und einige Zeilen aus `label_audit.csv` prüfen.
+- **Offene Befunde in den Daten** (dokumentiert, nicht behoben):
+  - Form 25-NSE reicht die Börse ein (NYSE, CIK 876661); das Ereignis wird der Börse statt
+    der SUBJECT COMPANY zugeordnet.
+  - `fact_event` hat rund 93 600 Zeilen von Filern ohne Abschlüsse (leerer `company_key`);
+    sie stehen in keiner Kennzahl.
+  - Die Risikotabelle im Frühwarnsystem braucht 11,8 s (nur Formel-Engine); ein Flag
+    `is_latest_for_company` in dbt würde den Filter auf den letzten Stichtag ersetzen.
+  - Die Treiber im Frühwarnsystem stehen als Rohcodes da (`EQUITY_RATIO value`, …).
 
 ---
 

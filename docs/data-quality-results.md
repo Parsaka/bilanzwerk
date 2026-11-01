@@ -47,4 +47,6 @@ gebaut sind, und **nicht** je Fall ausgezählt.
   (`results/mdm_metrics.json`).
 - **`MDM_LEI_MATCH_RATE`** ist eine Kennzahl ohne Ziel: Anteil der SEC-Filer mit Perioden, die
   eine LEI haben. Ein SEC-Filer ohne Treffer hat keine LEI, wurde vom Abgleich verfehlt oder steht in der
-  Stewardship-Queue (1 626 offene Fälle).
+  Stewardship-Queue (1 626 offene Fälle). Die Karte „LEI-Match-Quote“ im Power-BI-Bericht
+  zählt anders: aktuelle Zeilen von `dim_company` mit CIK (Lauf 41328368604: 3 749 von 17 147,
+  21,9 %), die Regel zählt SEC-Filer mit Perioden auf `bv_company_golden`.

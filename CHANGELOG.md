@@ -1,5 +1,19 @@
 # Changelog
 
+## Power BI Desktop, Tableau Public, measure fixes (PR #6 to PR #10, 2026-11-01)
+
+- Local Power BI copy: `generate_tmdl.py --local` builds an import model from the
+  `marts-parquet` artifact; all 11 pages checked in Desktop against `answer.json` of run
+  41328368604, screenshots in `docs/images/powerbi_*.png`.
+- Measures: `fact_kpi.is_restated` in dbt (Restatement-Quote 67,4 s → 0,1 s); Risiko 12M and
+  Unternehmen rot at each company's latest as_of_date (risk table 22,1 s → 11,8 s); WAPE
+  replaces MAPE; CCC sector median over bounded peers (≥ 5); KPIs at the latest statement;
+  DQ target and status; 149 measures. Timings: `docs/performance-local.md`.
+- Tableau: the workbook ships a `.hyper` extract and a valid `<windows>` section; published on
+  Tableau Public (link in `tableau/README.md`).
+- Docs: README "Was noch fehlt" now lists only Excel `.xlsm` (not run, no licence),
+  Azure/Fabric, the human spot-check and the open data findings.
+
 ## Real data, master data review, fixes found in the results (PR #2, PR #3, 2026-10-31 to 2026-11-01)
 
 - Master data: 300 candidate pairs labelled blind by written rules (`mdm/REVIEW.md`); model v1
