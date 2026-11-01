@@ -662,14 +662,19 @@ measures:
     name: "CCC Sektor-Median"
     folder: "Working Capital"
     format: "0.0"
-    description: "Median des CCC über alle Unternehmen des Sektors im Kontext (aus fact_kpi, letzte Version)."
+    description: "Median des CCC über alle Unternehmen mit CCC im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version)."
     expression: |
-      CALCULATE (
-          MEDIANX ( VALUES ( dim_company[company_key] ), [KPI Wert] ),
-          REMOVEFILTERS ( dim_company ),
-          VALUES ( dim_sector[sector_key] ),
-          dim_kpi[kpi_code] = "CCC"
-      )
+      -- the sector of the companies in context (dim_sector is not filtered by a company pick,
+      -- the relationship runs from dim_company to dim_sector); MEDIANX only over companies that
+      -- have a CCC: most keys have none, and MEDIANX returns blank when they dominate
+      VAR _sektoren = VALUES ( dim_company[sector_key] )
+      RETURN
+          CALCULATE (
+              MEDIANX ( FILTER ( VALUES ( dim_company[company_key] ), NOT ISBLANK ( [KPI Wert] ) ), [KPI Wert] ),
+              REMOVEFILTERS ( dim_company ),
+              TREATAS ( _sektoren, dim_company[sector_key] ),
+              dim_kpi[kpi_code] = "CCC"
+          )
 
   - table: fact_wc_opportunity
     name: "Cash-Potenzial"
