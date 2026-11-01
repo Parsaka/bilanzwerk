@@ -6,6 +6,11 @@ Reads tableau/data/wc_opportunity.csv (scripts/export_tableau.py) and writes a p
 with the data inside, ready to open in Tableau Public and publish. Sheets, calculated fields,
 filters and the dashboard follow tableau/README.md.
 
+Tableau Public only opens and saves workbooks whose data is an extract, so the CSV is loaded into
+a Hyper file (Data/Extracts/wc_opportunity.hyper) with tableauhyperapi (extra `tableau`):
+
+  uv run --extra tableau python tableau/build_workbook.py
+
 The dashboard title states the finding. It is computed here from the same CSV that goes into
 the package, with the rule of H4 (latest fiscal year per company), so the title and the bars
 always come from one export and no number is typed by hand.
@@ -16,6 +21,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import tempfile
 import uuid
 import zipfile
 from collections import defaultdict
@@ -27,6 +33,9 @@ DATA = ROOT / "tableau" / "data"
 DS = "federated.bilanzwerk_wc"
 ACCENT, GREY = "#1F5AA6", "#B3B3B3"
 SIZE = (1200, 800)
+SHEETS = ["Brücke nach Sektor", "Top 20 Unternehmen", "Wo das Cash liegt", "KPI-Zeile"]
+DASHBOARD = "Working-Capital-Potenzial"
+CSV_DIR, HYPER_PATH = "Data/wc_opportunity", "Data/Extracts/wc_opportunity.hyper"
 
 COLUMNS = {
     # extract column -> (Tableau datatype, role, type)
@@ -47,6 +56,9 @@ COLUMNS = {
     "cash_opportunity_eur": ("real", "measure", "quantitative"),
     "cash_opportunity_stretch_eur": ("real", "measure", "quantitative"),
 }
+
+CAPTIONS = {"company_name": "Unternehmen", "sector_de": "Sektor", "fiscal_year": "Geschäftsjahr"}
+FORMATS = {"Calc_Cash_Bn": "n#,##0.0;-#,##0.0"}
 
 # name -> (caption, datatype, role, type, formula); formulas as in tableau/README.md
 CALCS = {
@@ -69,13 +81,6 @@ CALCS = {
         "nominal",
         "[fiscal_year] = { FIXED [cik], [company_name] : MAX([fiscal_year]) }",
     ),
-    "Calc_Is_Top": (
-        "Größter Hebel",
-        "boolean",
-        "dimension",
-        "nominal",
-        "RANK(SUM([Calc_Cash_EUR])) = 1",
-    ),
 }
 
 
@@ -88,16 +93,51 @@ def read_extract(path: Path) -> list[dict]:
     return rows
 
 
+def write_hyper(csv_path: Path, hyper_path: Path) -> int:
+    """Copy the CSV into a Hyper extract (table Extract.Extract) with the types of COLUMNS."""
+    from tableauhyperapi import (
+        Connection,
+        CreateMode,
+        HyperProcess,
+        Nullability,
+        SqlType,
+        TableDefinition,
+        TableName,
+        Telemetry,
+        escape_string_literal,
+    )
+
+    types = {"string": SqlType.text(), "integer": SqlType.big_int(), "real": SqlType.double()}
+    table = TableDefinition(
+        TableName("Extract", "Extract"),
+        [TableDefinition.Column(name, types[dt], Nullability.NULLABLE) for name, (dt, _, _) in COLUMNS.items()],
+    )
+    with (
+        HyperProcess(Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU, parameters={"log_config": ""}) as hyper,
+        Connection(hyper.endpoint, str(hyper_path), CreateMode.CREATE_AND_REPLACE) as conn,
+    ):
+        conn.catalog.create_schema("Extract")
+        conn.catalog.create_table(table)
+        return conn.execute_command(
+            f"COPY {table.table_name} FROM {escape_string_literal(str(csv_path))} "
+            "WITH (format csv, header true, delimiter ',', null '')"
+        )
+
+
 def finding(rows: list[dict]) -> dict:
-    """Latest fiscal year per company (as H4), summed by sector: total and the largest sector."""
-    latest: dict[tuple, dict] = {}
+    """Latest fiscal year per company (as H4), summed by sector: total and the largest sector.
+
+    All rows of that year count, as in the workbook's filter [Calc_Latest_FY], so the title and the
+    bars agree even where the extract holds two rows for one company and fiscal year.
+    """
+    latest: dict[tuple, int] = {}
     for r in rows:
         key = (r["cik"], r["company_name"])
-        if key not in latest or int(r["fiscal_year"]) > int(latest[key]["fiscal_year"]):
-            latest[key] = r
+        latest[key] = max(latest.get(key, int(r["fiscal_year"])), int(r["fiscal_year"]))
     by_sector: dict[str, float] = defaultdict(float)
-    for r in latest.values():
-        by_sector[r["sector_de"]] += float(r["cash_opportunity_eur"] or 0)
+    for r in rows:
+        if int(r["fiscal_year"]) == latest[(r["cik"], r["company_name"])]:
+            by_sector[r["sector_de"]] += float(r["cash_opportunity_eur"] or 0)
     top = max(by_sector, key=by_sector.get)
     years = [int(r["fiscal_year"]) for r in rows]
     return {
@@ -111,7 +151,7 @@ def finding(rows: list[dict]) -> dict:
 
 
 def de(x: float) -> str:
-    return f"{x:,.1f}".replace(",", " ").replace(".", ",")
+    return f"{x:,.1f}".replace(",", " ").replace(".", ",").replace(" ", ".")
 
 
 def ref(name: str, derivation: str = "None", kind: str = "nk") -> str:
@@ -129,14 +169,16 @@ def instance(name: str, derivation: str, kind: str, type_: str) -> str:
 
 
 def column_xml(name: str) -> str:
+    fmt = f" default-format={quoteattr(FORMATS[name])}" if name in FORMATS else ""
     if name in CALCS:
         caption, dt, role, type_, formula = CALCS[name]
         return (
-            f"<column caption={quoteattr(caption)} datatype='{dt}' name='[{name}]' role='{role}' type='{type_}'>"
+            f"<column caption={quoteattr(caption)} datatype='{dt}'{fmt} name='[{name}]' role='{role}' type='{type_}'>"
             f"<calculation class='tableau' formula={quoteattr(formula)} /></column>"
         )
     dt, role, type_ = COLUMNS[name]
-    return f"<column datatype='{dt}' name='[{name}]' role='{role}' type='{type_}' />"
+    caption = f" caption={quoteattr(CAPTIONS[name])}" if name in CAPTIONS else ""
+    return f"<column{caption} datatype='{dt}'{fmt} name='[{name}]' role='{role}' type='{type_}' />"
 
 
 def text_run(text: str, size: int = 12, bold: bool = False, color: str = "#262626") -> str:
@@ -153,8 +195,14 @@ def latest_fy_filter() -> str:
     )
 
 
-def worksheet(name: str, title: str, deps: list[str], instances: list[str], body: str, extra_view: str = "") -> str:
+def worksheet(
+    name: str, title: str, deps: list[str], instances: list[str], body: str, extra_view: str = "", style: str = ""
+) -> str:
     dep_cols = "".join(column_xml(c) for c in deps)
+    # the sheet titles name the dimension already; field labels ("Sektor") only cost a row
+    hide_field_labels = (
+        "<style-rule element='worksheet'><format attr='display-field-labels' scope='rows' value='false' /></style-rule>"
+    )
     return f"""
     <worksheet name={quoteattr(name)}>
       <layout-options><title><formatted-text>{text_run(title, 12, True)}</formatted-text></title></layout-options>
@@ -171,7 +219,7 @@ def worksheet(name: str, title: str, deps: list[str], instances: list[str], body
           <slices><column>{ref("Calc_Latest_FY")}</column></slices>
           <aggregation value='true' />
         </view>
-        <style />
+        <style>{hide_field_labels}{style}</style>
         {body}
       </table>
       <simple-id uuid='{{{uuid.uuid5(uuid.NAMESPACE_URL, "bilanzwerk/tableau/" + name)}}}' />
@@ -188,27 +236,42 @@ def parameter_column() -> str:
     )
 
 
-def bar_pane(color_field: str | None = None, label: str | None = None) -> str:
-    enc = ""
-    if color_field or label:
-        enc = "<encodings>"
-        if color_field:
-            enc += f"<color column='{color_field}' />"
-        if label:
-            enc += f"<text column='{label}' />"
-        enc += "</encodings>"
-    show_labels = (
-        "<style><style-rule element='mark'><format attr='mark-labels-show' value='true' /></style-rule></style>"
-        if label
-        else ""
-    )
+def bar_pane(color: str, label: str | None = None) -> str:
+    enc = f"<encodings><text column='{label}' /></encodings>" if label else ""
+    labels = "<format attr='mark-labels-show' value='true' />" if label else ""
     return (
         "<panes><pane selection-relaxation-option='selection-relaxation-allow'>"
-        f"<view><breakdown value='auto' /></view><mark class='Bar' />{enc}{show_labels}</pane></panes>"
+        f"<view><breakdown value='auto' /></view><mark class='Bar' />{enc}"
+        f"<style><style-rule element='mark'><format attr='mark-color' value='{color}' />{labels}</style-rule></style>"
+        "</pane></panes>"
     )
 
 
-def build_twb(f: dict, csv_dir: str) -> str:
+def windows() -> str:
+    """Tableau needs an active sheet to open a workbook: the dashboard, with the sheets behind it."""
+    cards = (
+        "<cards><edge name='left'><strip size='160'><card type='pages' /><card type='filters' />"
+        "<card type='marks' /></strip></edge><edge name='top'><strip size='2147483647'><card type='columns' />"
+        "</strip><strip size='2147483647'><card type='rows' /></strip><strip size='31'><card type='title' />"
+        "</strip></edge></cards>"
+    )
+
+    def sid(name: str) -> str:
+        return f"<simple-id uuid='{{{uuid.uuid5(uuid.NAMESPACE_URL, 'bilanzwerk/tableau/window/' + name)}}}' />"
+
+    sheets = "".join(
+        f"\n    <window class='worksheet' hidden='true' maximized='true' name={quoteattr(n)}>{cards}{sid(n)}</window>"
+        for n in SHEETS
+    )
+    viewpoints = "".join(f"<viewpoint name={quoteattr(n)}><zoom type='entire-view' /></viewpoint>" for n in SHEETS)
+    return (
+        f"<windows source-height='30'>{sheets}\n    <window class='dashboard' maximized='true' name='{DASHBOARD}'>"
+        f"<viewpoints>{viewpoints}</viewpoints><active id='-1' /><device-preview visible='false' />"
+        f"{sid(DASHBOARD)}</window>\n  </windows>"
+    )
+
+
+def build_twb(f: dict, csv_dir: str = CSV_DIR, hyper_path: str = HYPER_PATH) -> str:
     cash_bn = "Calc_Cash_Bn"
     title = (
         f"{f['top_sector']} hat den größten Hebel: {de(f['top_eur_bn'])} Mrd. EUR Working Capital "
@@ -228,15 +291,14 @@ def build_twb(f: dict, csv_dir: str) -> str:
 
     bridge = worksheet(
         "Brücke nach Sektor",
-        "Working-Capital-Potenzial nach Sektor (Mrd. EUR, letztes Geschäftsjahr je Unternehmen)",
-        sector_dims + calc_deps + ["Calc_Is_Top"],
+        "Potenzial nach Sektor (Mrd. EUR)",
+        sector_dims + calc_deps,
         [
             instance("sector_de", "None", "nk", "nominal"),
             instance(cash_bn, "User", "qk", "quantitative"),
-            instance("Calc_Is_Top", "User", "nk", "nominal"),
             instance("Calc_Latest_FY", "None", "nk", "nominal"),
         ],
-        bar_pane(ref("Calc_Is_Top", "User"), ref(cash_bn, "User", "qk"))
+        bar_pane(ACCENT, ref(cash_bn, "User", "qk"))
         + f"<rows>{ref('sector_de')}</rows><cols>{ref(cash_bn, 'User', 'qk')}</cols>",
         extra_view=(
             f"<sort class='computed' column='{ref('sector_de')}' direction='DESC' "
@@ -252,7 +314,7 @@ def build_twb(f: dict, csv_dir: str) -> str:
             instance(cash_bn, "User", "qk", "quantitative"),
             instance("Calc_Latest_FY", "None", "nk", "nominal"),
         ],
-        bar_pane(None, ref(cash_bn, "User", "qk"))
+        bar_pane(GREY, ref(cash_bn, "User", "qk"))
         + f"<rows>{ref('company_name')}</rows><cols>{ref(cash_bn, 'User', 'qk')}</cols>",
         extra_view=(
             f"<filter class='categorical' column='{ref('company_name')}'>"
@@ -268,7 +330,7 @@ def build_twb(f: dict, csv_dir: str) -> str:
     lever_cols = ["Calc_Delta_DSO", "Calc_Delta_DIO", "Calc_Delta_DPO"]
     levers = worksheet(
         "Wo das Cash liegt",
-        "Abstand zum Sektormedian in Tagen (Median der Unternehmen): Forderungen, Vorräte, Lieferanten",
+        "Tage über dem Sektormedian: DSO, DIO, DPO",
         [
             "sector_de",
             *lever_cols,
@@ -282,12 +344,16 @@ def build_twb(f: dict, csv_dir: str) -> str:
         ],
         [instance("sector_de", "None", "nk", "nominal")]
         + [instance(c, "Median", "qk", "quantitative") for c in lever_cols]
-        + [instance("Calc_Latest_FY", "None", "nk", "nominal")],
-        bar_pane()
+        + [instance(cash_bn, "User", "qk", "quantitative"), instance("Calc_Latest_FY", "None", "nk", "nominal")],
+        bar_pane(GREY)
         + f"<rows>{ref('sector_de')}</rows>"
         + "<cols>("
         + " + ".join(ref(c, "Median", "qk") for c in lever_cols)
         + ")</cols>",
+        extra_view=(
+            f"<sort class='computed' column='{ref('sector_de')}' direction='DESC' "
+            f"using='{ref(cash_bn, 'User', 'qk')}' />"
+        ),
     )
     kpi = worksheet(
         "KPI-Zeile",
@@ -295,16 +361,26 @@ def build_twb(f: dict, csv_dir: str) -> str:
         ["company_name", "sector_de", *calc_deps],
         [
             instance(cash_bn, "User", "qk", "quantitative"),
-            instance("company_name", "CountD", "qk", "quantitative"),
+            instance("cik", "CountD", "qk", "quantitative"),
             instance("sector_de", "CountD", "qk", "quantitative"),
             instance("Calc_Latest_FY", "None", "nk", "nominal"),
         ],
         "<panes><pane selection-relaxation-option='selection-relaxation-allow'>"
         "<view><breakdown value='auto' /></view><mark class='Text' /><encodings>"
         f"<text column='{ref(cash_bn, 'User', 'qk')}' />"
-        f"<text column='{ref('company_name', 'CountD', 'qk')}' />"
+        f"<text column='{ref('cik', 'CountD', 'qk')}' />"
         f"<text column='{ref('sector_de', 'CountD', 'qk')}' />"
-        "</encodings></pane></panes><rows /><cols />",
+        "</encodings><customized-label><formatted-text>"
+        + text_run("Gesamt ", 12, True)
+        + text_run(f"<{ref(cash_bn, 'User', 'qk')}>", 12, True, ACCENT)
+        + text_run(" Mrd. EUR · ", 12, True)
+        + text_run(f"<{ref('cik', 'CountD', 'qk')}>", 12)
+        + text_run(" Unternehmen · ", 12)
+        + text_run(f"<{ref('sector_de', 'CountD', 'qk')}>", 12)
+        + text_run(" Sektoren", 12)
+        + "</formatted-text></customized-label>"
+        "<style><style-rule element='mark'><format attr='mark-labels-show' value='true' /></style-rule></style>"
+        "</pane></panes><rows /><cols />",
     )
 
     cols = "".join(
@@ -313,16 +389,17 @@ def build_twb(f: dict, csv_dir: str) -> str:
     )
     ds_columns = "".join(column_xml(c) for c in [*COLUMNS, *CALCS])
     footer = (
-        f"Datenstand: Export der Geschäftsjahre {f['years'][0]} bis {f['years'][1]} · Quellen: SEC EDGAR, ESEF über "
-        "filings.xbrl.org, GLEIF, EZB · github.com/Parsaka/bilanzwerk"
+        f"Geschäftsjahre {f['years'][0]} bis {f['years'][1]} · Quellen: SEC EDGAR, ESEF (filings.xbrl.org), "
+        "GLEIF, EZB · github.com/Parsaka/bilanzwerk"
     )
     W, H = SIZE
 
-    def z(id_, name, x, y, w, h):
+    def z(id_, name, x, y, w, h, show_title=True):
         # zone coordinates in 1/100000 of the dashboard
         return (
             f"<zone h='{h * 100000 // H}' id='{id_}' name={quoteattr(name)} "
-            f"w='{w * 100000 // W}' x='{x * 100000 // W}' y='{y * 100000 // H}' />"
+            + ("" if show_title else "show-title='false' ")
+            + f"w='{w * 100000 // W}' x='{x * 100000 // W}' y='{y * 100000 // H}' />"
         )
 
     def ztext(id_, text, x, y, w, h, size, bold=False, color="#262626"):
@@ -333,16 +410,16 @@ def build_twb(f: dict, csv_dir: str) -> str:
         )
 
     dashboard = f"""
-    <dashboard name='Working-Capital-Potenzial'>
+    <dashboard name='{DASHBOARD}'>
       <style />
       <size maxheight='{H}' maxwidth='{W}' minheight='{H}' minwidth='{W}' />
       <zones>
         <zone h='100000' id='1' type-v2='layout-basic' w='100000' x='0' y='0'>
-          {ztext(2, title, 16, 8, 1168, 56, 18, True)}
-          {z(3, "KPI-Zeile", 16, 72, 1168, 60)}
-          {z(4, "Brücke nach Sektor", 16, 140, 584, 600)}
-          {z(5, "Top 20 Unternehmen", 608, 140, 576, 330)}
-          {z(6, "Wo das Cash liegt", 608, 478, 576, 262)}
+          {ztext(2, title, 16, 8, 1168, 76, 14, True)}
+          {z(3, "KPI-Zeile", 16, 88, 1168, 48, show_title=False)}
+          {z(4, "Brücke nach Sektor", 16, 140, 584, 300)}
+          {z(6, "Wo das Cash liegt", 16, 448, 584, 292)}
+          {z(5, "Top 20 Unternehmen", 608, 140, 576, 600)}
           {ztext(7, footer, 16, 748, 1168, 40, 9, False, "#8C8C8C")}
         </zone>
       </zones>
@@ -380,13 +457,21 @@ def build_twb(f: dict, csv_dir: str) -> str:
       </connection>
       <aliases enabled='yes' />
       {ds_columns}
-      <layout dim-ordering='alphabetic' measure-ordering='alphabetic' show-structure='true' />
+      <extract count='-1' enabled='true' units='records'>
+        <connection access_mode='readonly' author-locale='en_US' class='hyper' dbname={quoteattr(hyper_path)}
+                    default-settings='hyper' schema='Extract' sslmode='' tablename='Extract' username='tableau'>
+          <relation name='Extract' table='[Extract].[Extract]' type='table' />
+        </connection>
+      </extract>
+      <layout dim-ordering='alphabetic' dim-percentage='0.5' measure-ordering='alphabetic'
+              measure-percentage='0.4' show-structure='true' />
     </datasource>
   </datasources>
   <worksheets>{bridge}{top20}{levers}{kpi}
   </worksheets>
   <dashboards>{dashboard}
   </dashboards>
+  {windows()}
 </workbook>
 """
 
@@ -412,11 +497,17 @@ def main() -> None:
     f = finding(rows)
     if args.check_answer:
         check_against_h4(f, json.loads(args.check_answer.read_text())["H4"])
-    twb = build_twb(f, "Data/wc_opportunity")
+    twb = build_twb(f)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(args.out, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("Bilanzwerk_Working_Capital.twb", twb)
-        zf.write(args.csv, "Data/wc_opportunity/wc_opportunity.csv")
+    with tempfile.TemporaryDirectory() as tmp:
+        hyper = Path(tmp) / "wc_opportunity.hyper"
+        loaded = write_hyper(args.csv, hyper)
+        if loaded != len(rows):
+            raise SystemExit(f"Hyper extract holds {loaded} rows, the CSV {len(rows)}")
+        with zipfile.ZipFile(args.out, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("Bilanzwerk_Working_Capital.twb", twb)
+            zf.write(args.csv, f"{CSV_DIR}/wc_opportunity.csv")
+            zf.write(hyper, HYPER_PATH)
     (args.out.with_suffix(".finding.json")).write_text(json.dumps(f, indent=2, ensure_ascii=False) + "\n")
     print(f"wrote {args.out}: {f['companies']} companies, title sector {f['top_sector']}")
 

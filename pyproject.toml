@@ -27,6 +27,8 @@ analysis = [
     "mlflow-skinny>=2.16",
     "matplotlib>=3.9",
 ]
+# Tableau Public opens only extracts: tableau/build_workbook.py writes a Hyper file.
+tableau = ["tableauhyperapi>=0.0.19"]
 deploy = ["fabric-cicd>=0.1.20", "azure-identity>=1.19", "azure-storage-file-datalake>=12.18", "requests>=2.32", "pyodbc>=5.1"]
 dev = ["pytest>=8.3", "pytest-cov>=5", "ruff>=0.6", "sqlfluff>=3.2", "sqlfluff-templater-dbt>=3.2", "responses>=0.25", "openpyxl>=3.1"]
 
