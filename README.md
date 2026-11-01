@@ -36,6 +36,16 @@
 | H3 | Sektorrelative Kennzahlen schlagen absolute | bestätigt | +0,004 | +0,002 bis +0,006 |
 | H4 | Working-Capital-Potenzial je Sektor ist wesentlich (Mrd. EUR) | bestätigt | 1 309 | – (Summe, kein Schätzer) |
 
+![H1: Vorlauf der Flaggen](docs/images/h1_lead_time.png)
+![H4: Potenzial je Sektor](docs/images/h4_wc_potential_by_sector.png)
+![PR-AUC der Modelle](docs/images/models_pr_auc.png)
+![PR-AUC je Testjahr](docs/images/backtest_by_year.png)
+
+Die Bilder rendert `scripts/portfolio_charts.py` mit matplotlib aus den Ergebnisdateien
+desselben Laufs (keine Power-BI-Screenshots). Alle Ergebnisse als Excel-Datei ohne
+Fabric-Verbindung: [excel/Bilanzwerk_Ergebnisse.xlsx](excel/Bilanzwerk_Ergebnisse.xlsx)
+(`scripts/results_workbook.py`).
+
 **Wie man H1 lesen muss.** Von 645 Insolvenzen mit Kennzahlen hatten nur 29 (4 %) eine
 CCC-Flagge, die bis zum Ereignis rot blieb, aber 439 (68 %) eine solche Z''-Flagge. Wo die
 CCC-Flagge kam, kam sie im Median 4,7 Monate vorher (Z'': 23,2). Die CCC braucht DSO, DIO und
