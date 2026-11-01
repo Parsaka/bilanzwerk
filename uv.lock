@@ -196,6 +196,9 @@ dev = [
 mdm = [
     { name = "splink" },
 ]
+tableau = [
+    { name = "tableauhyperapi" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -226,10 +229,11 @@ requires-dist = [
     { name = "sqlfluff", marker = "extra == 'dev'", specifier = ">=3.2" },
     { name = "sqlfluff-templater-dbt", marker = "extra == 'dev'", specifier = ">=3.2" },
     { name = "statsmodels", marker = "extra == 'analysis'", specifier = ">=0.14" },
+    { name = "tableauhyperapi", marker = "extra == 'tableau'", specifier = ">=0.0.19" },
     { name = "tenacity", specifier = ">=9.0" },
     { name = "typer", specifier = ">=0.12" },
 ]
-provides-extras = ["dbt", "mdm", "analysis", "deploy", "dev"]
+provides-extras = ["dbt", "mdm", "analysis", "tableau", "deploy", "dev"]
 
 [[package]]
 name = "cachetools"
@@ -2036,6 +2040,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/41/c7/aeadca282baf51d7b9c135674bac79ded91f4db79c69c188575d22234342/statsmodels-0.15.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c6f2bd48915cc9b3b95c3c7f6ac363b6f8aaa38172962ba5f7f6885f0dfe57f2", size = 12042643, upload-time = "2026-08-27T14:33:06.022Z" },
     { url = "https://files.pythonhosted.org/packages/9c/44/7d3eb3836b3c054280baca7ec91bd12858825de437c6319c1212c2531d94/statsmodels-0.15.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:733887a09ff878a2e29504eda684488b26bd134ba3539ac58d2136a58914c65a", size = 12079497, upload-time = "2026-08-27T14:33:47.147Z" },
     { url = "https://files.pythonhosted.org/packages/03/e3/d863228849da191d37c54bdd72634fbbcfadd12e910e29e4bdca1b952bb6/statsmodels-0.15.0-cp312-cp312-win_amd64.whl", hash = "sha256:ba89eb3ccb1c9c1e400d5081157305495b09350b3a65f2d66d3424ad1d3c4209", size = 11322106, upload-time = "2026-08-27T10:35:58.135Z" },
+]
+
+[[package]]
+name = "tableauhyperapi"
+version = "0.0.26963"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cffi" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/0f/a60fdcfbf8f9745333d611c5eacf483ba513d5dccb51bfc1a50420820dfe/tableauhyperapi-0.0.26963-py3-none-manylinux2014_x86_64.whl", hash = "sha256:35376f598c6fdfa52fe25769778f756e2daec1c124ff8f471b5e098cb9cf7863", size = 90909073, upload-time = "2026-10-17T06:25:55.243Z" },
+    { url = "https://files.pythonhosted.org/packages/05/13/74972128ccb368be32db9bcf4369d51a519cffb8de7c5ab660594fa7affa/tableauhyperapi-0.0.26963-py3-none-win_amd64.whl", hash = "sha256:35e64279c619157561158128b3ef7e2c1107855be39b8fa0c1967371ad394ffd", size = 72770537, upload-time = "2026-10-17T06:26:14.667Z" },
 ]
 
 [[package]]

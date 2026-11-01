@@ -10,9 +10,11 @@ as page 9 of the Power BI report (hypothesis H4), from the same mart.
   (or `--odbc` against the Fabric Warehouse) writes `tableau/data/wc_opportunity.csv` and a
   manifest with row count, years and SHA-256. The CSV is not versioned; the manifest of the
   published export goes into the release notes.
-* **Workbook:** `uv run python tableau/build_workbook.py` packs the CSV into
+* **Workbook:** `uv run --extra tableau python tableau/build_workbook.py` packs the CSV into
   `tableau/Bilanzwerk_Working_Capital.twbx` with the sheets, calculated fields and the dashboard
-  below; the title is computed from the same CSV. `--check-answer answer.json` fails when the
+  below; the title is computed from the same CSV. Tableau Public opens only extracts, so the CSV
+  also goes into `Data/Extracts/wc_opportunity.hyper` (tableauhyperapi, extra `tableau`), and the
+  workbook opens on the dashboard. `--check-answer answer.json` fails when the
   workbook total is more than EUR 0.5 bn away from H4. The real-data run builds it and keeps it
   under `results/tableau/` on branch `real-data-results`; publishing it to Tableau Public needs
   the account and stays a manual step.
@@ -50,8 +52,11 @@ Filters and controls: fiscal year (single value, default `[Ist letztes Jahr]`), 
 filters the top-20 list (dashboard action).
 
 Design rules as in the Power BI report: one accent colour (#1F5AA6) for the item the title talks
-about, grey for the rest, no red/green (no risk bands here). The dashboard title states the
-finding and is written after the real-data run, for example in the form
+about, grey for the rest, no red/green (no risk bands here). In the generated workbook the sector
+bars carry the accent and the other sheets are grey: Tableau ignored colour maps written into the
+XML (checked in Tableau Public 2026.3), so the largest sector is marked by its position and the
+title rather than by its own colour; recolour it in Tableau (legend > Edit Colors) if needed.
+The dashboard title states the finding and is written after the real-data run, for example in the form
 "<Sektor> bindet <x> Mrd. EUR mehr Working Capital als der Sektormedian", with the number from
 `analysis/results/wc_opportunity_by_sector.csv`. Footer: data cut-off from the manifest, sources
 (SEC EDGAR, ESEF via filings.xbrl.org, GLEIF, EZB), link to the repository.
