@@ -110,6 +110,10 @@ jobs:
             echo "LAST_QUARTER=$q" >> "$GITHUB_ENV"
           done
       - name: dbt build (without MDM and model outputs)
+        env:
+          # one model at a time: sat_fact_value and a uniqueness test spilling together filled
+          # the runner's DuckDB temp disk (71 GB, run 41245747626)
+          BW_DBT_THREADS: "1"
         run: scripts/real_data_dbt_build.sh base
       - name: MDM matching (Splink) and review sample
         run: |
