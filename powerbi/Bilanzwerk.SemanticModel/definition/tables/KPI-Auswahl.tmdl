@@ -2,6 +2,18 @@
 table 'KPI-Auswahl'
 	lineageTag: 49c94dde-7cdc-5b13-8bbd-1d2df0d2eeb3
 
+	/// Wert der in KPI-Auswahl gewählten Kennzahl (für die Achsen des Streudiagramms), außerhalb plausibler Grenzen leer.
+	measure 'KPI-Auswahl Wert' = SWITCH ( SELECTEDVALUE ( 'KPI-Auswahl'[KPI-Auswahl Reihenfolge] ), 0, VAR _v = [DSO] RETURN IF ( _v >= 0 && _v <= 730, _v ), 1, VAR _v = [DIO] RETURN IF ( _v >= 0 && _v <= 730, _v ), 2, VAR _v = [DPO] RETURN IF ( _v >= 0 && _v <= 730, _v ), 3, VAR _v = [CCC] RETURN IF ( _v >= -730 && _v <= 730, _v ), 4, VAR _v = [EBIT-Marge] RETURN IF ( _v >= -2 && _v <= 1, _v ), 5, VAR _v = [Eigenkapitalquote] RETURN IF ( _v >= -5 && _v <= 1, _v ), 6, VAR _v = [Z'' Score] RETURN IF ( _v >= -20 && _v <= 20, _v ), 7, VAR _v = [Bruttomarge] RETURN IF ( _v >= -2 && _v <= 1, _v ), 8, VAR _v = [Verschuldungsgrad] RETURN IF ( _v >= -50 && _v <= 50, _v ) )
+		formatString: #,0.00
+		displayFolder: Peer-Vergleich
+		lineageTag: ac906e8a-f428-5632-9ec9-2f287a92f240
+
+	/// Sektorperzentil der in KPI-Auswahl gewählten Kennzahl (Rang des Werts im Sektor, niedrig = kleiner Wert); leer, wo der Wert leer ist.
+	measure 'KPI-Auswahl Perzentil' = IF ( ISBLANK ( [KPI-Auswahl Wert] ), BLANK (), SWITCH ( SELECTEDVALUE ( 'KPI-Auswahl'[KPI-Auswahl Reihenfolge] ), 0, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "DSO" ), 1, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "DIO" ), 2, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "DPO" ), 3, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "CCC" ), 4, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "EBIT_MARGIN" ), 5, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "EQUITY_RATIO" ), 6, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "ZPP" ), 7, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "GROSS_MARGIN" ) ) )
+		formatString: 0%
+		displayFolder: Peer-Vergleich
+		lineageTag: a25194de-f069-5235-a19c-1acd205dcd4f
+
 	column 'KPI-Auswahl'
 		dataType: string
 		summarizeBy: none

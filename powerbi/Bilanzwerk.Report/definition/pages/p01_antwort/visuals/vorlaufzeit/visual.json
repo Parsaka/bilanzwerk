@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_lead_time.Vorlaufzeit Z'' (Median)",
-              "nativeQueryRef": "Vorlaufzeit Z'' (Median)"
+              "nativeQueryRef": "Vorlaufzeit Z'' (Median)",
+              "displayName": "Z''"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "fact_lead_time.Vorlaufzeit CCC (Median)",
-              "nativeQueryRef": "Vorlaufzeit CCC (Median)"
+              "nativeQueryRef": "Vorlaufzeit CCC (Median)",
+              "displayName": "CCC"
             }
           ]
         }
@@ -55,6 +57,26 @@
               "expr": {
                 "Literal": {
                   "Value": "true"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
                 }
               }
             }
@@ -82,6 +104,13 @@
                     }
                   },
                   "Property": "Befund Vorlaufzeit"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

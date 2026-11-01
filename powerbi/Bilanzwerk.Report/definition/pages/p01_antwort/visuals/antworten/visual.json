@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_hypothesis_result.hypothesis_code",
-              "nativeQueryRef": "hypothesis_code"
+              "nativeQueryRef": "hypothesis_code",
+              "displayName": "Hypothese"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "fact_hypothesis_result.Antwort Text",
-              "nativeQueryRef": "Antwort Text"
+              "nativeQueryRef": "Antwort Text",
+              "displayName": "Ergebnis"
             }
           ]
         }
@@ -91,6 +93,49 @@
             }
           }
         }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "90D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_hypothesis_result.hypothesis_code"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "700D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_hypothesis_result.Antwort Text"
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "visualContainerObjects": {
@@ -113,6 +158,13 @@
                     }
                   },
                   "Property": "Diagramm 01 antworten"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

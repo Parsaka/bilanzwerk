@@ -124,7 +124,8 @@ def render_table(
         out.append("\t\t\t\tlet")
         out.append(f'\t\t\t\t    Quelle = Parquet.Document(File.Contents(MartsFolder & "\\{name}.parquet")),')
         names = ", ".join(f'"{col["name"]}"' for col in columns)
-        out.append(f"\t\t\t\t    Spalten = Table.SelectColumns(Quelle, {{{names}}}),")
+        # a column the contract added after these marts were exported loads as null instead of failing
+        out.append(f"\t\t\t\t    Spalten = Table.SelectColumns(Quelle, {{{names}}}, MissingField.UseNull),")
         out.append(f"\t\t\t\t    Typen = Table.TransformColumnTypes(Spalten, {{{types}}})")
         out.append("\t\t\t\tin")
         out.append("\t\t\t\t    Typen")
@@ -183,11 +184,55 @@ def render_field_parameter(fp: dict, measure_table: dict[str, str]) -> str:
         f"\t\t\t\t(\"{m}\", NAMEOF('{measure_table[m]}'[{m.replace(']', ']]')}]), {i})"
         for i, m in enumerate(fp["measures"])
     )
+
+    # The value of the selected measure, for visuals that need a measure rather than the parameter
+    # itself (a scatter's x and y axes do not summarize a field parameter). It switches on the order
+    # column: the display column forms a composite key with the hidden fields column and cannot be
+    # read with SELECTEDVALUE alone. Values outside `bounds` (model.yml peer_bounds) are BLANK, so a
+    # handful of implausible ratios does not squeeze all other points into one corner.
+    def case(i: int, m: str) -> str:
+        ref = f"[{m.replace(']', ']]')}]"
+        if m not in fp.get("bounds", {}):
+            return f"{i}, {ref}"
+        lo, hi = fp["bounds"][m]
+        return f"{i}, VAR _v = {ref} RETURN IF ( _v >= {lo} && _v <= {hi}, _v )"
+
+    cases = ", ".join(case(i, m) for i, m in enumerate(fp["measures"]))
+    # sector percentile of the selected ratio (kpi_codes: measure -> fact_kpi code); a measure
+    # without a code (no matching KPI) stays BLANK
+    codes = fp.get("kpi_codes", {})
+    pct_cases = ", ".join(
+        f'{i}, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "{codes[m]}" )'
+        for i, m in enumerate(fp["measures"])
+        if m in codes
+    )
+    percentile = (
+        [
+            f"\t/// Sektorperzentil der in {name} gewählten Kennzahl "
+            "(Rang des Werts im Sektor, niedrig = kleiner Wert); leer, wo der Wert leer ist.",
+            f"\tmeasure {q(name + ' Perzentil')} = IF ( ISBLANK ( [{name} Wert] ), BLANK (), "
+            f"SWITCH ( SELECTEDVALUE ( {q(name)}[{name} Reihenfolge] ), {pct_cases} ) )",
+            "\t\tformatString: 0%",
+            "\t\tdisplayFolder: Peer-Vergleich",
+            f"\t\tlineageTag: {tag('measure', name, 'percentile')}",
+            "",
+        ]
+        if codes
+        else []
+    )
     out = description(fp.get("description"), "")
     out += [
         f"table {q(name)}",
         f"\tlineageTag: {tag('table', name)}",
         "",
+        f"\t/// Wert der in {name} gewählten Kennzahl (für die Achsen des Streudiagramms), "
+        "außerhalb plausibler Grenzen leer.",
+        f"\tmeasure {q(name + ' Wert')} = SWITCH ( SELECTEDVALUE ( {q(name)}[{name} Reihenfolge] ), {cases} )",
+        "\t\tformatString: #,0.00",
+        "\t\tdisplayFolder: Peer-Vergleich",
+        f"\t\tlineageTag: {tag('measure', name, 'value')}",
+        "",
+        *percentile,
         f"\tcolumn {q(name)}",
         "\t\tdataType: string",
         "\t\tsummarizeBy: none",
@@ -376,7 +421,7 @@ def render_static_table(st: dict) -> str:
 def load_columns(name: str, cfg: dict) -> list[dict]:
     if "columns" in cfg:
         return cfg["columns"]
-    contract = yaml.safe_load((CONTRACTS / f"{name}.yml").read_text())
+    contract = yaml.safe_load((CONTRACTS / f"{name}.yml").read_text(encoding="utf-8"))
     return contract["columns"]
 
 
@@ -400,10 +445,10 @@ def write_local_report() -> None:
     if report.exists():
         shutil.rmtree(report)
     shutil.copytree(PBI / "Bilanzwerk.Report", report)
-    pbir = json.loads((report / "definition.pbir").read_text())
+    pbir = json.loads((report / "definition.pbir").read_text(encoding="utf-8"))
     pbir["datasetReference"]["byPath"]["path"] = "../Bilanzwerk.Local.SemanticModel"
     (report / "definition.pbir").write_text(json.dumps(pbir, indent=2) + "\n")
-    pbip = json.loads((PBI / "Bilanzwerk.pbip").read_text())
+    pbip = json.loads((PBI / "Bilanzwerk.pbip").read_text(encoding="utf-8"))
     pbip["artifacts"] = [{"report": {"path": "Bilanzwerk.Local.Report"}}]
     (local / "Bilanzwerk.Local.pbip").write_text(json.dumps(pbip, indent=2) + "\n")
 
@@ -418,7 +463,7 @@ def main() -> None:
         LOCAL = True
         MODEL_DIR = PBI / "local" / "Bilanzwerk.Local.SemanticModel"
         DEF = MODEL_DIR / "definition"
-    model = yaml.safe_load((PBI / "model.yml").read_text())
+    model = yaml.safe_load((PBI / "model.yml").read_text(encoding="utf-8"))
     if DEF.exists():
         shutil.rmtree(DEF)
     (DEF / "tables").mkdir(parents=True)
@@ -454,7 +499,7 @@ def main() -> None:
     for st in model.get("static_tables", []):
         (DEF / "tables" / f"{st['name']}.tmdl").write_text(render_static_table(st), encoding="utf-8")
         table_names.append(st["name"])
-    labels = label_measures(yaml.safe_load((PBI / "report" / "pages.yml").read_text()))
+    labels = label_measures(yaml.safe_load((PBI / "report" / "pages.yml").read_text(encoding="utf-8")))
     (DEF / "tables" / "Sprache.tmdl").write_text(render_language_table(labels), encoding="utf-8")
     table_names.append("Sprache")
 

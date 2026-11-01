@@ -101,7 +101,8 @@ measures:
   - table: fact_financial_line
     name: "GuV-Brücke Betrag"
     folder: "GuV"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Vorzeichenrichtige Schritte von Umsatz bis EBIT: Umsatz, minus Umsatzkosten, Rest bis EBIT; ohne Schritt das EBIT (Summe des Wasserfalls)."
     expression: |
       IF (
@@ -285,7 +286,8 @@ measures:
   - table: fact_wc_opportunity
     name: "Cash-Potenzial aktuell"
     folder: "Working Capital"
-    format: "#,0.0,,,\" Mrd\""
+    format: "#,0.0"
+    unit: Mrd
     description: "Cash-Potenzial im letzten Geschäftsjahr je Unternehmen (wie H4), summiert über die Unternehmen im Kontext."
     expression: |
       SUMX (
@@ -299,7 +301,8 @@ measures:
   - table: fact_wc_opportunity
     name: "Cash-Potenzial Stretch aktuell"
     folder: "Working Capital"
-    format: "#,0.0,,,\" Mrd\""
+    format: "#,0.0"
+    unit: Mrd
     description: "Wie Cash-Potenzial aktuell, Ziel ist das 25. Perzentil des Sektors (DPO: 75.)."
     expression: |
       SUMX (
@@ -456,6 +459,7 @@ measures:
     name: "Bestand"
     folder: "_Basis"
     format: "#,0"
+    unit: Mio
     hidden: true
     description: "Bilanzwert zum letzten Periodenende jedes Unternehmens im Kontext (Stichtagswert, nicht summiert über Quartale)."
     expression: |
@@ -468,7 +472,8 @@ measures:
   - table: fact_financial_line
     name: "Umsatz"
     folder: "GuV"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Umsatzerlöse (Position REV), Summe der Quartale im Kontext."
     expression: |
       CALCULATE ( [Betrag], dim_line_item[line_item_code] = "REV" )
@@ -476,7 +481,8 @@ measures:
   - table: fact_financial_line
     name: "COGS"
     folder: "GuV"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Umsatzkosten (Position COGS)."
     expression: |
       CALCULATE ( [Betrag], dim_line_item[line_item_code] = "COGS" )
@@ -484,7 +490,8 @@ measures:
   - table: fact_financial_line
     name: "EBIT"
     folder: "GuV"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Betriebsergebnis (Position EBIT)."
     expression: |
       CALCULATE ( [Betrag], dim_line_item[line_item_code] = "EBIT" )
@@ -492,7 +499,8 @@ measures:
   - table: fact_financial_line
     name: "Jahresergebnis"
     folder: "GuV"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Jahresergebnis der Anteilseigner (Position NI)."
     expression: |
       CALCULATE ( [Betrag], dim_line_item[line_item_code] = "NI" )
@@ -516,7 +524,8 @@ measures:
   - table: fact_financial_line
     name: "Umsatz TTM"
     folder: "GuV"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz); braucht einen Datumskontext aus dim_date, im Geschäftsjahr-Kontext von dim_period leer."
     expression: |
       CALCULATE ( [Umsatz], Zeitintelligenz[Zeit] = "TTM" )
@@ -524,7 +533,8 @@ measures:
   - table: fact_financial_line
     name: "COGS TTM"
     folder: "GuV"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Umsatzkosten der letzten zwölf Monate; braucht wie Umsatz TTM einen Datumskontext aus dim_date."
     expression: |
       CALCULATE ( [COGS], Zeitintelligenz[Zeit] = "TTM" )
@@ -532,7 +542,8 @@ measures:
   - table: fact_financial_line
     name: "Bilanzsumme"
     folder: "Bilanz"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Bilanzsumme Aktiva zum Stichtag."
     expression: |
       CALCULATE ( [Bestand], dim_line_item[line_item_code] = "TA" )
@@ -540,7 +551,8 @@ measures:
   - table: fact_financial_line
     name: "Eigenkapital"
     folder: "Bilanz"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Eigenkapital gesamt zum Stichtag."
     expression: |
       CALCULATE ( [Bestand], dim_line_item[line_item_code] = "EQ" )
@@ -548,7 +560,8 @@ measures:
   - table: fact_financial_line
     name: "Verbindlichkeiten"
     folder: "Bilanz"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Verbindlichkeiten gesamt zum Stichtag."
     expression: |
       CALCULATE ( [Bestand], dim_line_item[line_item_code] = "TL" )
@@ -572,7 +585,8 @@ measures:
   - table: fact_financial_line
     name: "Liquide Mittel"
     folder: "Bilanz"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Liquide Mittel zum Stichtag."
     expression: |
       CALCULATE ( [Bestand], dim_line_item[line_item_code] = "CASH" )
@@ -580,7 +594,8 @@ measures:
   - table: fact_financial_line
     name: "Operativer Cashflow"
     folder: "Cashflow"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Cashflow aus laufender Geschäftstätigkeit."
     expression: |
       CALCULATE ( [Betrag], dim_line_item[line_item_code] = "CFO" )
@@ -596,7 +611,8 @@ measures:
   - table: fact_financial_line
     name: "Forderungen Durchschnitt"
     folder: "Working Capital"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Durchschnitt der Forderungen aus Lieferungen und Leistungen über die Perioden im Kontext."
     expression: |
       AVERAGEX (
@@ -607,7 +623,8 @@ measures:
   - table: fact_financial_line
     name: "Vorräte Durchschnitt"
     folder: "Working Capital"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Durchschnitt der Vorräte."
     expression: |
       AVERAGEX (
@@ -618,7 +635,8 @@ measures:
   - table: fact_financial_line
     name: "Verbindlichkeiten LuL Durchschnitt"
     folder: "Working Capital"
-    format: "#,0,,\" Mio\""
+    format: "#,0"
+    unit: Mio
     description: "Durchschnitt der Verbindlichkeiten aus Lieferungen und Leistungen."
     expression: |
       AVERAGEX (
@@ -685,7 +703,8 @@ measures:
   - table: fact_wc_opportunity
     name: "Cash-Potenzial"
     folder: "Working Capital"
-    format: "#,0.0,,,\" Mrd\""
+    format: "#,0.0"
+    unit: Mrd
     description: "Freisetzbare Liquidität in EUR, wenn DSO und DIO auf den Sektormedian sinken und DPO auf ihn steigt."
     expression: |
       SUM ( fact_wc_opportunity[cash_opportunity_eur] )
@@ -693,7 +712,8 @@ measures:
   - table: fact_wc_opportunity
     name: "Cash-Potenzial Stretch"
     folder: "Working Capital"
-    format: "#,0.0,,,\" Mrd\""
+    format: "#,0.0"
+    unit: Mrd
     description: "Wie Cash-Potenzial, Ziel ist das 25. Perzentil des Sektors (DPO: 75.)."
     expression: |
       SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] )
@@ -975,15 +995,44 @@ static_tables:
     rows:
       - ["Umsatz", 1]
       - ["Umsatzkosten", 2]
-      - ["Übrige betriebliche Aufwendungen und Erträge", 3]
+      - ["Übrige Aufwendungen und Erträge", 3]
+
+# Display bounds of the peer scatter ([<name> Wert]): values outside are left out as implausible
+# (days as in fact_wc_opportunity, equity ratio as the rule VALID_EQUITY_RATIO_BOUNDS).
+peer_bounds: &peer_bounds
+  DSO: [0, 730]
+  DIO: [0, 730]
+  DPO: [0, 730]
+  CCC: [-730, 730]
+  EBIT-Marge: [-2, 1]
+  Bruttomarge: [-2, 1]
+  Eigenkapitalquote: [-5, 1]
+  "Z'' Score": [-20, 20]
+  Verschuldungsgrad: [-50, 50]
+
+# fact_kpi code of each peer measure, for the sector percentile of the selected ratio
+# (Verschuldungsgrad has none: EQ_TL is its inverse, so its percentile stays empty).
+peer_kpi_codes: &peer_kpi_codes
+  DSO: DSO
+  DIO: DIO
+  DPO: DPO
+  CCC: CCC
+  EBIT-Marge: EBIT_MARGIN
+  Eigenkapitalquote: EQUITY_RATIO
+  "Z'' Score": ZPP
+  Bruttomarge: GROSS_MARGIN
 
 field_parameters:
   - name: KPI-Auswahl
     description: "Feldparameter für den Peer-Vergleich: wählt die Kennzahl auf Achsen und in Tabellen."
     measures: [DSO, DIO, DPO, CCC, EBIT-Marge, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
+    bounds: *peer_bounds
+    kpi_codes: *peer_kpi_codes
   - name: KPI-Auswahl Y
     description: "Zweiter Feldparameter für den Peer-Vergleich: die Kennzahl auf der y-Achse des Streudiagramms."
     measures: [EBIT-Marge, DSO, DIO, DPO, CCC, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
+    bounds: *peer_bounds
+    kpi_codes: *peer_kpi_codes
 
 roles:
   - name: Sektor-Team

@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_lead_time.Anteil Z''-Flagge rot",
-              "nativeQueryRef": "Anteil Z''-Flagge rot"
+              "nativeQueryRef": "Anteil Z''-Flagge rot",
+              "displayName": "Z''-Flagge rot"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "fact_lead_time.Anteil CCC-Flagge rot",
-              "nativeQueryRef": "Anteil CCC-Flagge rot"
+              "nativeQueryRef": "Anteil CCC-Flagge rot",
+              "displayName": "CCC-Flagge rot"
             },
             {
               "field": {
@@ -55,7 +57,8 @@
                 }
               },
               "queryRef": "fact_lead_time.Anteil CCC berechenbar",
-              "nativeQueryRef": "Anteil CCC berechenbar"
+              "nativeQueryRef": "Anteil CCC berechenbar",
+              "displayName": "CCC berechenbar"
             }
           ]
         }
@@ -69,6 +72,26 @@
               "expr": {
                 "Literal": {
                   "Value": "true"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
                 }
               }
             }
@@ -96,6 +119,13 @@
                     }
                   },
                   "Property": "Diagramm 01 flaggen"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

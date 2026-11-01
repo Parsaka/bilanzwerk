@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_period.period_end_date",
-              "nativeQueryRef": "period_end_date"
+              "nativeQueryRef": "period_end_date",
+              "displayName": "Periodenende"
             }
           ]
         },
@@ -45,7 +46,8 @@
                 }
               },
               "queryRef": "fact_case_study.Fall CCC",
-              "nativeQueryRef": "Fall CCC"
+              "nativeQueryRef": "Fall CCC",
+              "displayName": "CCC"
             },
             {
               "field": {
@@ -59,11 +61,40 @@
                 }
               },
               "queryRef": "fact_case_study.Fall CCC Sektor-Median",
-              "nativeQueryRef": "Fall CCC Sektor-Median"
+              "nativeQueryRef": "Fall CCC Sektor-Median",
+              "displayName": "CCC Sektor-Median"
             }
           ]
         }
       }
+    },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "visualContainerObjects": {
       "title": [
@@ -85,6 +116,13 @@
                     }
                   },
                   "Property": "Diagramm 08 ccc"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

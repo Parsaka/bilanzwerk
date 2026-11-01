@@ -4,5 +4,17 @@
   "displayName": "4. GuV und Margen",
   "displayOption": "FitToPage",
   "height": 720,
-  "width": 1280
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "geschaeftsjahr",
+      "target": "umsatz_bis_ebit",
+      "type": "NoFilter"
+    },
+    {
+      "source": "geschaeftsjahr",
+      "target": "margen",
+      "type": "NoFilter"
+    }
+  ]
 }

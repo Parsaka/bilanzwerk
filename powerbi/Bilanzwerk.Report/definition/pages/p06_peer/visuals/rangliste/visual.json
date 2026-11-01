@@ -27,35 +27,38 @@
                 }
               },
               "queryRef": "dim_company.company_name",
-              "nativeQueryRef": "company_name"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "KPI-Auswahl"
-                    }
-                  },
-                  "Property": "KPI-Auswahl"
-                }
-              },
-              "queryRef": "KPI-Auswahl.KPI-Auswahl",
-              "nativeQueryRef": "KPI-Auswahl"
+              "nativeQueryRef": "company_name",
+              "displayName": "Unternehmen"
             },
             {
               "field": {
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "fact_kpi"
+                      "Entity": "KPI-Auswahl"
                     }
                   },
-                  "Property": "Sektorperzentil"
+                  "Property": "KPI-Auswahl Wert"
                 }
               },
-              "queryRef": "fact_kpi.Sektorperzentil",
-              "nativeQueryRef": "Sektorperzentil"
+              "queryRef": "KPI-Auswahl.KPI-Auswahl Wert",
+              "nativeQueryRef": "KPI-Auswahl Wert",
+              "displayName": "Wert"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPI-Auswahl"
+                    }
+                  },
+                  "Property": "KPI-Auswahl Perzentil"
+                }
+              },
+              "queryRef": "KPI-Auswahl.KPI-Auswahl Perzentil",
+              "nativeQueryRef": "KPI-Auswahl Perzentil",
+              "displayName": "Sektorperzentil"
             }
           ]
         }
@@ -67,10 +70,10 @@
               "Measure": {
                 "Expression": {
                   "SourceRef": {
-                    "Entity": "fact_kpi"
+                    "Entity": "KPI-Auswahl"
                   }
                 },
-                "Property": "Sektorperzentil"
+                "Property": "KPI-Auswahl Perzentil"
               }
             },
             "direction": "Descending"
@@ -105,6 +108,63 @@
             }
           }
         }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "270D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "dim_company.company_name"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "80D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "KPI-Auswahl.KPI-Auswahl Wert"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "110D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "KPI-Auswahl.KPI-Auswahl Perzentil"
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "visualContainerObjects": {
@@ -129,10 +189,74 @@
                   "Property": "Diagramm 06 rangliste"
                 }
               }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }
       ]
     }
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "f0",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "KPI-Auswahl"
+              }
+            },
+            "Property": "KPI-Auswahl Wert"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "f",
+              "Entity": "KPI-Auswahl",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Measure": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "f"
+                            }
+                          },
+                          "Property": "KPI-Auswahl Wert"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      }
+    ]
   }
 }

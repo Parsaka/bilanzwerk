@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_event.event_date",
-              "nativeQueryRef": "event_date"
+              "nativeQueryRef": "event_date",
+              "displayName": "Datum"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "fact_event.event_type",
-              "nativeQueryRef": "event_type"
+              "nativeQueryRef": "event_type",
+              "displayName": "Ereignis"
             },
             {
               "field": {
@@ -55,7 +57,8 @@
                 }
               },
               "queryRef": "fact_event.form",
-              "nativeQueryRef": "form"
+              "nativeQueryRef": "form",
+              "displayName": "Formular"
             },
             {
               "field": {
@@ -69,7 +72,8 @@
                 }
               },
               "queryRef": "fact_event.item_code",
-              "nativeQueryRef": "item_code"
+              "nativeQueryRef": "item_code",
+              "displayName": "Item"
             }
           ]
         }
@@ -119,6 +123,19 @@
             }
           }
         }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "visualContainerObjects": {
@@ -141,6 +158,13 @@
                     }
                   },
                   "Property": "Diagramm 02 ereignisse"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

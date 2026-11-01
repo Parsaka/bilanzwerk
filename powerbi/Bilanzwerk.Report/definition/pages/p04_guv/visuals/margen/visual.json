@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_period.fiscal_year",
-              "nativeQueryRef": "fiscal_year"
+              "nativeQueryRef": "fiscal_year",
+              "displayName": "Geschäftsjahr"
             }
           ]
         },
@@ -65,6 +66,34 @@
         }
       }
     },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
     "visualContainerObjects": {
       "title": [
         {
@@ -85,6 +114,13 @@
                     }
                   },
                   "Property": "Diagramm 04 margen"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

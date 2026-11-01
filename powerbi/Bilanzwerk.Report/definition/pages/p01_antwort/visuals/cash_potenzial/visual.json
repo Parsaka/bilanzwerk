@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_wc_opportunity.Cash-Potenzial aktuell",
-              "nativeQueryRef": "Cash-Potenzial aktuell"
+              "nativeQueryRef": "Cash-Potenzial aktuell",
+              "displayName": "Cash-Potenzial"
             }
           ]
         }
@@ -41,6 +42,13 @@
               "expr": {
                 "Literal": {
                   "Value": "24D"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1000000000D"
                 }
               }
             }
@@ -81,6 +89,13 @@
                     }
                   },
                   "Property": "Diagramm 01 cash_potenzial"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

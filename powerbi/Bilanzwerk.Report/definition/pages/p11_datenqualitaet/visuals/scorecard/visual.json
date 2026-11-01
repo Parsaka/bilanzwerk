@@ -6,7 +6,7 @@
     "y": 152,
     "z": 4,
     "width": 820,
-    "height": 300,
+    "height": 320,
     "tabOrder": 4
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_data_quality.rule_code",
-              "nativeQueryRef": "rule_code"
+              "nativeQueryRef": "rule_code",
+              "displayName": "Regel"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "fact_data_quality.dq_dimension",
-              "nativeQueryRef": "dq_dimension"
+              "nativeQueryRef": "dq_dimension",
+              "displayName": "Dimension"
             },
             {
               "field": {
@@ -55,7 +57,8 @@
                 }
               },
               "queryRef": "fact_data_quality.table_name",
-              "nativeQueryRef": "table_name"
+              "nativeQueryRef": "table_name",
+              "displayName": "Tabelle"
             },
             {
               "field": {
@@ -69,7 +72,8 @@
                 }
               },
               "queryRef": "fact_data_quality.DQ Pass-Rate",
-              "nativeQueryRef": "DQ Pass-Rate"
+              "nativeQueryRef": "DQ Pass-Rate",
+              "displayName": "Erfüllt"
             },
             {
               "field": {
@@ -83,7 +87,8 @@
                 }
               },
               "queryRef": "fact_data_quality.DQ Ziel",
-              "nativeQueryRef": "DQ Ziel"
+              "nativeQueryRef": "DQ Ziel",
+              "displayName": "Ziel"
             },
             {
               "field": {
@@ -97,7 +102,8 @@
                 }
               },
               "queryRef": "fact_data_quality.DQ Status",
-              "nativeQueryRef": "DQ Status"
+              "nativeQueryRef": "DQ Status",
+              "displayName": "Status"
             }
           ]
         }
@@ -147,6 +153,19 @@
             }
           }
         }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "visualContainerObjects": {
@@ -169,6 +188,13 @@
                     }
                   },
                   "Property": "Diagramm 11 scorecard"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

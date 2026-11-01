@@ -9,6 +9,54 @@ source_line:
   de: "Quelle: SEC EDGAR (Financial Statement Data Sets, Submissions), ESEF über filings.xbrl.org, GLEIF, EZB-Referenzkurse"
   en: "Source: SEC EDGAR (Financial Statement Data Sets, submissions), ESEF via filings.xbrl.org, GLEIF, ECB reference rates"
 
+# Display names of fields in headers, axis titles and legends (the report is German by default;
+# a visual can override one with `names`).
+field_names:
+  dim_company.company_name: Unternehmen
+  dim_sector.sector_de: Sektor
+  dim_kpi.name_de: Kennzahl
+  dim_line_item.group_de: Gruppe
+  dim_period.fiscal_year: Geschäftsjahr
+  dim_period.period_end_date: Periodenende
+  fact_hypothesis_result.hypothesis_code: Hypothese
+  fact_hypothesis_result.[Antwort Text]: Ergebnis
+  fact_event.event_date: Datum
+  fact_event.event_type: Ereignis
+  fact_event.form: Formular
+  fact_event.item_code: Item
+  fact_data_quality.rule_code: Regel
+  fact_data_quality.dq_dimension: Dimension
+  fact_data_quality.table_name: Tabelle
+  fact_data_quality.[DQ Pass-Rate]: Erfüllt
+  fact_data_quality.[DQ Ziel]: Ziel
+  fact_data_quality.[DQ Status]: Status
+  fact_stewardship_queue.sec_name: Name (SEC)
+  fact_stewardship_queue.gleif_legal_name: Name (GLEIF)
+  fact_stewardship_queue.gleif_city: Ort
+  fact_stewardship_queue.gleif_country: Land
+  fact_stewardship_queue.match_probability: Match-Wahrscheinlichkeit
+  fact_risk_score.top_3_drivers: Stärkste Treiber
+  fact_model_backtest.model_name: Modell
+  fact_case_study.company_name: Fall
+  GuV-Brücke.Schritt: Schritt
+  KPI-Auswahl.[KPI-Auswahl Wert]: Kennzahl x (Auswahl oben)
+  KPI-Auswahl Y.[KPI-Auswahl Y Wert]: Kennzahl y (Auswahl oben)
+  KPI-Auswahl.[KPI-Auswahl Perzentil]: Sektorperzentil
+  fact_wc_opportunity.[Cash-Potenzial aktuell]: Cash-Potenzial
+  fact_wc_opportunity.[Cash-Potenzial Stretch aktuell]: Cash-Potenzial Stretch
+  fact_lead_time.[Vorlaufzeit Z'' (Median)]: Z''
+  fact_lead_time.[Vorlaufzeit CCC (Median)]: CCC
+  fact_lead_time.[Anteil Z''-Flagge rot]: Z''-Flagge rot
+  fact_lead_time.[Anteil CCC-Flagge rot]: CCC-Flagge rot
+  fact_lead_time.[Anteil CCC berechenbar]: CCC berechenbar
+  fact_kpi.[KPI Wert letzter Abschluss]: Wert
+  fact_kpi.[Sektorperzentil letzter Abschluss]: Sektorperzentil
+  fact_kpi.[Rote Flaggen letzter Abschluss]: Rote Flaggen
+  fact_case_study.[Fall CCC]: CCC
+  fact_case_study.[Fall CCC Sektor-Median]: CCC Sektor-Median
+  fact_case_study.[Fall Z'' Score]: Z''
+  fact_case_study.[Fall Rote Flaggen]: Rote Flaggen
+
 pages:
   - id: antwort
     de: {name: "Antwort", question: "Was haben wir herausgefunden?"}
@@ -24,6 +72,7 @@ pages:
         pos: [24, 84, 820, 300]
         fields: {Values: ["fact_hypothesis_result.hypothesis_code", "fact_hypothesis_result.[Antwort Text]"]}
         sort: ["fact_hypothesis_result.hypothesis_code", asc]
+        widths: {"fact_hypothesis_result.hypothesis_code": 90, "fact_hypothesis_result.[Antwort Text]": 700}
         label: {de: "Die vier Hypothesen (vorher festgelegt, ADR-001), Ergebnis des letzten Modelllaufs", en: "The four hypotheses (fixed beforehand, ADR-001), result of the last model run"}
       - name: vorlaufzeit
         type: clusteredBarChart
@@ -61,6 +110,7 @@ pages:
         type: slicer
         pos: [24, 84, 400, 56]
         fields: {Values: ["dim_company.company_name"]}
+        default: "MICROSOFT CORP"
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
       - name: kopfzeile
@@ -71,7 +121,8 @@ pages:
       - name: kennzahlen
         type: tableEx
         pos: [24, 152, 400, 512]
-        fields: {Values: ["dim_kpi.name_de", "fact_kpi.[KPI Wert]", "fact_kpi.[Sektorperzentil]", "fact_kpi.[Rote Flaggen]"]}
+        fields: {Values: ["dim_kpi.name_de", "fact_kpi.[KPI Wert letzter Abschluss]", "fact_kpi.[Sektorperzentil letzter Abschluss]", "fact_kpi.[Rote Flaggen letzter Abschluss]"]}
+        widths: {"dim_kpi.name_de": 150, "fact_kpi.[KPI Wert letzter Abschluss]": 55, "fact_kpi.[Sektorperzentil letzter Abschluss]": 105, "fact_kpi.[Rote Flaggen letzter Abschluss]": 70}
         label: {de: "Kennzahlen zum letzten Abschluss mit Sektorperzentil", en: "Ratios at the latest statement with sector percentile"}
       - name: umsatz
         type: lineChart
@@ -106,6 +157,7 @@ pages:
         type: slicer
         pos: [24, 84, 400, 56]
         fields: {Values: ["dim_company.company_name"]}
+        default: "MICROSOFT CORP"
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
       - name: aktiva
@@ -142,12 +194,15 @@ pages:
         type: slicer
         pos: [24, 84, 400, 56]
         fields: {Values: ["dim_company.company_name"]}
+        default: "MICROSOFT CORP"
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
       - name: geschaeftsjahr
         type: slicer
         pos: [440, 84, 200, 56]
         fields: {Values: ["dim_period.fiscal_year"]}
+        default: "2025"
+        filters_only: [bruecke]
         label: {de: "Geschäftsjahr", en: "Fiscal year"}
       - name: bruecke
         type: waterfallChart
@@ -177,6 +232,7 @@ pages:
         type: slicer
         pos: [24, 84, 400, 56]
         fields: {Values: ["dim_company.company_name"]}
+        default: "MICROSOFT CORP"
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
       - name: tage
@@ -222,13 +278,16 @@ pages:
       - name: streuung
         type: scatterChart
         pos: [24, 152, 720, 512]
-        fields: {Category: ["dim_company.company_name"], X: ["KPI-Auswahl.KPI-Auswahl"], Y: ["KPI-Auswahl Y.KPI-Auswahl Y"]}
-        label: {de: "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen", en: "Companies of the sector on two ratios of your choice"}
+        fields: {Category: ["dim_company.company_name"], X: ["KPI-Auswahl.[KPI-Auswahl Wert]"], Y: ["KPI-Auswahl Y.[KPI-Auswahl Y Wert]"]}
+        label: {de: "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen (Werte außerhalb plausibler Grenzen ausgeblendet)", en: "Companies of the sector on two ratios of your choice (values outside plausible bounds hidden)"}
       - name: rangliste
         type: tableEx
         pos: [760, 152, 496, 512]
-        fields: {Values: ["dim_company.company_name", "KPI-Auswahl.KPI-Auswahl", "fact_kpi.[Sektorperzentil]"]}
-        sort: ["fact_kpi.[Sektorperzentil]", desc]
+        fields: {Values: ["dim_company.company_name", "KPI-Auswahl.[KPI-Auswahl Wert]", "KPI-Auswahl.[KPI-Auswahl Perzentil]"]}
+        widths: {"dim_company.company_name": 270, "KPI-Auswahl.[KPI-Auswahl Wert]": 80, "KPI-Auswahl.[KPI-Auswahl Perzentil]": 110}
+        names: {"KPI-Auswahl.[KPI-Auswahl Wert]": "Wert"}
+        filters: [{field: "KPI-Auswahl.[KPI-Auswahl Wert]", not_blank: true}]
+        sort: ["KPI-Auswahl.[KPI-Auswahl Perzentil]", desc]
         label: {de: "Rangliste mit Sektorperzentil", en: "Ranking with sector percentile"}
   - id: fruehwarnung
     de: {name: "Frühwarnsystem", question: "Welche Unternehmen brauchen jetzt Aufmerksamkeit?"}
@@ -253,7 +312,8 @@ pages:
       - name: ampel
         type: tableEx
         pos: [24, 152, 820, 512]
-        fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_risk_score.[Risiko 12M]", "fact_risk_score.[Risiko Veränderung zum Vorquartal]", "fact_kpi.[Rote Flaggen]", "fact_risk_score.top_3_drivers"]}
+        fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_risk_score.[Risiko 12M]", "fact_kpi.[Rote Flaggen]", "fact_risk_score.top_3_drivers"]}
+        widths: {"dim_company.company_name": 230, "dim_sector.sector_de": 130, "fact_risk_score.[Risiko 12M]": 70, "fact_kpi.[Rote Flaggen]": 60, "fact_risk_score.top_3_drivers": 290}
         sort: ["fact_risk_score.[Risiko 12M]", desc]
         conditional_back: ["fact_risk_score.[Risiko 12M]", "fact_risk_score.[Risiko Farbe]"]
         label: {de: "Unternehmen nach Insolvenzrisiko 12 Monate, mit den drei stärksten Treibern", en: "Companies by 12-month bankruptcy risk, with the three strongest drivers"}
@@ -262,6 +322,7 @@ pages:
         pos: [860, 152, 396, 512]
         fields: {Category: ["fact_model_backtest.model_name"], Y: ["fact_model_backtest.[PR-AUC]"]}
         sort: ["fact_model_backtest.[PR-AUC]", desc]
+        label_space: 50
         data_labels: true
         title: "fact_model_backtest.[Befund Modellgüte]"
   - id: fallstudien
@@ -317,21 +378,25 @@ pages:
         type: clusteredBarChart
         pos: [24, 84, 610, 580]
         fields: {Category: ["dim_sector.sector_de"], Y: ["fact_wc_opportunity.[Cash-Potenzial aktuell]"]}
+        label_space: 40
         sort: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", desc]
         colour_by: "fact_wc_opportunity.[Farbe Sektor-Hebel]"
         data_labels: true
         title: "fact_wc_opportunity.[Befund Cash-Potenzial]"
       - name: top20
         type: tableEx
-        pos: [646, 84, 610, 330]
+        pos: [646, 84, 610, 214]
         fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_wc_opportunity.[Cash-Potenzial aktuell]"]}
         sort: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", desc]
+        widths: {"dim_company.company_name": 270, "dim_sector.sector_de": 200, "fact_wc_opportunity.[Cash-Potenzial aktuell]": 100}
         filters: [{field: "dim_company.company_name", by: "fact_wc_opportunity.[Cash-Potenzial aktuell]", top: 20}]
         label: {de: "Die 20 Unternehmen mit dem größten Potenzial (letztes Geschäftsjahr)", en: "The 20 companies with the largest potential (latest fiscal year)"}
       - name: stretch
         type: clusteredBarChart
-        pos: [646, 426, 610, 238]
+        pos: [646, 310, 610, 354]
         fields: {Category: ["dim_sector.sector_de"], Y: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", "fact_wc_opportunity.[Cash-Potenzial Stretch aktuell]"]}
+        label_space: 40
+        category_width: 10
         sort: ["fact_wc_opportunity.[Cash-Potenzial Stretch aktuell]", desc]
         label: {de: "Median gegen oberes Quartil als Ziel (Stretch-Szenario)", en: "Median against top quartile as target (stretch scenario)"}
   - id: plan_ist
@@ -352,12 +417,15 @@ pages:
         type: slicer
         pos: [340, 84, 200, 56]
         fields: {Values: ["dim_period.fiscal_year"]}
+        default: "2025"
+        filters_only: [abweichung, mape]
         label: {de: "Geschäftsjahr", en: "Fiscal year"}
       - name: abweichung
         type: pivotTable
         pos: [24, 152, 820, 512]
         fields: {Rows: ["dim_sector.sector_de", "dim_company.company_name"], Columns: ["Szenario.Szenario"], Values: ["fact_financial_line.[Umsatz]"]}
-        filters: [{field: "Szenario.Szenario", in: ["Ist", "Plan", "Plan-Ist-Abweichung", "Plan-Ist-Abweichung %"]}]
+        # one measure across the scenario items gets one display unit (Mio); the % item would read "0,0M%"
+        filters: [{field: "Szenario.Szenario", in: ["Ist", "Plan", "Plan-Ist-Abweichung"]}]
         label: {de: "Umsatz Ist gegen Plan nach Sektor und Unternehmen (Plan im Januar eingefroren)", en: "Revenue actual against plan by sector and company (plan frozen in January)"}
       - name: mape
         type: card
@@ -386,7 +454,7 @@ pages:
         font_size: 14
       - name: scorecard
         type: tableEx
-        pos: [24, 152, 820, 300]
+        pos: [24, 152, 820, 320]
         # measures, not columns: the mart appends one row per rule and dbt run, the measures read the last run
         fields: {Values: ["fact_data_quality.rule_code", "fact_data_quality.dq_dimension", "fact_data_quality.table_name", "fact_data_quality.[DQ Pass-Rate]", "fact_data_quality.[DQ Ziel]", "fact_data_quality.[DQ Status]"]}
         sort: ["fact_data_quality.[DQ Pass-Rate]", asc]
@@ -408,7 +476,7 @@ pages:
         label: {de: "Offene Stewardship-Fälle", en: "Open stewardship cases"}
       - name: stewardship
         type: tableEx
-        pos: [24, 464, 1232, 200]
+        pos: [24, 484, 1232, 180]
         fields: {Values: ["fact_stewardship_queue.sec_name", "fact_stewardship_queue.gleif_legal_name", "fact_stewardship_queue.gleif_city", "fact_stewardship_queue.gleif_country", "fact_stewardship_queue.match_probability"]}
         sort: ["fact_stewardship_queue.match_probability", desc]
         label: {de: "Stewardship-Warteschlange: Kandidatenpaare zur Prüfung (Service Level: Frische 24 h, Refresh-Erfolg 99 %)", en: "Stewardship queue: candidate pairs to review (service level: freshness 24 h, refresh success 99 %)"}

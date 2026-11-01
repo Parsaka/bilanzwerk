@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "GuV-Brücke.Schritt",
-              "nativeQueryRef": "Schritt"
+              "nativeQueryRef": "Schritt",
+              "displayName": "Schritt"
             }
           ]
         },
@@ -61,6 +62,26 @@
                   "Value": "true"
                 }
               }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1000000D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1000000D"
+                }
+              }
             }
           }
         }
@@ -86,6 +107,13 @@
                     }
                   },
                   "Property": "Diagramm 04 bruecke"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

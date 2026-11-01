@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_model_backtest.model_name",
-              "nativeQueryRef": "model_name"
+              "nativeQueryRef": "model_name",
+              "displayName": "Modell"
             }
           ]
         },
@@ -79,6 +80,39 @@
                   "Value": "true"
                 }
               }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "categoryAxis": [
+        {
+          "properties": {
+            "maxMarginFactor": {
+              "expr": {
+                "Literal": {
+                  "Value": "50L"
+                }
+              }
             }
           }
         }
@@ -104,6 +138,13 @@
                     }
                   },
                   "Property": "Befund Modellgüte"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

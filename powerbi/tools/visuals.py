@@ -29,6 +29,11 @@ ROLES = {
     "waterfallChart": ["Category", "Breakdown", "Y"],
     "scatterChart": ["Category", "Series", "X", "Y", "Size"],
 }
+CHARTS = {t for t in ROLES if t.endswith("Chart")}
+# Display units: amounts are EUR measures with `unit: Mio|Mrd` in model.yml, shown in that unit;
+# everything else (counts, days, ratios) without automatic scaling, which would print "1,3T".
+UNITS = {"Mio": "1000000D", "Mrd": "1000000000D"}
+CATEGORY_ROLES = {"Category", "Series", "Rows", "Columns", "Breakdown"}
 
 
 def lit(value: str) -> dict:
@@ -61,8 +66,11 @@ def query_ref(ref: str) -> str:
     return f"{table}.{prop}"
 
 
-def projection(ref: str, active: bool = False) -> dict:
+def projection(ref: str, active: bool = False, name: str | None = None) -> dict:
     out = {"field": field(ref), "queryRef": query_ref(ref), "nativeQueryRef": parse(ref)[1]}
+    if name:
+        # what headers, axis titles and legends show instead of the column or measure name
+        out["displayName"] = name
     if active:
         out["active"] = True
     return out
@@ -95,6 +103,54 @@ def categorical_filter(name: str, ref: str, values: list[str]) -> dict:
             ],
         },
         "howCreated": "User",
+    }
+
+
+def not_blank_filter(name: str, ref: str) -> dict:
+    """Visual-level filter: column is not blank. Keeps the engine's blank member (facts without a
+    dimension row) out of a single-select slicer, which would otherwise preselect it."""
+    table, _, _ = parse(ref)
+    alias = "f"
+    return {
+        "name": name,
+        "field": field(ref),
+        "type": "Advanced",
+        "filter": {
+            "Version": 2,
+            "From": [{"Name": alias, "Entity": table, "Type": 0}],
+            "Where": [
+                {
+                    "Condition": {
+                        "Not": {
+                            "Expression": {
+                                "Comparison": {
+                                    "ComparisonKind": 0,
+                                    "Left": field(ref, alias),
+                                    "Right": {"Literal": {"Value": "null"}},
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+        },
+        "howCreated": "User",
+    }
+
+
+def selection(ref: str, value: str) -> dict:
+    """A slicer's saved selection: the member it shows when the report opens."""
+    table, _, _ = parse(ref)
+    # integers (fiscal_year) are Int64 literals, everything else a string
+    literal = f"{value}L" if re.fullmatch(r"-?\d+", str(value)) else "'" + str(value).replace("'", "''") + "'"
+    return {
+        "filter": {
+            "Version": 2,
+            "From": [{"Name": "s", "Entity": table, "Type": 0}],
+            "Where": [
+                {"Condition": {"In": {"Expressions": [field(ref, "s")], "Values": [[{"Literal": {"Value": literal}}]]}}}
+            ],
+        }
     }
 
 
@@ -145,8 +201,17 @@ def top_n_filter(name: str, ref: str, by: str, n: int) -> dict:
     }
 
 
-def build(spec: dict, z: int) -> dict:
-    """One visual from its pages.yml entry."""
+def display_units(refs: list[str], units: dict[str, str]) -> dict:
+    """The display units literal for these value fields: their unit if they have one, else none."""
+    found = [units[parse(r)[1]] for r in refs if parse(r)[2] == "Measure" and parse(r)[1] in units]
+    return lit(UNITS[found[0]] if found else "1D")
+
+
+def build(spec: dict, z: int, units: dict[str, str] | None = None, names: dict[str, str] | None = None) -> dict:
+    """One visual from its pages.yml entry; `units` maps measure names to Mio/Mrd (model.yml)."""
+    units = units or {}
+    # display names: the report-wide map (pages.yml field_names), overridden per visual (names)
+    names = {**(names or {}), **spec.get("names", {})}
     vtype = spec["type"]
     x, y, w, h = spec["pos"]
     visual: dict = {"visualType": vtype}
@@ -157,7 +222,7 @@ def build(spec: dict, z: int) -> dict:
         raise ValueError(f"{spec['name']}: roles {sorted(unknown)} not valid for {vtype}")
     if roles:
         state = {
-            role: {"projections": [projection(r, active=(vtype == "slicer")) for r in refs]}
+            role: {"projections": [projection(r, active=(vtype == "slicer"), name=names.get(r)) for r in refs]}
             for role, refs in roles.items()
         }
         query: dict = {"queryState": state}
@@ -169,14 +234,26 @@ def build(spec: dict, z: int) -> dict:
             }
         visual["query"] = query
 
+    values = [r for role, refs in roles.items() if role not in CATEGORY_ROLES | {"X"} for r in refs]
     objects: dict = {}
     if vtype == "slicer":
         mode = spec.get("slicer_mode", "Dropdown")
         objects["data"] = [{"properties": {"mode": text(mode)}}]
         if spec.get("single_select", True):
             objects["selection"] = [{"properties": {"strictSingleSelect": lit("true")}}]
+        if "default" in spec:
+            objects["general"] = [{"properties": {"filter": selection(spec["fields"]["Values"][0], spec["default"])}}]
+        # the visual title names the field already; the header would only repeat the column name
+        objects["header"] = [{"properties": {"show": lit("false")}}]
     if vtype == "card":
-        objects["labels"] = [{"properties": {"fontSize": lit(f"{spec.get('font_size', 24)}D")}}]
+        objects["labels"] = [
+            {
+                "properties": {
+                    "fontSize": lit(f"{spec.get('font_size', 24)}D"),
+                    "labelDisplayUnits": display_units(values, units),
+                }
+            }
+        ]
         objects["categoryLabels"] = [{"properties": {"show": lit("false")}}]
         if spec.get("word_wrap"):
             objects["wordWrap"] = [{"properties": {"show": lit("true")}}]
@@ -192,6 +269,20 @@ def build(spec: dict, z: int) -> dict:
                     "selector": {"data": [{"dataViewWildcard": {"matchingOption": 1}}], "metadata": query_ref(target)},
                 }
             )
+        scaled = [r for r in values if parse(r)[2] == "Measure" and parse(r)[1] in units]
+        if scaled:
+            objects["columnFormatting"] = [
+                {"properties": {"labelDisplayUnits": display_units([r], units)}, "selector": {"metadata": query_ref(r)}}
+                for r in scaled
+            ]
+        if spec.get("widths"):
+            objects["columnWidth"] = [
+                {"properties": {"value": lit(f"{px}D")}, "selector": {"metadata": query_ref(ref)}}
+                for ref, px in spec["widths"].items()
+            ]
+    if vtype == "tableEx":
+        # a total over companies, hypotheses or rules means nothing here
+        objects["total"] = [{"properties": {"totals": lit("false")}}]
     if "colour_by" in spec:
         # one accent colour for the item the title talks about, grey for the rest
         objects["dataPoint"] = [
@@ -202,13 +293,35 @@ def build(spec: dict, z: int) -> dict:
         ]
     if spec.get("data_labels"):
         objects["labels"] = [{"properties": {"show": lit("true")}}]
+    if vtype in CHARTS:
+        unit = display_units(values, units)
+        objects.setdefault("labels", [{"properties": {}}])[0]["properties"]["labelDisplayUnits"] = unit
+        objects["valueAxis"] = [{"properties": {"labelDisplayUnits": unit}}]
+        if vtype == "scatterChart":
+            objects["categoryAxis"] = [{"properties": {"labelDisplayUnits": display_units(roles.get("X", []), units)}}]
+        if "Series" in roles:
+            objects["legend"] = [{"properties": {"showTitle": lit("false")}}]
+        # long category names (sectors, model names): up to `label_space` % of the width for the
+        # labels instead of cutting them; `category_width` lets all categories fit without a scrollbar
+        axis = objects.setdefault("categoryAxis", [{"properties": {}}])[0]["properties"]
+        if "label_space" in spec:
+            axis["maxMarginFactor"] = lit(f"{spec['label_space']}L")
+        if "category_width" in spec:
+            axis["minCategoryWidth"] = lit(f"{spec['category_width']}D")
+        if not axis:
+            del objects["categoryAxis"]
     if objects:
         visual["objects"] = objects
 
     title = spec.get("title")
     container: dict = {}
     if title:
-        container["title"] = [{"properties": {"show": lit("true"), "text": measure_expr(title)}}]
+        # findings are sentences; wrapped instead of cut off with "...". Not on slicers: their box is one
+        # line high and a second title line would push the dropdown out of it.
+        wrap = "false" if vtype == "slicer" else "true"
+        container["title"] = [
+            {"properties": {"show": lit("true"), "text": measure_expr(title), "titleWrap": lit(wrap)}}
+        ]
     else:
         container["title"] = [{"properties": {"show": lit("false")}}]
     visual["visualContainerObjects"] = container
@@ -222,9 +335,13 @@ def build(spec: dict, z: int) -> dict:
         "visual": visual,
     }
     filters = []
+    if vtype == "slicer" and spec.get("single_select", True):
+        filters.append(not_blank_filter("nb", spec["fields"]["Values"][0]))
     for i, flt in enumerate(spec.get("filters", [])):
         if "top" in flt:
             filters.append(top_n_filter(f"f{i}", flt["field"], flt["by"], flt["top"]))
+        elif flt.get("not_blank"):
+            filters.append(not_blank_filter(f"f{i}", flt["field"]))
         else:
             filters.append(categorical_filter(f"f{i}", flt["field"], flt["in"]))
     if filters:

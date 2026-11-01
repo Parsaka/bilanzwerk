@@ -18,7 +18,7 @@ as page 9 of the Power BI report (hypothesis H4), from the same mart.
   workbook total is more than EUR 0.5 bn away from H4. The real-data run builds it and keeps it
   under `results/tableau/` on branch `real-data-results`; publishing it to Tableau Public needs
   the account and stays a manual step.
-* **Link:** _added after publishing (Tableau Public profile of Parsa Kamali)._
+* **Link:** [Working-Capital-Potenzial nach Sektor](https://public.tableau.com/app/profile/parsa.kamali/viz/BilanzwerkWorking-Capital-PotenzialnachSektor/Working-Capital-Potenzial) (Tableau Public, Parsa Kamali)
 
 ## Calculated fields
 
