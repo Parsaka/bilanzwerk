@@ -163,6 +163,17 @@ jobs:
           uv run python tableau/build_workbook.py --out data/results/tableau/Bilanzwerk_Working_Capital.twbx \
             --check-answer data/analysis/results/answer.json
 
+      # mart tables as Parquet for the local Power BI model (generate_tmdl.py --local); an
+      # artifact only, too large for the results branch
+      - name: Export marts for the local Power BI model
+        run: uv run python scripts/export_marts.py --duckdb "$BW_DATA_ROOT/bilanzwerk.duckdb" --out data/marts_parquet
+      - uses: actions/upload-artifact@v4
+        with:
+          name: marts-parquet
+          path: data/marts_parquet/
+          retention-days: 30
+          compression-level: 0
+
       - name: Collect results
         if: always()
         run: |

@@ -42,3 +42,6 @@ powerbi/**/.pbi/cache.abf
 
 # Tableau extract: produced by scripts/export_tableau.py, published to Tableau Public, not versioned
 tableau/data/
+
+# local import-mode copy of the Power BI model (generate_tmdl.py --local)
+powerbi/local/

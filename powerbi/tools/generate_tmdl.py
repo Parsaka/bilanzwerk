@@ -6,10 +6,17 @@ Columns are taken from docs/data-contracts/*.yml, so the model can never drift f
 a renamed mart column breaks the contract check first, and the regenerated model follows.
 The Warehouse endpoint is a placeholder (#{SQL_ENDPOINT}#, #{WAREHOUSE}#) that the deployment
 step replaces (scripts/deploy_semantic_model.py / Fabric deployment pipeline parameters).
+
+  python powerbi/tools/generate_tmdl.py --local
+
+writes the same model in import mode to powerbi/local/ (not versioned): every mart table is
+read from <MartsFolder>/<table>.parquet (scripts/export_marts.py), so the report opens in Power
+BI Desktop without Fabric. Measures, relationships, roles and pages are identical.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import shutil
 import uuid
@@ -31,6 +38,14 @@ DATATYPE = {
     "decimal": "decimal",
     "date": "dateTime",
     "timestamp": "dateTime",
+}
+M_TYPE = {
+    "string": "type text",
+    "integer": "Int64.Type",
+    "float": "type number",
+    "decimal": "type number",
+    "date": "type date",
+    "timestamp": "type datetime",
 }
 FORMAT = {"date": "dd.MM.yyyy", "timestamp": "dd.MM.yyyy HH:mm", "float": "#,0.00", "decimal": "#,0.00", "integer": "0"}
 
@@ -55,6 +70,9 @@ def expression_lines(expr: str, indent: str) -> list[str]:
     if len(lines) == 1:
         return [lines[0]]
     return [""] + [f"{indent}{line}" if line.strip() else "" for line in lines]
+
+
+LOCAL = False  # set by --local: import partitions from Parquet instead of Direct Lake
 
 
 def render_table(
@@ -98,12 +116,25 @@ def render_table(
         out.append(f"\t\tlineageTag: {tag('column', name, c)}")
         out.append(f"\t\tsourceLineageTag: {c}")
         out.append("")
-    out.append(f"\tpartition {q(name)} = entity")
-    out.append("\t\tmode: directLake")
-    out.append("\t\tsource")
-    out.append(f"\t\t\tentityName: {name}")
-    out.append(f"\t\t\tschemaName: {schema}")
-    out.append("\t\t\texpressionSource: DatabaseQuery")
+    if LOCAL:
+        types = ", ".join(f'{{"{col["name"]}", {M_TYPE[col["type"]]}}}' for col in columns)
+        out.append(f"\tpartition {q(name)} = m")
+        out.append("\t\tmode: import")
+        out.append("\t\tsource =")
+        out.append("\t\t\t\tlet")
+        out.append(f'\t\t\t\t    Quelle = Parquet.Document(File.Contents(MartsFolder & "\\{name}.parquet")),')
+        names = ", ".join(f'"{col["name"]}"' for col in columns)
+        out.append(f"\t\t\t\t    Spalten = Table.SelectColumns(Quelle, {{{names}}}),")
+        out.append(f"\t\t\t\t    Typen = Table.TransformColumnTypes(Spalten, {{{types}}})")
+        out.append("\t\t\t\tin")
+        out.append("\t\t\t\t    Typen")
+    else:
+        out.append(f"\tpartition {q(name)} = entity")
+        out.append("\t\tmode: directLake")
+        out.append("\t\tsource")
+        out.append(f"\t\t\tentityName: {name}")
+        out.append(f"\t\t\tschemaName: {schema}")
+        out.append("\t\t\texpressionSource: DatabaseQuery")
     out.append("")
     if cfg.get("mark_as_date"):
         out.append("\tannotation __PBI_TimeIntelligenceEnabled = 0")
@@ -349,7 +380,44 @@ def load_columns(name: str, cfg: dict) -> list[dict]:
     return contract["columns"]
 
 
+def write_direct_lake_expression() -> None:
+    (DEF / "expressions.tmdl").write_text(
+        "/// Direct Lake source: the Fabric Warehouse. Placeholders are replaced at deployment.\n"
+        "expression DatabaseQuery =\n"
+        "\t\tlet\n"
+        '\t\t    database = Sql.Database("#{SQL_ENDPOINT}#", "#{WAREHOUSE}#")\n'
+        "\t\tin\n"
+        "\t\t    database\n"
+        f"\tlineageTag: {tag('expression', 'DatabaseQuery')}\n",
+        encoding="utf-8",
+    )
+
+
+def write_local_report() -> None:
+    """The report pages, bound to the local model, and a .pbip to open both in Power BI Desktop."""
+    local = PBI / "local"
+    report = local / "Bilanzwerk.Local.Report"
+    if report.exists():
+        shutil.rmtree(report)
+    shutil.copytree(PBI / "Bilanzwerk.Report", report)
+    pbir = json.loads((report / "definition.pbir").read_text())
+    pbir["datasetReference"]["byPath"]["path"] = "../Bilanzwerk.Local.SemanticModel"
+    (report / "definition.pbir").write_text(json.dumps(pbir, indent=2) + "\n")
+    pbip = json.loads((PBI / "Bilanzwerk.pbip").read_text())
+    pbip["artifacts"] = [{"report": {"path": "Bilanzwerk.Local.Report"}}]
+    (local / "Bilanzwerk.Local.pbip").write_text(json.dumps(pbip, indent=2) + "\n")
+
+
 def main() -> None:
+    global LOCAL, MODEL_DIR, DEF  # noqa: PLW0603 - one switch for the whole render
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--local", action="store_true", help="import mode from Parquet, written to powerbi/local/")
+    parser.add_argument("--marts-folder", default=r"C:\bilanzwerk-marts", help="default of the MartsFolder parameter")
+    args = parser.parse_args()
+    if args.local:
+        LOCAL = True
+        MODEL_DIR = PBI / "local" / "Bilanzwerk.Local.SemanticModel"
+        DEF = MODEL_DIR / "definition"
     model = yaml.safe_load((PBI / "model.yml").read_text())
     if DEF.exists():
         shutil.rmtree(DEF)
@@ -401,16 +469,17 @@ def main() -> None:
     for role in model["roles"]:
         (DEF / "roles" / f"{role['name']}.tmdl").write_text(render_role(role), encoding="utf-8")
 
-    (DEF / "expressions.tmdl").write_text(
-        "/// Direct Lake source: the Fabric Warehouse. Placeholders are replaced at deployment.\n"
-        "expression DatabaseQuery =\n"
-        "\t\tlet\n"
-        '\t\t    database = Sql.Database("#{SQL_ENDPOINT}#", "#{WAREHOUSE}#")\n'
-        "\t\tin\n"
-        "\t\t    database\n"
-        f"\tlineageTag: {tag('expression', 'DatabaseQuery')}\n",
-        encoding="utf-8",
-    )
+    if LOCAL:
+        folder = args.marts_folder.replace('"', "")
+        (DEF / "expressions.tmdl").write_text(
+            "/// Folder with one Parquet file per mart table (scripts/export_marts.py).\n"
+            f'expression MartsFolder = "{folder}" meta '
+            '[IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n'
+            f"\tlineageTag: {tag('expression', 'MartsFolder')}\n",
+            encoding="utf-8",
+        )
+    else:
+        write_direct_lake_expression()
     (DEF / "database.tmdl").write_text("database\n\tcompatibilityLevel: 1604\n", encoding="utf-8")
     model_lines = [
         "model Model",
@@ -440,6 +509,8 @@ def main() -> None:
         + "\n"
     )
     (MODEL_DIR / "definition.pbism").write_text(json.dumps({"version": "4.2", "settings": {}}, indent=2) + "\n")
+    if LOCAL:
+        write_local_report()
     print(
         f"wrote {len(table_names)} tables, {len(model['measures']) + len(labels)} measures, {len(model['roles'])} roles"
     )
