@@ -219,17 +219,21 @@ table fact_financial_line
 		displayFolder: Working Capital
 		lineageTag: 29e85bc8-58ac-5c3e-af99-5d1282746427
 
-	/// Mittlerer absoluter prozentualer Fehler des Forecasts je Unternehmen und Quartal.
-	measure 'Prognosefehler MAPE' =
-			AVERAGEX (
-			    SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
-			    VAR _ist = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" )
-			    VAR _fc = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
-			    RETURN IF ( NOT ISBLANK ( _fc ), DIVIDE ( ABS ( _ist - _fc ), ABS ( _ist ) ) )
-			)
+	/// Gewichteter absoluter Prognosefehler: Summe |Ist - Forecast| geteilt durch Summe |Ist| über Unternehmen und Quartale im Kontext. Anders als ein einfacher MAPE dominieren Unternehmen mit sehr kleinem Umsatz das Ergebnis nicht.
+	measure 'Prognosefehler WAPE' =
+			VAR _paare =
+			    FILTER (
+			        ADDCOLUMNS (
+			            SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
+			            "@ist", CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" ),
+			            "@fc", CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
+			        ),
+			        NOT ISBLANK ( [@fc] ) && NOT ISBLANK ( [@ist] )
+			    )
+			RETURN DIVIDE ( SUMX ( _paare, ABS ( [@ist] - [@fc] ) ), SUMX ( _paare, ABS ( [@ist] ) ) )
 		formatString: 0.0%
 		displayFolder: Plan-Ist
-		lineageTag: dde69af8-6f7b-5bbb-887c-2b5b6f37d0d7
+		lineageTag: 4fdb9e8c-7882-5433-aba4-54076a9d7895
 
 	/// Letzter Veröffentlichungszeitpunkt (available_at) aller Werte im Modell, unabhängig von Filtern. Für Fußzeilen und das Excel-Cockpit.
 	measure Datenstand = CALCULATE ( MAX ( fact_financial_line[available_at] ), REMOVEFILTERS () )

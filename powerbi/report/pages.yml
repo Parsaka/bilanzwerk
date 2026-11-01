@@ -339,8 +339,8 @@ pages:
     en: {name: "Plan vs. actual", question: "How far did actuals miss plan?"}
     visuals:
       - "Abweichung nach Sektor und Unternehmen, absolut und in % (Berechnungsgruppe Szenario)"
-      - "Prognosefehler (MAPE)"
-    measures: ["Umsatz", "Prognosefehler MAPE"]
+      - "Prognosefehler (WAPE)"
+    measures: ["Umsatz", "Prognosefehler WAPE"]
     layout:
       - name: sektor
         type: slicer
@@ -362,13 +362,13 @@ pages:
       - name: mape
         type: card
         pos: [860, 152, 396, 140]
-        fields: {Values: ["fact_financial_line.[Prognosefehler MAPE]"]}
-        label: {de: "Prognosefehler (MAPE) im Kontext", en: "Forecast error (MAPE) in context"}
+        fields: {Values: ["fact_financial_line.[Prognosefehler WAPE]"]}
+        label: {de: "Prognosefehler (WAPE) im Kontext", en: "Forecast error (WAPE) in context"}
       - name: mape_verlauf
         type: lineChart
         pos: [860, 304, 396, 360]
-        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Prognosefehler MAPE]"]}
-        label: {de: "Prognosefehler (MAPE) je Geschäftsjahr", en: "Forecast error (MAPE) by fiscal year"}
+        fields: {Category: ["dim_period.fiscal_year"], Y: ["fact_financial_line.[Prognosefehler WAPE]"]}
+        label: {de: "Prognosefehler (WAPE) je Geschäftsjahr", en: "Forecast error (WAPE) by fiscal year"}
   - id: datenqualitaet
     de: {name: "Datenqualität", question: "Können wir den Zahlen trauen?"}
     en: {name: "Data quality", question: "Can we trust the numbers?"}
