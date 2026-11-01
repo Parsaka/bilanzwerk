@@ -72,7 +72,8 @@ with rules as (
 
     union all
 
-    -- Uniqueness: one golden record per LEI
+    -- Uniqueness: one SEC filer (CIK) per golden record with an LEI; several CIKs on one LEI are
+    -- either one company filing under old and new CIKs or a wrong merge, so they are counted
     select
         'UNIQ_GOLDEN_PER_LEI',
         'Uniqueness',

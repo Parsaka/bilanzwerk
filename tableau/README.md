@@ -10,6 +10,12 @@ as page 9 of the Power BI report (hypothesis H4), from the same mart.
   (or `--odbc` against the Fabric Warehouse) writes `tableau/data/wc_opportunity.csv` and a
   manifest with row count, years and SHA-256. The CSV is not versioned; the manifest of the
   published export goes into the release notes.
+* **Workbook:** `uv run python tableau/build_workbook.py` packs the CSV into
+  `tableau/Bilanzwerk_Working_Capital.twbx` with the sheets, calculated fields and the dashboard
+  below; the title is computed from the same CSV. `--check-answer answer.json` fails when the
+  workbook total is more than EUR 0.5 bn away from H4. The real-data run builds it and keeps it
+  under `results/tableau/` on branch `real-data-results`; publishing it to Tableau Public needs
+  the account and stays a manual step.
 * **Link:** _added after publishing (Tableau Public profile of Parsa Kamali)._
 
 ## Calculated fields

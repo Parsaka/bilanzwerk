@@ -140,6 +140,12 @@ jobs:
         run: |
           uv run bw-analysis events | tee data/results/event_counts.txt
           uv run bw-analysis run | tee data/results/answers.txt
+      # reads each 8-K behind the label on EDGAR; reports, never relabels, so it may fail alone
+      - name: Audit the bankruptcy label against the 8-K text
+        continue-on-error: true
+        env:
+          BW_REQUEST_PAUSE: "0.15"
+        run: uv run bw-analysis label-audit | tee data/results/label_audit.txt
       - name: dbt build with risk scores
         env:
           BW_HAS_MDM: "true"

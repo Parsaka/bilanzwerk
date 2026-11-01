@@ -1,4 +1,4 @@
-"""`bw-analysis run | events | case --cik N`"""
+"""`bw-analysis run | events | case --cik N | label-audit`"""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import logging
 import duckdb
 import typer
 
-from analysis import data, pipeline
+from analysis import data, label_audit, pipeline
 from analysis.config import AnalysisConfig
 
 app = typer.Typer(help="Early-warning analysis: backtest, statistics, explanations, risk score write-back.")
@@ -39,6 +39,16 @@ def case(cik: int) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False)
     typer.echo(json.dumps({"rows": len(df), "file": str(out)}))
+
+
+@app.command("label-audit")
+def label_audit_cmd(limit: int = 0) -> None:
+    """Read the 8-K behind every main-label event on EDGAR and report wrong item lists and
+    subsidiary-only bankruptcies (needs access to sec.gov). The labels are not changed."""
+    logging.basicConfig(level=logging.INFO)
+    cfg = AnalysisConfig()
+    summary = label_audit.run(cfg.warehouse, cfg.out_dir / "results", limit=limit or None)
+    typer.echo(json.dumps(summary, indent=2))
 
 
 if __name__ == "__main__":
