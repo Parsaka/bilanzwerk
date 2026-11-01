@@ -184,3 +184,17 @@ def test_needs_review_for_weak_names_and_differing_legal_forms():
         }
     )
     assert matching.needs_review(pairs) == [False, True, True]
+
+
+def test_tied_best_leis_go_to_review_and_pick_is_stable():
+    preds = pd.DataFrame(
+        {
+            "unique_id_l": ["CIK:1", "CIK:1", "CIK:2"],
+            "unique_id_r": ["LEI:B", "LEI:A", "LEI:C"],
+            "match_probability": [0.99, 0.99 + 1e-16, 0.99],
+            "match_weight": [10.0, 10.0, 10.0],
+        }
+    )
+    out = matching.to_matches(preds).set_index("source_company_bk")
+    assert out.loc["1", "lei"] == "A" and out.loc["1", "match_status"] == "review"
+    assert out.loc["2", "match_status"] == "match"

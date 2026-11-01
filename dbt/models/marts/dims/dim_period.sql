@@ -18,7 +18,7 @@ fye as (
         select
             g.golden_company_id,
             cast(left(s.fiscal_year_end_mmdd, 2) as {{ dbt.type_int() }}) as fye_month,
-            row_number() over (partition by g.golden_company_id order by s.effective_from desc) as rn
+            row_number() over (partition by g.golden_company_id order by s.effective_from desc, s.hk_company asc) as rn
         from {{ ref('sat_company_sec') }} as s
         inner join {{ ref('bv_company_golden') }} as g
             on s.hk_company = g.hk_company
@@ -53,7 +53,9 @@ filed as (
         select
             g.golden_company_id,
             p.*,
-            row_number() over (partition by g.golden_company_id, p.period_end order by p.first_accepted_at) as rn
+            row_number() over (
+                partition by g.golden_company_id, p.period_end order by p.first_accepted_at, p.hk_company
+            ) as rn
         from {{ ref('bv_company_periods') }} as p
         inner join {{ ref('bv_company_golden') }} as g
             on p.hk_company = g.hk_company

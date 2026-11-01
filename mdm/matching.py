@@ -284,8 +284,15 @@ def to_matches(predictions: pd.DataFrame) -> pd.DataFrame:
     sec_is_l = p["unique_id_l"].str.startswith("CIK:")
     p["cik_uid"] = p["unique_id_l"].where(sec_is_l, p["unique_id_r"])
     p["lei_uid"] = p["unique_id_r"].where(sec_is_l, p["unique_id_l"])
-    p = p.sort_values(["cik_uid", "match_probability"], ascending=[True, False])
+    # Several LEIs can tie for the best probability (same name and address, e.g. a company and
+    # its branch). The pick is then made by LEI so that two runs give the same golden record
+    # (an unstable sort gave 170 of 5 384 filers another LEI on rerun), and the tie itself is a
+    # steward's decision, so such a filer is never an automatic match.
+    p["_p"] = p["match_probability"].round(9)  # float noise between runs must not reorder ties
+    p["_tied"] = tied_best(p)
+    p = p.sort_values(["cik_uid", "_p", "lei_uid"], ascending=[True, False, True], kind="mergesort")
     best = p.drop_duplicates("cik_uid")
+    best_tied = best["_tied"].tolist()
     return pd.DataFrame(
         {
             "source_company_bk_type": "CIK",
@@ -295,11 +302,25 @@ def to_matches(predictions: pd.DataFrame) -> pd.DataFrame:
             "match_weight": best["match_weight"],
             "match_status": [
                 "match" if v >= UPPER and not ruled else "review"
-                for v, ruled in zip(best["match_probability"], needs_review(best), strict=True)
+                for v, ruled in zip(
+                    best["match_probability"],
+                    [r or t for r, t in zip(needs_review(best), best_tied, strict=True)],
+                    strict=True,
+                )
             ],
             "model_version": MODEL_VERSION,
         }
     ).reset_index(drop=True)
+
+
+def tied_best(pairs: pd.DataFrame) -> pd.Series:
+    """True for a pair whose SEC filer has more than one LEI at the best probability."""
+    sec_is_l = pairs["unique_id_l"].str.startswith("CIK:")
+    cik = pairs["unique_id_l"].where(sec_is_l, pairs["unique_id_r"])
+    prob = pairs["match_probability"].round(9)
+    best = prob.groupby(cik).transform("max")
+    n_best = (prob == best).groupby(cik).transform("sum")
+    return (prob == best) & (n_best > 1)
 
 
 def needs_review(pairs: pd.DataFrame) -> list[bool]:

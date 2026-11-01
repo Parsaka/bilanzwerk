@@ -31,9 +31,10 @@ def _pair_key(df: pd.DataFrame) -> pd.Series:
 
 def rescore(labelled: pd.DataFrame, candidate_pairs: pd.DataFrame) -> pd.DataFrame:
     """The labelled pairs with match_probability from `candidate_pairs` (0 where it is absent)."""
-    from mdm.matching import needs_review
+    from mdm.matching import needs_review, tied_best
 
-    newer = candidate_pairs.assign(_key=_pair_key(candidate_pairs), _ruled=needs_review(candidate_pairs))
+    ruled = [r or t for r, t in zip(needs_review(candidate_pairs), tied_best(candidate_pairs), strict=True)]
+    newer = candidate_pairs.assign(_key=_pair_key(candidate_pairs), _ruled=ruled)
     newer = newer.drop_duplicates("_key").set_index("_key")
     out = labelled.copy()
     key = _pair_key(out)
