@@ -290,7 +290,9 @@ measures:
     expression: |
       SUMX (
           VALUES ( fact_wc_opportunity[company_id] ),
-          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+          -- the company's latest fiscal year overall (H4 rule), not the latest within the sector or
+          -- filter in context: a company that changed sector is counted once, in its latest sector
+          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ), ALLEXCEPT ( fact_wc_opportunity, fact_wc_opportunity[company_id] ) )
           RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
       )
 
@@ -302,7 +304,9 @@ measures:
     expression: |
       SUMX (
           VALUES ( fact_wc_opportunity[company_id] ),
-          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+          -- the company's latest fiscal year overall (H4 rule), not the latest within the sector or
+          -- filter in context: a company that changed sector is counted once, in its latest sector
+          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ), ALLEXCEPT ( fact_wc_opportunity, fact_wc_opportunity[company_id] ) )
           RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
       )
 
@@ -808,6 +812,23 @@ measures:
           )
 
   - table: fact_data_quality
+    name: "DQ Ziel"
+    folder: "Datenqualität"
+    format: "0.0%"
+    description: "Ziel-Pass-Rate der Regel im letzten Lauf."
+    expression: |
+      VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+      RETURN CALCULATE ( MAX ( fact_data_quality[target_pass_rate] ), fact_data_quality[run_at] = _lauf )
+
+  - table: fact_data_quality
+    name: "DQ Status"
+    folder: "Beschriftungen\\Datenqualität"
+    description: "Status der Regel im letzten Lauf (pass, fail, info, no_data); leer für Regeln, die der letzte Lauf nicht geprüft hat."
+    expression: |
+      VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+      RETURN CALCULATE ( SELECTEDVALUE ( fact_data_quality[status] ), fact_data_quality[run_at] = _lauf )
+
+  - table: fact_data_quality
     name: "Regeln verletzt"
     folder: "Datenqualität"
     format: "#,0"
@@ -836,15 +857,14 @@ measures:
     name: "Restatement-Quote"
     folder: "Datenqualität"
     format: "0.0%"
-    description: "Anteil der Kennzahlenwerte, deren letzte Version von der Erstveröffentlichung abweicht."
+    description: "Anteil der Kennzahlenwerte (letzte Version), die um mehr als 0,5 % von der Erstveröffentlichung abweichen."
     expression: |
-      VAR _paare =
-          ADDCOLUMNS (
-              SUMMARIZE ( fact_kpi, fact_kpi[company_key], fact_kpi[period_key], fact_kpi[kpi_key] ),
-              "@erst", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "first_reported" ),
-              "@letzt", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "latest" )
-          )
-      RETURN DIVIDE ( COUNTROWS ( FILTER ( _paare, ABS ( [@erst] - [@letzt] ) > 0.005 * ABS ( [@erst] ) ) ), COUNTROWS ( _paare ) )
+      -- fact_kpi[is_restated] is set in dbt on both rows of a pair (latest differs from first
+      -- reported by more than 0.5 %), so the measure is a filtered count in the storage engine
+      DIVIDE (
+          CALCULATE ( COUNTROWS ( fact_kpi ), fact_kpi[version] = "latest", fact_kpi[is_restated] = 1 ),
+          CALCULATE ( COUNTROWS ( fact_kpi ), fact_kpi[version] = "latest" )
+      )
 
 calculation_groups:
   - name: Zeitintelligenz
