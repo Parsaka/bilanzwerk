@@ -517,7 +517,7 @@ measures:
     name: "Umsatz TTM"
     folder: "GuV"
     format: "#,0,,\" Mio\""
-    description: "Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz)."
+    description: "Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz); braucht einen Datumskontext aus dim_date, im Geschäftsjahr-Kontext von dim_period leer."
     expression: |
       CALCULATE ( [Umsatz], Zeitintelligenz[Zeit] = "TTM" )
 
@@ -525,7 +525,7 @@ measures:
     name: "COGS TTM"
     folder: "GuV"
     format: "#,0,,\" Mio\""
-    description: "Umsatzkosten der letzten zwölf Monate."
+    description: "Umsatzkosten der letzten zwölf Monate; braucht wie Umsatz TTM einen Datumskontext aus dim_date."
     expression: |
       CALCULATE ( [COGS], Zeitintelligenz[Zeit] = "TTM" )
 
@@ -630,33 +630,33 @@ measures:
     name: "DSO"
     folder: "Working Capital"
     format: "0.0"
-    description: "Days Sales Outstanding: Forderungen Durchschnitt / Umsatz TTM * 365."
+    description: "Days Sales Outstanding aus fact_kpi (dbt: Forderungen / Umsatz TTM * 365, Point-in-time je Periode), letzte Version."
     expression: |
-      DIVIDE ( [Forderungen Durchschnitt], [Umsatz TTM] ) * 365
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DSO" )
 
   - table: fact_financial_line
     name: "DIO"
     folder: "Working Capital"
     format: "0.0"
-    description: "Days Inventory Outstanding: Vorräte Durchschnitt / COGS TTM * 365."
+    description: "Days Inventory Outstanding aus fact_kpi (dbt: Vorräte / COGS TTM * 365), letzte Version."
     expression: |
-      DIVIDE ( [Vorräte Durchschnitt], [COGS TTM] ) * 365
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DIO" )
 
   - table: fact_financial_line
     name: "DPO"
     folder: "Working Capital"
     format: "0.0"
-    description: "Days Payables Outstanding: Verbindlichkeiten LuL Durchschnitt / COGS TTM * 365."
+    description: "Days Payables Outstanding aus fact_kpi (dbt: Verbindlichkeiten LuL / COGS TTM * 365), letzte Version."
     expression: |
-      DIVIDE ( [Verbindlichkeiten LuL Durchschnitt], [COGS TTM] ) * 365
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DPO" )
 
   - table: fact_financial_line
     name: "CCC"
     folder: "Working Capital"
     format: "0.0"
-    description: "Cash Conversion Cycle in Tagen: DSO + DIO - DPO."
+    description: "Cash Conversion Cycle in Tagen (DSO + DIO - DPO) aus fact_kpi, letzte Version; dieselbe Zahl wie in H1 und der Watchlist."
     expression: |
-      [DSO] + [DIO] - [DPO]
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "CCC" )
 
   - table: fact_kpi
     name: "CCC Sektor-Median"
