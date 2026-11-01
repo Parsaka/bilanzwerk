@@ -1,0 +1,5 @@
+run: https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293
+commit: c339121565fb2f3e14383e31df1d4c2c1101ca40
+finished_utc: 2026-11-01T09:05:17Z
+fsds_start: 2009q2
+dbt_tests_failed: 0

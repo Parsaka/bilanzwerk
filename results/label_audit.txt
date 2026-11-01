@@ -1,0 +1,20 @@
+{
+  "filings_in_label": 3609,
+  "fetched": 3609,
+  "not_fetched": 0,
+  "all_filings": {
+    "filings": 3609,
+    "item_missing_in_text": 124,
+    "subsidiary_only": 250,
+    "unclear": 310,
+    "filer_is_debtor": 2925
+  },
+  "first_event_per_company": {
+    "filings": 1914,
+    "item_missing_in_text": 58,
+    "subsidiary_only": 164,
+    "unclear": 162,
+    "filer_is_debtor": 1530
+  },
+  "method": "analysis/label_audit.py: Item 1.03 searched in the first document; debtor sentence read by wording rules (heuristic, see snippet per row). Labels are not changed."
+}

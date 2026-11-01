@@ -1,0 +1,11 @@
+{
+  "file": "wc_opportunity.csv",
+  "rows": 44373,
+  "fiscal_years": [
+    2008,
+    2026
+  ],
+  "exported_at": "2026-11-01T09:05:16+00:00",
+  "source": "duckdb",
+  "sha256": "8e81052763c02b01579d2e7a383801c24c3f3882192976c856d6393c729c211f"
+}

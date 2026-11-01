@@ -1,0 +1,37 @@
+run_id,run_at,rule_code,dq_dimension,table_name,rows_checked,rows_failed,pass_rate,target_pass_rate,status
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,COMPL_ANNUAL_CORE,Completeness,int_company_period_wide,0,,,0.95,no_data
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,COMPL_ANNUAL_CORE,Completeness,int_company_period_wide,88896,15080.0,0.8303635709143269,0.95,fail
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,COMPL_ANNUAL_CORE,Completeness,int_company_period_wide,88906,15080.0,0.8303826513396171,0.95,fail
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,COMPL_GOLDEN_RECORD,Completeness,bv_company_golden,0,,,1.0,no_data
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,COMPL_GOLDEN_RECORD,Completeness,bv_company_golden,991164,0.0,1.0,1.0,pass
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,COMPL_GOLDEN_RECORD,Completeness,bv_company_golden,991164,0.0,1.0,1.0,pass
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,CONS_BALANCE_CHECK,Consistency,int_company_period_wide,426460,454.0,0.9989354218449561,0.98,pass
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,CONS_BALANCE_CHECK,Consistency,int_company_period_wide,0,,,0.98,no_data
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,CONS_BALANCE_CHECK,Consistency,int_company_period_wide,426270,454.0,0.9989349473338495,0.98,pass
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,CONS_CASH_BS_CF,Consistency,int_company_period_wide,0,,,0.9,no_data
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,CONS_CASH_BS_CF,Consistency,int_company_period_wide,460360,41462.0,0.9099357024937006,0.9,pass
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,CONS_CASH_BS_CF,Consistency,int_company_period_wide,460622,41505.0,0.9098935786827377,0.9,pass
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,CONS_QUARTERS_SUM_TO_YEAR,Consistency,bv_period_values,27539,2779.0,0.8990885653073822,0.98,fail
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,CONS_QUARTERS_SUM_TO_YEAR,Consistency,bv_period_values,0,,,0.98,no_data
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,CONS_QUARTERS_SUM_TO_YEAR,Consistency,bv_period_values,27539,2779.0,0.8990885653073822,0.98,fail
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,MDM_LEI_MATCH_RATE,Master data,bv_company_golden,16891,13113.0,0.22366940974483454,,info
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,MDM_LEI_MATCH_RATE,Master data,bv_company_golden,16891,16867.0,0.0014208750222011722,,info
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,MDM_LEI_MATCH_RATE,Master data,bv_company_golden,0,,,,info
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,SCALE_OUTLIER_TOTAL_ASSETS,Validity,int_company_period_wide,0,,,0.999,no_data
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,SCALE_OUTLIER_TOTAL_ASSETS,Validity,int_company_period_wide,389918,213.0,0.9994537312973497,0.999,pass
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,SCALE_OUTLIER_TOTAL_ASSETS,Validity,int_company_period_wide,389780,213.0,0.9994535378931705,0.999,pass
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,TIMELY_SEC_QUARTER,Timeliness,sat_filing,1,0.0,1.0,1.0,pass
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,TIMELY_SEC_QUARTER,Timeliness,sat_filing,1,0.0,1.0,1.0,pass
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,TIMELY_SEC_QUARTER,Timeliness,sat_filing,1,0.0,1.0,1.0,pass
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,UNIQ_FACT_FINANCIAL_LINE,Uniqueness,fact_financial_line,31271672,0.0,1.0,1.0,pass
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,UNIQ_FACT_FINANCIAL_LINE,Uniqueness,fact_financial_line,0,0.0,,1.0,no_data
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,UNIQ_FACT_FINANCIAL_LINE,Uniqueness,fact_financial_line,31260160,0.0,1.0,1.0,pass
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,UNIQ_GOLDEN_PER_LEI,Uniqueness,dim_company,2328,0.0,1.0,0.99,pass
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,UNIQ_GOLDEN_PER_LEI,Uniqueness,dim_company,0,0.0,,0.99,no_data
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,UNIQ_GOLDEN_PER_LEI,Uniqueness,dim_company,6053,29.0,0.9952089872790352,0.99,pass
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,VALID_EQUITY_RATIO_BOUNDS,Validity,fact_kpi,821601,54244.0,0.9339776850320289,0.99,fail
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,VALID_EQUITY_RATIO_BOUNDS,Validity,fact_kpi,821339,54271.0,0.9339237513377545,0.99,fail
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,VALID_EQUITY_RATIO_BOUNDS,Validity,fact_kpi,0,,,0.99,no_data
+93198955-1f03-46b3-8f02-fc6679a95fbc,2026-11-01 08:09:47,VALID_ISO_CURRENCY,Validity,fact_financial_line,31271672,0.0,1.0,1.0,pass
+f9667e99-a748-4157-8dbe-a5c19818b55a,2026-11-01 08:42:06,VALID_ISO_CURRENCY,Validity,fact_financial_line,31260160,0.0,1.0,1.0,pass
+cd290acd-bbce-4ca2-8e32-9fc96633d86b,2026-11-01 06:52:17,VALID_ISO_CURRENCY,Validity,fact_financial_line,0,,,1.0,no_data
