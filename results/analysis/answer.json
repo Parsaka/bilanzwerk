@@ -1,0 +1,146 @@
+{
+  "label": "label_main",
+  "label_note": "1686 bankruptcy positives; 8-K Item 1.03 is the main label.",
+  "data_version": "73620034880f981f",
+  "n_observations": 229051,
+  "n_labelled": 200015,
+  "n_positive": 1686,
+  "H1": {
+    "hypothesis": "H1 lead time",
+    "held": false,
+    "status": "not_held",
+    "text_de": "H1 nicht bestätigt: Das CCC-Signal wurde im Median 0.0 Monate vor der Insolvenz rot, das Z''-Signal 12.7 Monate; Differenz -12.7 Monate (95%-KI -15.1 bis -11.3).",
+    "text_en": "H1 not held: the CCC flag turned red a median 0.0 months before bankruptcy, the Z'' flag 12.7 months; difference -12.7 months (95% CI -15.1 to -11.3).",
+    "estimate": -12.714579055441478,
+    "ci_low": -15.080082135523615,
+    "ci_high": -11.252156057494867,
+    "p_le_zero": 1.0,
+    "n_resamples": 1000,
+    "median_ccc": 0.0,
+    "median_z": 12.714579055441478,
+    "median_ccc_flagged_only": 5.174537987679672,
+    "median_z_flagged_only": 23.260780287474333,
+    "share_never_red_ccc": 0.9506172839506173,
+    "share_never_red_z": 0.3271604938271605,
+    "share_ever_red_ccc": 0.14814814814814814,
+    "share_ever_red_z": 0.7422839506172839,
+    "share_ccc_available_last": 0.3950617283950617,
+    "share_z_available_last": 0.7484567901234568,
+    "n_companies": 648,
+    "sensitivity_valid_obs": {
+      "estimate": -20.35318275154004,
+      "ci_low": -23.49281314168378,
+      "ci_high": -17.609856262833677,
+      "median_ccc": 0.0,
+      "median_z": 20.35318275154004,
+      "share_sustained_red_ccc": 0.05401234567901234,
+      "share_sustained_red_z": 0.7253086419753086
+    }
+  },
+  "H2": {
+    "hypothesis": "H2 accuracy",
+    "held": false,
+    "status": "not_held",
+    "text_de": "H2 nicht bestätigt: PR-AUC M2 minus M1 = -0.002 (95%-KI -0.004 bis -0.001).",
+    "text_en": "H2 not held: PR-AUC M2 minus M1 = -0.002 (95% CI -0.004 to -0.001).",
+    "estimate": -0.00230877833746412,
+    "ci_low": -0.0036286629550097006,
+    "ci_high": -0.0007301591214087672,
+    "p_le_zero": 0.996,
+    "n_resamples": 1000
+  },
+  "H3": {
+    "hypothesis": "H3 sector view",
+    "held": true,
+    "status": "held",
+    "text_de": "H3 bestätigt: PR-AUC sektorrelativ minus absolut = 0.005 (95%-KI 0.003 bis 0.007).",
+    "text_en": "H3 held: PR-AUC sector-relative minus absolute = 0.005 (95% CI 0.003 to 0.007).",
+    "estimate": 0.004934822697961545,
+    "ci_low": 0.003216702848063243,
+    "ci_high": 0.007013079475877399,
+    "p_le_zero": 0.0,
+    "n_resamples": 1000
+  },
+  "H4": {
+    "hypothesis": "H4 euro value",
+    "held": true,
+    "status": "held",
+    "total_eur_bn": 1308.569277343264,
+    "top_sector": "Technologie und Telekommunikation",
+    "top_sector_eur_bn": 337.5512413562209,
+    "text_de": "H4 bestätigt: Working-Capital-Potenzial gesamt 1308.6 Mrd. EUR; größter Hebel Technologie und Telekommunikation mit 337.6 Mrd. EUR.",
+    "text_en": "H4 held: working-capital potential EUR 1308.6 bn in total; largest lever Technology and telecommunications with EUR 337.6 bn."
+  },
+  "champion_check": {
+    "comparison": "PR-AUC M3_lightgbm_all minus M2_logit_z_wc",
+    "estimate": 0.036304153569247974,
+    "ci_low": 0.027905992731414565,
+    "ci_high": 0.047052545462949236,
+    "m3_gain_excludes_zero": true
+  },
+  "pooled": [
+    {
+      "model": "M3_lightgbm_all",
+      "n": 158030,
+      "n_pos": 1434,
+      "pr_auc": 0.051466255437825674,
+      "recall_top5": 0.3305439330543933,
+      "brier": 0.00889747092041166
+    },
+    {
+      "model": "M2r_logit_z_wc_relative",
+      "n": 158030,
+      "n_pos": 1434,
+      "pr_auc": 0.02009692456653924,
+      "recall_top5": 0.100418410041841,
+      "brier": 0.008950054813400742
+    },
+    {
+      "model": "M0_zscore_rule",
+      "n": 158030,
+      "n_pos": 1434,
+      "pr_auc": 0.017623136765199852,
+      "recall_top5": 0.06694560669456066,
+      "brier": 0.008947421132968703
+    },
+    {
+      "model": "M1_logit_z",
+      "n": 158030,
+      "n_pos": 1434,
+      "pr_auc": 0.017470880206041817,
+      "recall_top5": 0.08577405857740586,
+      "brier": 0.008973480808074077
+    },
+    {
+      "model": "M2_logit_z_wc",
+      "n": 158030,
+      "n_pos": 1434,
+      "pr_auc": 0.015162101868577697,
+      "recall_top5": 0.08298465829846582,
+      "brier": 0.008998068828065368
+    },
+    {
+      "model": "S1_discrete_time_hazard",
+      "n": 158030,
+      "n_pos": 1434,
+      "pr_auc": 0.01515931288056901,
+      "recall_top5": 0.09274755927475593,
+      "brier": 0.008990561108901124
+    }
+  ],
+  "config": {
+    "data_root": "/home/runner/work/bilanzwerk/bilanzwerk/data",
+    "first_test_year": "2014",
+    "last_test_year": "2025",
+    "horizon_months": "12",
+    "alive_evidence_months": "9",
+    "min_events_for_main_label": "100",
+    "bootstrap_iterations": "1000",
+    "top_share": "0.05",
+    "seed": "42",
+    "ccc_flag_percentile": "0.8",
+    "z_flag_threshold": "1.1",
+    "red_band": "0.1",
+    "yellow_band": "0.03"
+  }
+}

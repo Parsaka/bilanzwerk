@@ -1,0 +1,115 @@
+{
+  "model_version": "splink4-v3",
+  "chosen": {
+    "threshold": 0.9,
+    "n_labelled": 297,
+    "n_unclear": 3,
+    "tp": 78,
+    "fp": 4,
+    "fn": 7,
+    "precision": 0.9512195121951219,
+    "recall": 0.9176470588235294
+  },
+  "curve": [
+    {
+      "threshold": 0.5,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.55,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.6,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.65,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.7,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.75,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.8,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.85,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.9,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    },
+    {
+      "threshold": 0.95,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 78,
+      "fp": 4,
+      "fn": 7,
+      "precision": 0.9512195121951219,
+      "recall": 0.9176470588235294
+    }
+  ]
+}
