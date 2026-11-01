@@ -18,4 +18,4 @@ table 'GuV-Brücke'
 
 	partition 'GuV-Brücke' = calculated
 		mode: import
-		source = DATATABLE ( "Schritt", STRING, "Reihenfolge", INTEGER, { { "Umsatz", 1 }, { "Umsatzkosten", 2 }, { "Übrige betriebliche Aufwendungen und Erträge", 3 } } )
+		source = DATATABLE ( "Schritt", STRING, "Reihenfolge", INTEGER, { { "Umsatz", 1 }, { "Umsatzkosten", 2 }, { "Übrige Aufwendungen und Erträge", 3 } } )

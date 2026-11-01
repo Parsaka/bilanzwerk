@@ -3,10 +3,10 @@
   "name": "stewardship",
   "position": {
     "x": 24,
-    "y": 464,
+    "y": 484,
     "z": 8,
     "width": 1232,
-    "height": 200,
+    "height": 180,
     "tabOrder": 8
   },
   "visual": {

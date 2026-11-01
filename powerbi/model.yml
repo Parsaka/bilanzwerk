@@ -995,7 +995,7 @@ static_tables:
     rows:
       - ["Umsatz", 1]
       - ["Umsatzkosten", 2]
-      - ["Übrige betriebliche Aufwendungen und Erträge", 3]
+      - ["Übrige Aufwendungen und Erträge", 3]
 
 # Display bounds of the peer scatter ([<name> Wert]): values outside are left out as implausible
 # (days as in fact_wc_opportunity, equity ratio as the rule VALID_EQUITY_RATIO_BOUNDS).

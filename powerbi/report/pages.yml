@@ -122,7 +122,7 @@ pages:
         type: tableEx
         pos: [24, 152, 400, 512]
         fields: {Values: ["dim_kpi.name_de", "fact_kpi.[KPI Wert letzter Abschluss]", "fact_kpi.[Sektorperzentil letzter Abschluss]", "fact_kpi.[Rote Flaggen letzter Abschluss]"]}
-        widths: {"dim_kpi.name_de": 170, "fact_kpi.[KPI Wert letzter Abschluss]": 60, "fact_kpi.[Sektorperzentil letzter Abschluss]": 90, "fact_kpi.[Rote Flaggen letzter Abschluss]": 55}
+        widths: {"dim_kpi.name_de": 150, "fact_kpi.[KPI Wert letzter Abschluss]": 55, "fact_kpi.[Sektorperzentil letzter Abschluss]": 105, "fact_kpi.[Rote Flaggen letzter Abschluss]": 70}
         label: {de: "Kennzahlen zum letzten Abschluss mit Sektorperzentil", en: "Ratios at the latest statement with sector percentile"}
       - name: umsatz
         type: lineChart
@@ -385,7 +385,7 @@ pages:
         title: "fact_wc_opportunity.[Befund Cash-Potenzial]"
       - name: top20
         type: tableEx
-        pos: [646, 84, 610, 290]
+        pos: [646, 84, 610, 214]
         fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_wc_opportunity.[Cash-Potenzial aktuell]"]}
         sort: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", desc]
         widths: {"dim_company.company_name": 270, "dim_sector.sector_de": 200, "fact_wc_opportunity.[Cash-Potenzial aktuell]": 100}
@@ -393,7 +393,7 @@ pages:
         label: {de: "Die 20 Unternehmen mit dem größten Potenzial (letztes Geschäftsjahr)", en: "The 20 companies with the largest potential (latest fiscal year)"}
       - name: stretch
         type: clusteredBarChart
-        pos: [646, 386, 610, 278]
+        pos: [646, 310, 610, 354]
         fields: {Category: ["dim_sector.sector_de"], Y: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", "fact_wc_opportunity.[Cash-Potenzial Stretch aktuell]"]}
         label_space: 40
         category_width: 10
@@ -454,7 +454,7 @@ pages:
         font_size: 14
       - name: scorecard
         type: tableEx
-        pos: [24, 152, 820, 300]
+        pos: [24, 152, 820, 320]
         # measures, not columns: the mart appends one row per rule and dbt run, the measures read the last run
         fields: {Values: ["fact_data_quality.rule_code", "fact_data_quality.dq_dimension", "fact_data_quality.table_name", "fact_data_quality.[DQ Pass-Rate]", "fact_data_quality.[DQ Ziel]", "fact_data_quality.[DQ Status]"]}
         sort: ["fact_data_quality.[DQ Pass-Rate]", asc]
@@ -476,7 +476,7 @@ pages:
         label: {de: "Offene Stewardship-Fälle", en: "Open stewardship cases"}
       - name: stewardship
         type: tableEx
-        pos: [24, 464, 1232, 200]
+        pos: [24, 484, 1232, 180]
         fields: {Values: ["fact_stewardship_queue.sec_name", "fact_stewardship_queue.gleif_legal_name", "fact_stewardship_queue.gleif_city", "fact_stewardship_queue.gleif_country", "fact_stewardship_queue.match_probability"]}
         sort: ["fact_stewardship_queue.match_probability", desc]
         label: {de: "Stewardship-Warteschlange: Kandidatenpaare zur Prüfung (Service Level: Frische 24 h, Refresh-Erfolg 99 %)", en: "Stewardship queue: candidate pairs to review (service level: freshness 24 h, refresh success 99 %)"}

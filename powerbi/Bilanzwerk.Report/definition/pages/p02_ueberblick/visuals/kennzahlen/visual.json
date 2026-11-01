@@ -112,7 +112,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "170D"
+                  "Value": "150D"
                 }
               }
             }
@@ -126,7 +126,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "60D"
+                  "Value": "55D"
                 }
               }
             }
@@ -140,7 +140,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "90D"
+                  "Value": "105D"
                 }
               }
             }
@@ -154,7 +154,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "55D"
+                  "Value": "70D"
                 }
               }
             }
