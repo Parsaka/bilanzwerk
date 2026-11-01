@@ -105,3 +105,18 @@ check cannot do, and what needs Desktop against the deployed model:
 * open the project once and look at every page with real data (spacing, axis formats, the
   stacked balance sheet), then take the screenshots for `docs/img/report/`;
 * run DAX Studio on the slowest visuals before and after (Server Timings) for the README table;
+
+## Local copy without Fabric
+
+The same model in import mode, for Power BI Desktop on one PC (screenshots, DAX Studio) before a
+Fabric workspace exists:
+
+1. Download the artifact `marts-parquet` of a real-data run (one Parquet file per mart table):
+   `gh run download <run id> -R Parsaka/bilanzwerk -n marts-parquet -D C:\bilanzwerk-marts`.
+2. `uv run python powerbi/tools/generate_tmdl.py --local --marts-folder C:\bilanzwerk-marts`
+   writes `powerbi/local/` (not versioned): the model with import partitions from Parquet, the
+   report bound to it and `Bilanzwerk.Local.pbip`.
+3. Open `powerbi/local/Bilanzwerk.Local.pbip` in Power BI Desktop and refresh.
+
+Measures, relationships, roles and pages are the ones of the Direct Lake model; only the
+partitions differ. Timings measured here are import-mode timings on a PC, not Direct Lake.
