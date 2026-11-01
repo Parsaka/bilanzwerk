@@ -26,6 +26,8 @@ env:
 jobs:
   load:
     runs-on: ubuntu-24.04
+    # skipped until Azure/Fabric is set up (repository variable AZURE_CLIENT_ID, see README)
+    if: vars.AZURE_CLIENT_ID != ''
     environment: prod
     timeout-minutes: 240
     steps:

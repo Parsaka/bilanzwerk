@@ -22,6 +22,8 @@ concurrency:
 jobs:
   capacity:
     runs-on: ubuntu-24.04
+    # skipped until Azure/Fabric is set up (repository variable AZURE_CLIENT_ID, see README)
+    if: vars.AZURE_CLIENT_ID != ''
     steps:
       - uses: actions/checkout@v4
       - uses: azure/login@v2
