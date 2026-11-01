@@ -27,7 +27,7 @@ data cache (`.pbi/cache.abf`) 1.5 GB.
 | Page | Visual (main measure) | Total | FE | SE | SE queries |
 |---|---|---:|---:|---:|---:|
 | 1 Antwort | Karte Working-Capital-Potenzial ([Cash-Potenzial aktuell]) | 128 | 117 | 9 | 5 |
-| 2 Unternehmensüberblick | Kopfzeile ([Befund Unternehmen]) | 156 | 142 | 14 | 9 |
+| 2 Unternehmensüberblick | Kopfzeile ([Befund Unternehmen], Flaggen zum letzten Abschluss) | 67 | 56 | 12 | 11 |
 | 3 Bilanzanalyse | Passiva nach Gruppe ([Bestand]) | 141 | 126 | 15 | 2 |
 | 4 GuV und Margen | Brücke Umsatz bis EBIT ([GuV-Brücke Betrag]) | 429 | 124 | 324 | 7 |
 | 5 Cashflow und Working Capital | CCC gegen Sektormedian ([CCC], [CCC Sektor-Median]) | 912 | 892 | 20 | 7 |
@@ -59,17 +59,17 @@ between −730 and 730 days, at least five of them): page 5 went from 217 to 912
 
 ## All runs
 
-The final model (main with PR #8 and report-fixes-2); pages 5, 7 and 8 measured after report-fixes-2,
-the others before it (their queries do not use the changed measures).
+The final model (main with PR #8 and report-fixes-2); pages 2, 5, 7 and 8 measured after the last
+measure changes, the others before them (their queries do not use the changed measures).
 
 | Page | Run | Total | FE | SE | SE queries | Rows |
 |---|---:|---:|---:|---:|---:|---:|
 | 1 | 1 | 128 | 117 | 11 | 5 | 1 |
 | 1 | 2 | 132 | 127 | 5 | 5 | 1 |
 | 1 | 3 | 123 | 114 | 9 | 5 | 1 |
-| 2 | 1 | 158 | 142 | 16 | 9 | 1 |
-| 2 | 2 | 156 | 142 | 14 | 9 | 1 |
-| 2 | 3 | 137 | 125 | 12 | 9 | 1 |
+| 2 | 1 | 67 | 57 | 10 | 11 | 1 |
+| 2 | 2 | 67 | 55 | 12 | 11 | 1 |
+| 2 | 3 | 68 | 56 | 12 | 11 | 1 |
 | 3 | 1 | 141 | 126 | 15 | 2 | 60 |
 | 3 | 2 | 131 | 121 | 10 | 2 | 60 |
 | 3 | 3 | 149 | 133 | 16 | 2 | 60 |
