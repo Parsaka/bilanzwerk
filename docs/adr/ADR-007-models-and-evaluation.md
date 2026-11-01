@@ -54,3 +54,8 @@ decision and the numbers behind it go into this ADR when it happens.
 `answer.json`). M2 is also below M1 (H2 not held), so its drivers would explain a weaker model.
 M3's drivers per company come from SHAP (`top_3_drivers`); M2 stays in `fact_risk_score` as the
 explainable challenger.
+
+**Check (01.11.2026): M3 stays.** Real-data run [41282080293](https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293) after the fixes of PR #3
+(point-in-time per KPI and per tag, MDM v3), pooled backtest 2014–2025 (158,038 observations,
+1,463 events): PR-AUC M3 0.053, M2 0.017; difference +0.037, 95 % bootstrap interval
++0.027 to +0.047. The rule above still holds, so `risk_champion_model` stays M3.

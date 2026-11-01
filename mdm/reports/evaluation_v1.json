@@ -1,0 +1,114 @@
+{
+  "chosen": {
+    "threshold": 0.9,
+    "n_labelled": 297,
+    "n_unclear": 3,
+    "tp": 30,
+    "fp": 118,
+    "fn": 55,
+    "precision": 0.20270270270270271,
+    "recall": 0.35294117647058826
+  },
+  "curve": [
+    {
+      "threshold": 0.5,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 85,
+      "fp": 212,
+      "fn": 0,
+      "precision": 0.28619528619528617,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.55,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 85,
+      "fp": 212,
+      "fn": 0,
+      "precision": 0.28619528619528617,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.6,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 85,
+      "fp": 212,
+      "fn": 0,
+      "precision": 0.28619528619528617,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.65,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 85,
+      "fp": 212,
+      "fn": 0,
+      "precision": 0.28619528619528617,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.7,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 85,
+      "fp": 137,
+      "fn": 0,
+      "precision": 0.38288288288288286,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.75,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 30,
+      "fp": 118,
+      "fn": 55,
+      "precision": 0.20270270270270271,
+      "recall": 0.35294117647058826
+    },
+    {
+      "threshold": 0.8,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 30,
+      "fp": 118,
+      "fn": 55,
+      "precision": 0.20270270270270271,
+      "recall": 0.35294117647058826
+    },
+    {
+      "threshold": 0.85,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 30,
+      "fp": 118,
+      "fn": 55,
+      "precision": 0.20270270270270271,
+      "recall": 0.35294117647058826
+    },
+    {
+      "threshold": 0.9,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 30,
+      "fp": 118,
+      "fn": 55,
+      "precision": 0.20270270270270271,
+      "recall": 0.35294117647058826
+    },
+    {
+      "threshold": 0.95,
+      "n_labelled": 297,
+      "n_unclear": 3,
+      "tp": 15,
+      "fp": 58,
+      "fn": 70,
+      "precision": 0.2054794520547945,
+      "recall": 0.17647058823529413
+    }
+  ]
+}

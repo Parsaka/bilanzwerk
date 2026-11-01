@@ -92,3 +92,16 @@
 {%- endmacro %}
 {% macro default__bw_intdiv(a, b) -%}(({{ a }}) // ({{ b }})){%- endmacro %}
 {% macro fabric__bw_intdiv(a, b) -%}(({{ a }}) / ({{ b }})){%- endmacro %}
+
+{#- Latest of several timestamps, ignoring NULLs (an input a formula does not use is NULL).
+    DuckDB and the Fabric warehouse both have GREATEST with this NULL rule. -#}
+{% macro bw_greatest(exprs) -%}
+    greatest({{ exprs | join(', ') }})
+{%- endmacro %}
+
+{#- greatest(<input>_at, ...) for a list of input column names. -#}
+{% macro bw_greatest_at(inputs) -%}
+    {%- set cols = [] -%}
+    {%- for i in inputs %}{% do cols.append(i ~ '_at') %}{% endfor -%}
+    {{ bw_greatest(cols) }}
+{%- endmacro %}

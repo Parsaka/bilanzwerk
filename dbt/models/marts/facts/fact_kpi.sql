@@ -16,7 +16,8 @@ with long_values as (
             period_end,
             '{{ k | upper }}' as kpi_code,
             cast({{ k }} as {{ bw_float() }}) as value,
-            available_at_all as available_at
+            -- the KPI's own inputs; the opening balances of the year before are included
+            {{ k }}_at as available_at
         from {{ ref('int_kpi_wide') }}
         where {{ k }} is not null
         union all

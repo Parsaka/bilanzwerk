@@ -40,3 +40,23 @@ conversion cycle down to the sector median, and where is the biggest opportunity
   end, is censored (left out of that window), not labelled negative.
 - Splits are rolling and yearly; never random.
 - A negative result is a valid result and is reported as such.
+
+## Note (01.11.2026): how H1 was measured on the real data
+
+The measurement above is unchanged. Two things were found while reading the first real result
+and are reported next to it, not instead of it:
+
+- **Availability.** The CCC needs DSO, DIO and DPO at once. In the last quarter before the
+  event it could be computed for 40 % of the companies, Z'' for 75 %. A sensitivity
+  analysis that counts only quarters in which the input could be computed gives a difference of
+  −21.1 months (95 % CI −25.5 to −17.9); `answer.json`, `H1.sensitivity_valid_obs`.
+- **Point-in-time per KPI.** Until run 41272420173 a KPI carried the latest acceptance time
+  of all line items of the period, so a KPI whose own inputs were known earlier was held back
+  to the later date. Since run 41282080293 every KPI carries the latest acceptance time of its own
+  inputs (`fact_kpi.available_at`), and the first-reported version keeps the tag known first
+  (a tag switch such as ASC 606 had dated two prior years of revenue to the later 10-K). The
+  leakage rule is unchanged and still tested.
+- **Label quality.** `bw-analysis label-audit` read the 3,609 8-Ks behind the main label on EDGAR:
+  250 name only a subsidiary as debtor (wording heuristic), 124 show no Item 1.03 in the
+  text read. The label stays as defined above; the audit is published next to the result
+  ([docs/case-studies.md](../case-studies.md)).

@@ -75,3 +75,126 @@ def test_sample_fills_short_bands_from_the_others():
     assert len(out) == 300
     assert (out["match_probability"] < 0.7).sum() == 10
     assert out["is_match"].eq("").all()
+
+
+def test_n_unclear_is_reported():
+    labelled = pd.DataFrame({"match_probability": [0.95, 0.6, 0.97], "is_match": ["1", "0", ""]})
+    assert evaluate.precision_recall(labelled, 0.9)["n_unclear"] == 1
+
+
+def _name_level(name_l: str, name_r: str) -> str:
+    """The name comparison level Splink assigns to two otherwise identical records."""
+    import duckdb
+    from splink import DuckDBAPI, Linker
+
+    def rec(uid, name, source):
+        frame = pd.DataFrame(
+            {
+                "cik": [uid],
+                "company_name": [name],
+                "business_city": ["X"],
+                "business_state": ["NY"],
+                "business_zip": ["10001"],
+                "tickers": [""],
+            }
+        )
+        out = matching.prepare_sec(frame)
+        out["source"] = source
+        return out
+
+    left, right = rec(1, name_l, "sec"), rec(2, name_r, "gleif")
+    linker = Linker([left, right], matching.settings(), DuckDBAPI(connection=duckdb.connect()))
+    row = linker.inference.compare_two_records(left.iloc[0].to_dict(), right.iloc[0].to_dict()).as_pandas_dataframe()
+    levels = matching.name_comparison().get_comparison("duckdb").as_dict()["comparison_levels"]
+    return levels[len(levels) - 1 - int(row["gamma_name_std"].iloc[0])]["label_for_charts"]
+
+
+def test_name_levels_separate_series_and_subsidiaries():
+    assert _name_level("AMAZON.COM, INC.", "AMAZON COM INC") == "exact (spaces ignored)"
+    assert (
+        _name_level("KINDER MORGAN ENERGY PARTNERS, L.P.", "KINDER MORGAN ENERGY PARTNERS L P")
+        == "exact (spaces ignored)"
+    )
+    assert (
+        _name_level("Venture Lending & Leasing VII, Inc.", "Venture Lending & Leasing IX, Inc.")
+        == "series or vehicle marks differ"
+    )
+    assert _name_level("Waste Connections US, Inc.", "Waste Connections, Inc.") == "series or vehicle marks differ"
+    assert _name_level("General Mills Services, Inc.", "General Mills, Inc.") == "one name is the other plus words"
+    assert _name_level("PETCO HEALTH AND WELNESS COMPANY, INC.", "Petco Health & Wellness Company, Inc.").startswith(
+        "Jaro"
+    )
+
+
+def test_rescore_keeps_labels_and_takes_the_newer_probability():
+    labelled = pd.DataFrame(
+        {
+            "unique_id_l": ["LEI:A", "LEI:B"],
+            "unique_id_r": ["CIK:1", "CIK:2"],
+            "match_probability": [0.95, 0.6],
+            "is_match": ["0", "1"],
+        }
+    )
+    # the newer run lists the first pair the other way round and drops the second
+    newer = pd.DataFrame({"unique_id_l": ["CIK:1"], "unique_id_r": ["LEI:A"], "match_probability": [0.2]})
+    out = evaluate.rescore(labelled, newer)
+    assert out["match_probability"].tolist() == [0.2, 0.0]
+    assert out["match_probability_before"].tolist() == [0.95, 0.6]
+    assert out["is_match"].tolist() == ["0", "1"]
+
+
+def test_sample_can_exclude_labelled_pairs():
+    pairs = pd.DataFrame(
+        {
+            "unique_id_l": [f"LEI:{i}" for i in range(20)],
+            "unique_id_r": [f"CIK:{i}" for i in range(20)],
+            "match_probability": [0.95] * 20,
+        }
+    )
+    out = evaluate.sample(pairs, 30, exclude=pairs.head(5))
+    assert len(out) == 15 and not set(out["unique_id_l"]) & {f"LEI:{i}" for i in range(5)}
+
+
+def test_smooth_name_m_gives_every_level_a_small_m():
+    model = {
+        "comparisons": [
+            {
+                "output_column_name": "name_std",
+                "comparison_levels": [
+                    {"is_null_level": True},
+                    {"m_probability": 0.9},
+                    {"m_probability": 0.1},
+                    {"m_probability": None},
+                ],
+            }
+        ]
+    }
+    matching.smooth_name_m(model, 10)
+    ms = [lvl["m_probability"] for lvl in model["comparisons"][0]["comparison_levels"][1:]]
+    assert ms == [10 / 13, 2 / 13, 1 / 13]
+
+
+def test_needs_review_for_weak_names_and_differing_legal_forms():
+    exact = max(matching._auto_match_gammas())
+    pairs = pd.DataFrame(
+        {
+            "gamma_name_std": [exact, exact, 0],
+            "legal_form_l": ["CORP", "LLC", "CORP"],
+            "legal_form_r": ["CORP", "CORP", "CORP"],
+        }
+    )
+    assert matching.needs_review(pairs) == [False, True, True]
+
+
+def test_tied_best_leis_go_to_review_and_pick_is_stable():
+    preds = pd.DataFrame(
+        {
+            "unique_id_l": ["CIK:1", "CIK:1", "CIK:2"],
+            "unique_id_r": ["LEI:B", "LEI:A", "LEI:C"],
+            "match_probability": [0.99, 0.99 + 1e-16, 0.99],
+            "match_weight": [10.0, 10.0, 10.0],
+        }
+    )
+    out = matching.to_matches(preds).set_index("source_company_bk")
+    assert out.loc["1", "lei"] == "A" and out.loc["1", "match_status"] == "review"
+    assert out.loc["2", "match_status"] == "match"

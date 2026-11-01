@@ -391,13 +391,27 @@ def build_twb(f: dict, csv_dir: str) -> str:
 """
 
 
+def check_against_h4(f: dict, h4: dict, tolerance_bn: float = 0.5) -> None:
+    """The workbook title and H4 come from the same mart; if they disagree, one of them is wrong."""
+    problems = []
+    if f["top_sector"] != h4["top_sector"]:
+        problems.append(f"top sector {f['top_sector']!r} vs H4 {h4['top_sector']!r}")
+    if abs(f["total_eur_bn"] - h4["total_eur_bn"]) > tolerance_bn:
+        problems.append(f"total {f['total_eur_bn']:.1f} bn vs H4 {h4['total_eur_bn']:.1f} bn")
+    if problems:
+        raise SystemExit("Tableau finding disagrees with H4: " + "; ".join(problems))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--csv", type=Path, default=DATA / "wc_opportunity.csv")
     parser.add_argument("--out", type=Path, default=ROOT / "tableau" / "Bilanzwerk_Working_Capital.twbx")
+    parser.add_argument("--check-answer", type=Path, help="answer.json of the same run: the title must agree with H4")
     args = parser.parse_args()
     rows = read_extract(args.csv)
     f = finding(rows)
+    if args.check_answer:
+        check_against_h4(f, json.loads(args.check_answer.read_text())["H4"])
     twb = build_twb(f, "Data/wc_opportunity")
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(args.out, "w", compression=zipfile.ZIP_DEFLATED) as zf:

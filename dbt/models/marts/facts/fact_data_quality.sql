@@ -72,7 +72,8 @@ with rules as (
 
     union all
 
-    -- Uniqueness: one golden record per LEI
+    -- Uniqueness: one SEC filer (CIK) per golden record with an LEI; several CIKs on one LEI are
+    -- either one company filing under old and new CIKs or a wrong merge, so they are counted
     select
         'UNIQ_GOLDEN_PER_LEI',
         'Uniqueness',
@@ -149,23 +150,35 @@ with rules as (
 
     union all
 
-    -- Accuracy signal: total assets 1,000 times off the sector median (XBRL scaling error)
+    -- Accuracy signal: total assets jump by the scaling factor against both neighbouring periods of
+    -- the same company and come back (an XBRL scaling error: thousands tagged as units or the
+    -- reverse). The first version compared with the sector median and flagged 8 % of the real
+    -- periods, mostly shell companies that are genuinely 1,000 times smaller than the median
+    -- (run 41245747626), which is size, not an error.
     select
         'SCALE_OUTLIER_TOTAL_ASSETS',
         'Validity',
         'int_company_period_wide',
         count(*),
-        sum(case when ta_eur > {{ var('scale_outlier_factor') }} * med or ta_eur * {{ var('scale_outlier_factor') }} < med then 1 else 0 end),
+        sum(
+            case
+                when
+                    (ta > {{ var('scale_outlier_jump') }} * prev_ta and ta > {{ var('scale_outlier_jump') }} * next_ta)
+                    or (ta * {{ var('scale_outlier_jump') }} < prev_ta and ta * {{ var('scale_outlier_jump') }} < next_ta)
+                    then 1
+                else 0
+            end
+        ),
         cast(0.999 as {{ bw_float() }})
     from (
         select
-            w.ta / nullif(fx.closing_rate_per_eur, 0) as ta_eur,
-            {{ bw_percentile_over('w.ta / nullif(fx.closing_rate_per_eur, 0)', 0.5, 'w.sector_key, year(w.period_end)') }} as med
+            w.ta,
+            lag(w.ta) over (partition by w.company_id order by w.period_end) as prev_ta,
+            lead(w.ta) over (partition by w.company_id order by w.period_end) as next_ta
         from {{ ref('int_company_period_wide') }} as w
-        left join {{ ref('bv_fx_daily') }} as fx
-            on w.currency_code = fx.currency_code and w.period_end = fx.date_day
         where w.{{ fy_filter }} and w.ta > 0
     ) as s
+    where prev_ta > 0 and next_ta > 0
 
     union all
 
@@ -190,7 +203,11 @@ with rules as (
         sum(case when lei is null then 1 else 0 end),
         cast(null as {{ bw_float() }})
     from {{ ref('bv_company_golden') }}
-    where company_bk_type = 'CIK'
+    where
+        company_bk_type = 'CIK'
+        -- the filers in scope of the matching: those with a financial statement in the vault,
+        -- not the ~1 M insiders and funds in the SEC submissions file
+        and hk_company in (select p.hk_company from {{ ref('bv_company_periods') }} as p)
 )
 
 select
@@ -210,3 +227,6 @@ select
         else 'fail'
     end as status
 from rules
+-- a `dbt run --empty` (schema-only, used before unit tests) checks no rows at all and is not a run
+-- of the scorecard
+where (select sum(r.rows_checked) from rules as r) > 0

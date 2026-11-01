@@ -1,5 +1,10 @@
 -- All KPIs per company, period and version (formulas: seed kpi_definitions).
 -- Averages of opening and closing balances use the balance four quarters earlier.
+-- <kpi>_at is the latest acceptance time of the inputs the formula uses (fallbacks included).
+-- Dating every KPI by the latest item of the whole row let one item that was first reported a
+-- year later (e.g. in the next 10-K's comparatives) hide every KPI of that period at its own
+-- as-of date; in run 41272420173 Z'' was usable at the last quarter before a bankruptcy for
+-- only 66 % of the companies, CCC for 35 %.
 with w as (
     select
         cur.*,
@@ -12,6 +17,10 @@ with w as (
         prev.inv as inv_open,
         prev.ap as ap_open,
         prev.rev_ttm as rev_ttm_prev_year,
+        prev.ar_at as ar_open_at,
+        prev.inv_at as inv_open_at,
+        prev.ap_at as ap_open_at,
+        prev.rev_at as rev_prev_at,
         case when prev.available_at > cur.available_at then prev.available_at else cur.available_at end as available_at_all
     from {{ ref('int_company_period_wide') }} as cur
     left join {{ ref('int_company_period_wide') }} as prev
@@ -49,12 +58,34 @@ ratios as (
         {{ bw_div('rev_ttm', 'rev_ttm_prev_year') }} - 1 as rev_growth,
         {{ bw_div('ebit_ttm_f', 'rev_ttm') }} as ebit_margin,
         {{ bw_div('rev_ttm - cogs_ttm_f', 'rev_ttm') }} as gross_margin,
-        {{ bw_div('cfo_ttm', 'rev_ttm') }} as cfo_margin
+        {{ bw_div('cfo_ttm', 'rev_ttm') }} as cfo_margin,
+        {{ bw_greatest_at(['tca', 'tcl', 'ta']) }} as wc_ta_at,
+        {{ bw_greatest_at(['re', 'ta']) }} as re_ta_at,
+        {{ bw_greatest_at(['ebit', 'ebt', 'intexp', 'ta']) }} as ebit_ta_at,
+        {{ bw_greatest_at(['eq', 'eqp', 'tl', 'tle', 'ta']) }} as eq_tl_at,
+        {{ bw_greatest_at(['ni', 'ta']) }} as ni_ta_at,
+        {{ bw_greatest_at(['tcl', 'tca']) }} as cl_ca_at,
+        {{ bw_greatest_at(['ni', 'da', 'tl', 'tle', 'eq', 'eqp', 'ta']) }} as ffo_tl_at,
+        {{ bw_greatest_at(['ar', 'ar_open', 'rev']) }} as dso_at,
+        {{ bw_greatest_at(['inv', 'inv_open', 'ar', 'cogs', 'rev', 'gp']) }} as dio_at,
+        {{ bw_greatest_at(['ap', 'ap_open', 'cogs', 'rev', 'gp']) }} as dpo_at,
+        {{ bw_greatest_at(['tca', 'tcl']) }} as current_ratio_at,
+        {{ bw_greatest_at(['tca', 'inv', 'tcl']) }} as quick_ratio_at,
+        {{ bw_greatest_at(['cfo', 'cash']) }} as cash_runway_m_at,
+        {{ bw_greatest_at(['ebit', 'ebt', 'intexp', 'da', 'std', 'ltd']) }} as debt_ebitda_at,
+        {{ bw_greatest_at(['ebit', 'ebt', 'intexp']) }} as interest_coverage_at,
+        {{ bw_greatest_at(['eq', 'eqp', 'ta']) }} as equity_ratio_at,
+        {{ bw_greatest_at(['rev', 'rev_prev']) }} as rev_growth_at,
+        {{ bw_greatest_at(['ebit', 'ebt', 'intexp', 'rev']) }} as ebit_margin_at,
+        {{ bw_greatest_at(['rev', 'cogs', 'gp']) }} as gross_margin_at,
+        {{ bw_greatest_at(['cfo', 'rev']) }} as cfo_margin_at
     from w
 )
 
 select
     ratios.*,
     6.56 * ratios.wc_ta + 3.26 * ratios.re_ta + 6.72 * ratios.ebit_ta + 1.05 * ratios.eq_tl as zpp,
-    ratios.dso + ratios.dio - ratios.dpo as ccc
+    ratios.dso + ratios.dio - ratios.dpo as ccc,
+    {{ bw_greatest(['ratios.wc_ta_at', 'ratios.re_ta_at', 'ratios.ebit_ta_at', 'ratios.eq_tl_at']) }} as zpp_at,
+    {{ bw_greatest(['ratios.dso_at', 'ratios.dio_at', 'ratios.dpo_at']) }} as ccc_at
 from ratios

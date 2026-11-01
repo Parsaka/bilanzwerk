@@ -33,7 +33,7 @@ former_names as (
             golden_company_id,
             sic,
             country_ba,
-            row_number() over (partition by golden_company_id order by effective_from) as rn
+            row_number() over (partition by golden_company_id order by effective_from, sic, country_ba) as rn
         from sec_history
     ) as first_sic
         on

@@ -9,39 +9,45 @@
 
 ## Die Antwort / The answer
 
-> Ergebnis des vollständigen Laufs auf den echten Daten (SEC FSDS 2009q2–2026q3, 1 661
+> Ergebnis des vollständigen Laufs auf den echten Daten (SEC FSDS 2009q2–2026q3, 1 726
 > Insolvenzen nach 8-K Item 1.03, rollierender Backtest 2014–2025, 1 000 Bootstrap-Ziehungen
 > über Unternehmen). Die Hypothesen wurden vorher festgelegt:
 > [ADR-001](docs/adr/ADR-001-hypotheses.md) (27.10.2026).
-> Lauf: [Actions 40684230866](https://github.com/Parsaka/bilanzwerk/actions/runs/40684230866),
+> Lauf: [Actions 41282080293](https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293) (Datenstand `c82f84b4f516fbe8`),
 > Zahlen: Branch `real-data-results`, `results/analysis/answer.json`.
 >
 > **H1 nicht bestätigt:** Das CCC-Signal wurde im Median 0,0 Monate vor der Insolvenz rot, das
-> Z''-Signal 6,0 Monate; Differenz −6,0 Monate (95%-KI −7,4 bis −4,6).
-> **H2 nicht bestätigt:** PR-AUC M2 minus M1 = −0,004 (95%-KI −0,007 bis −0,001).
-> **H3 bestätigt:** PR-AUC sektorrelativ minus absolut = +0,009 (95%-KI +0,006 bis +0,012).
-> **H4 bestätigt:** Working-Capital-Potenzial gesamt 1 295 Mrd. EUR; größter Hebel Technologie
-> und Telekommunikation mit 328 Mrd. EUR.
+> Z''-Signal 12,7 Monate; Differenz −12,7 Monate (95%-KI −14,9 bis −11,1).
+> **H2 nicht bestätigt:** PR-AUC M2 minus M1 = −0,002 (95%-KI −0,004 bis −0,001).
+> **H3 bestätigt:** PR-AUC sektorrelativ minus absolut = +0,004 (95%-KI +0,002 bis +0,006).
+> **H4 bestätigt:** Working-Capital-Potenzial gesamt 1 309 Mrd. EUR; größter Hebel Technologie und Telekommunikation
+> mit 338 Mrd. EUR.
 >
 > **English:** the full run on real data. H1 not held: the CCC flag turned red a median 0.0
-> months before bankruptcy, Z'' 6.0 months (difference −6.0, 95 % CI −7.4 to −4.6). H2 not held:
-> adding working capital to Z'' lowers PR-AUC by 0.004 (CI −0.007 to −0.001). H3 held:
-> sector-relative KPIs add 0.009 PR-AUC (CI 0.006 to 0.012). H4 held: EUR 1,295 bn of working
-> capital, EUR 328 bn of it in technology and telecoms.
+> months before bankruptcy, Z'' 12.7 months (difference −12.7, 95 % CI −14.9 to −11.1). H2 not held:
+> adding working capital to Z'' changes PR-AUC by −0.002 (CI −0.004 to −0.001). H3 held:
+> sector-relative KPIs add +0.004 PR-AUC (CI +0.002 to +0.006). H4 held: EUR 1,309 bn of working
+> capital, EUR 338 bn of it in Technology and telecommunications.
 
 | | Hypothese | Ergebnis | Zahl | 95%-KI |
 |---|---|---|---|---|
-| H1 | Working Capital (CCC) warnt früher als Altman Z'' | nicht bestätigt | −6,0 Monate | −7,4 bis −4,6 |
-| H2 | Z''-Kennzahlen + Working Capital schlagen Z'' allein (PR-AUC) | nicht bestätigt | −0,004 | −0,007 bis −0,001 |
-| H3 | Sektorrelative Kennzahlen schlagen absolute | bestätigt | +0,009 | +0,006 bis +0,012 |
-| H4 | Working-Capital-Potenzial je Sektor ist wesentlich (Mrd. EUR) | bestätigt | 1 295 | – (Summe, kein Schätzer) |
+| H1 | Working Capital (CCC) warnt früher als Altman Z'' | nicht bestätigt | −12,7 Monate | −14,9 bis −11,1 |
+| H2 | Z''-Kennzahlen + Working Capital schlagen Z'' allein (PR-AUC) | nicht bestätigt | −0,002 | −0,004 bis −0,001 |
+| H3 | Sektorrelative Kennzahlen schlagen absolute | bestätigt | +0,004 | +0,002 bis +0,006 |
+| H4 | Working-Capital-Potenzial je Sektor ist wesentlich (Mrd. EUR) | bestätigt | 1 309 | – (Summe, kein Schätzer) |
 
-**Wie man H1 lesen muss.** Von 630 Insolvenzen mit Kennzahlen hatten nur 27 (4 %) je eine rote
-CCC-Flagge, aber 399 (63 %) eine rote Z''-Flagge. Wo die CCC-Flagge kam, kam sie im Median
-4,7 Monate vorher (Z'': 11,4). Die CCC braucht DSO, DIO und DPO zugleich; ob die
-seltenen Flaggen an fehlenden Größen liegen, ist noch nicht ausgewertet. Für die Watchlist
-heißt der Befund: Z'' warnt früher und öfter, die CCC-Flagge in ihrer jetzigen Form nicht.
-Unternehmen ohne Sektorzuordnung (S99) sind im H4-Potenzial nicht enthalten.
+**Wie man H1 lesen muss.** Von 645 Insolvenzen mit Kennzahlen hatten nur 29 (4 %) eine
+CCC-Flagge, die bis zum Ereignis rot blieb, aber 439 (68 %) eine solche Z''-Flagge. Wo die
+CCC-Flagge kam, kam sie im Median 4,7 Monate vorher (Z'': 23,2). Die CCC braucht DSO, DIO und
+DPO zugleich: Im letzten Quartal vor dem Ereignis ließ sie sich nur bei 40 % der Unternehmen
+berechnen, Z'' bei 75 %. Eine Sensitivitätsrechnung, die nur die berechenbaren Quartale
+zählt (neben, nicht statt der vorab festgelegten Messung), verschiebt das Bild weiter zu Z'':
+Differenz −21,1 Monate (95%-KI −25,5 bis −17,9). Für die Watchlist heißt der Befund: Z'' warnt früher
+und öfter, die CCC-Flagge in ihrer jetzigen Form nicht. Das Label hat Lücken: Von 3 609 gelesenen 8-K
+mit Item 1.03 nennen 250 nach dem Wortlaut nur eine Tochter als Schuldner, in 124 fand sich
+kein Item 1.03 im Text; das Label bleibt wie vorab festgelegt
+([docs/case-studies.md](docs/case-studies.md), auch die Fallbeispiele). Unternehmen ohne Sektorzuordnung (S99) sind im
+H4-Potenzial nicht enthalten.
 
 ---
 
@@ -71,33 +77,36 @@ und eine zweite, die der Antwort einen Euro-Wert gibt:
 | Stammdaten | Abgleich SEC ↔ GLEIF mit Splink, Golden Record, Survivorship, Stewardship-Queue, SCD Typ 2. |
 | Marts | Kimball-Sternschema: Finanzzeilen (Ist/Plan/Forecast), 25 KPIs mit Sektorperzentil und roter Flagge, Ereignisse, Working-Capital-Potenzial, Risikoscores, Datenqualität. |
 | Analyse | Labels mit Zensierung, Leakage-Schutz, Modelle M0–M3 und Survival-Modell S1, rollierender Backtest, Bootstrap, SHAP, MLflow. |
-| Reporting | Power-BI-Projekt (PBIP): Semantikmodell aus `model.yml` und den Datenverträgen generiert (58 Messungen, Berechnungsgruppen, Feldparameter, RLS/OLS, DE/EN), 11 Seiten mit Titel, Sprachumschalter und Fußzeile, BPA-Regeln. Excel-Monatsbericht (CUBE-Formeln, XVERWEIS, Power Query, Pivot mit Datenschnitten, VBA-Export als PDF). Tableau-Extrakt und Dashboard-Spezifikation. |
+| Reporting | Power-BI-Projekt (PBIP): Semantikmodell aus `model.yml` und den Datenverträgen generiert (139 Measures, Berechnungsgruppen, Feldparameter, RLS/OLS, DE/EN), 11 Seiten mit Titel, Sprachumschalter und Fußzeile, BPA-Regeln. Excel-Monatsbericht (CUBE-Formeln, XVERWEIS, Power Query, Pivot mit Datenschnitten, VBA-Export als PDF). Tableau: Extrakt und daraus gepackte Arbeitsmappe (`.twbx`, Titel aus den Daten berechnet und gegen H4 geprüft). |
 | Betrieb | Fabric-Pipelines und Notebooks (je Quelle, Transform, Master, E-Mail-Alarme), Veröffentlichung nach dev/prod mit fabric-cicd, GitHub Actions (CI, dbt-Build, Quartals- und Tageslauf, Kapazität pausieren, Terraform), Terraform für Azure und Fabric (OIDC, keine Secrets), Runbook, Incident-Drill, Datenverträge. |
 
 ### Ergebnisse in Zahlen
 
-Aus dem Lauf auf echten Daten vom 28.10.2026; Felder mit „–“ sind noch nicht gemessen.
+Aus dem Lauf auf echten Daten [41282080293](https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293); Felder mit „–“ sind noch nicht gemessen.
 
 | Messgröße | Wert |
 |---|---|
 | Zeilen Abschlusswerte (FSDS `num`, 70 Quartale 2009q2–2026q3, geladen) | 188 865 277 |
 | Filings (FSDS `sub`) | 440 233 |
-| Beobachtungen im Modell / davon mit Label / Insolvenzen | 226 813 / 198 057 / 1 661 |
-| Ladezeit Vollhistorie | – |
-| Mapping-Abdeckung (us-gaap) | – |
-| Bilanzcheck bestanden (Ziel ≥ 98 %) | – |
-| LEI-Match-Quote / Precision / Recall (300 geprüfte Paare) | – |
-| PR-AUC M0 / M1 / M2 / M3 (gepoolt 2014–2025, 1 403 Ereignisse) | 0,027 / 0,030 / 0,026 / 0,066 |
-| PR-AUC M2r (sektorrelativ) / S1 (Hazard) | 0,035 / 0,030 |
-| Recall in den riskantesten 5 % M0 / M1 / M2 / M3 | 20 % / 22 % / 17 % / 36 % |
+| Beobachtungen im Modell / davon mit Label / Insolvenzen | 229 017 / 199 933 / 1 726 |
+| Ladezeit Vollhistorie (GitHub-Runner, DuckDB, Downloads aus dem Cache) | 1 h 18 min Raw Vault + 31 min dbt-Build; ganzer Lauf 2 h 20 min |
+| Bilanzcheck bestanden (Aktiva = Passiva ± 0,5 %, Ziel ≥ 98 %) | 99,9 % von 426 270 Perioden |
+| Jahresabschlüsse mit Umsatz, Bilanzsumme und Schulden (Ziel 95 %) | 83,0 % |
+| SEC-Filer mit LEI (automatisch / Stewardship-Queue) | 3 758 (22,2 %) / 1 626 von 16 891 |
+| Precision / Recall Stammdatenabgleich bei 0,90 (Holdout, 149 geprüfte Paare) | 1,00 / 1,00 |
+| PR-AUC M0 / M1 / M2 / M3 (gepoolt 2014–2025, 1 463 Ereignisse) | 0,018 / 0,019 / 0,017 / 0,053 |
+| PR-AUC M2r (sektorrelativ) / S1 (Hazard) | 0,021 / 0,016 |
+| Recall in den riskantesten 5 % M0 / M1 / M2 / M3 | 6 % / 10 % / 10 % / 34 % |
 | Abfragezeit langsamste Visuals vorher → nachher | – |
 | Monatliche Kosten (Kapazität + Speicher) | – |
+
+Alle Datenqualitätsregeln des Laufs: [docs/data-quality-results.md](docs/data-quality-results.md).
 
 ### Schnellstart
 
 ```bash
 uv sync --all-extras
-uv run pytest                                   # 73 Tests
+uv run pytest                                   # 103 Tests
 uv run python scripts/build_test_landing.py --out .ci-data   # synthetische Testdaten
 cd dbt && BW_DATA_ROOT=../.ci-data DBT_PROFILES_DIR=. uv run dbt build
 ```
@@ -106,19 +115,21 @@ Vollständiger Lauf mit echten Daten: [docs/runbook.md](docs/runbook.md).
 
 ### Was noch fehlt
 
-Ehrlich aufgeführt, damit niemand eine Zahl für gemessen hält, die es nicht ist:
+Ehrlich aufgeführt, damit niemand eine Zahl für gemessen hält, die es nicht ist. Alles Übrige
+ist gebaut und auf echten Daten gelaufen; offen ist nur, was ein Gerät oder ein Konto braucht:
 
-- **Fallstudien und Diagrammtitel** aus den echten Zahlen. Der Lauf selbst ist erledigt:
-  `real-data-run.yml` fährt die ganze Kette auf einem GitHub-Runner und legt die Ergebnisse auf
-  den Branch `real-data-results` (Runbook).
-- **300 Paare von Hand prüfen** für Precision/Recall des Stammdatenabgleichs (`mdm/`).
-- **Power BI Desktop:** Hauptvisuals je Seite nach `powerbi/report-pages.md` platzieren,
-  Screenshots, DAX-Studio-Messung vorher/nachher.
+- **Power BI Desktop:** Hauptvisuals je Seite nach `powerbi/report-pages.md` prüfen,
+  Screenshots, DAX-Studio-Messung vorher/nachher (Zeile „Abfragezeit“ oben).
 - **Excel unter Windows:** `excel/finalize_workbook.ps1` erzeugt die `.xlsm` mit Verbindung,
   Power Query, Pivot und VBA.
-- **Tableau Public:** Dashboard nach `tableau/README.md` bauen und veröffentlichen.
-- **Azure/Fabric:** Terraform anwenden, Repository-Variablen setzen; die Fabric-Items wurden
-  gegen das Git-Format und fabric-cicd geprüft, aber noch in keinem Workspace ausgeführt.
+- **Tableau Public:** die gepackte Arbeitsmappe aus dem Lauf
+  (`results/tableau/Bilanzwerk_Working_Capital.twbx`) öffnen und veröffentlichen, Link in
+  `tableau/README.md` eintragen.
+- **Azure/Fabric:** Repository-Variablen `AZURE_CLIENT_ID` und `TF_STATE_ACCOUNT` mit OIDC
+  setzen, Terraform anwenden; die Fabric-Items wurden gegen das Git-Format und fabric-cicd
+  geprüft, aber noch in keinem Workspace ausgeführt (Zeile „Monatliche Kosten“ oben).
+- **Stichprobe durch einen Menschen:** die Stammdaten-Labels (`mdm/labelled_pairs*.csv`, von
+  Claude nach `mdm/REVIEW.md` gesetzt) und einige Zeilen aus `label_audit.csv` prüfen.
 
 ---
 

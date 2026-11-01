@@ -59,3 +59,14 @@ def test_package_holds_parseable_workbook_and_the_data(tmp_path, monkeypatch):
     assert sheets <= zones  # every sheet sits on the dashboard
     title = next(z for z in root.iter("zone") if z.get("id") == "2")
     assert "Energie hat den größten Hebel" in "".join(title.itertext())
+
+
+def test_check_against_h4_rejects_a_different_total():
+    import pytest
+
+    from tableau.build_workbook import check_against_h4
+
+    h4 = {"top_sector": "Handel", "total_eur_bn": 10.0}
+    check_against_h4({"top_sector": "Handel", "total_eur_bn": 10.2}, h4)
+    with pytest.raises(SystemExit):
+        check_against_h4({"top_sector": "Handel", "total_eur_bn": 13.0}, h4)
