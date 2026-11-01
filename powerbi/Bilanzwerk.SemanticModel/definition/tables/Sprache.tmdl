@@ -259,12 +259,12 @@ table Sprache
 		lineageTag: e3238bcf-1900-59f5-a48b-0f63ba8e9c84
 
 	/// Diagrammtitel mape auf Seite 10 (plan_ist).
-	measure 'Diagramm 10 mape' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Forecast error (MAPE) in context", "Prognosefehler (MAPE) im Kontext" )
+	measure 'Diagramm 10 mape' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Forecast error (WAPE) in context", "Prognosefehler (WAPE) im Kontext" )
 		displayFolder: Beschriftungen\Diagramme
 		lineageTag: a66563a3-446d-5f2b-a3f3-e300acfb7856
 
 	/// Diagrammtitel mape_verlauf auf Seite 10 (plan_ist).
-	measure 'Diagramm 10 mape_verlauf' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Forecast error (MAPE) by fiscal year", "Prognosefehler (MAPE) je Geschäftsjahr" )
+	measure 'Diagramm 10 mape_verlauf' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Forecast error (WAPE) by fiscal year", "Prognosefehler (WAPE) je Geschäftsjahr" )
 		displayFolder: Beschriftungen\Diagramme
 		lineageTag: 26ba1841-9454-5729-9048-e254a4cc7211
 

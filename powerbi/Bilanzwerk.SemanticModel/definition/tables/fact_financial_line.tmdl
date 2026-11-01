@@ -105,13 +105,13 @@ table fact_financial_line
 		displayFolder: GuV
 		lineageTag: 5fcbd67c-50f4-58db-923b-3ee46648e534
 
-	/// Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz).
+	/// Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz); braucht einen Datumskontext aus dim_date, im Geschäftsjahr-Kontext von dim_period leer.
 	measure 'Umsatz TTM' = CALCULATE ( [Umsatz], Zeitintelligenz[Zeit] = "TTM" )
 		formatString: #,0,," Mio"
 		displayFolder: GuV
 		lineageTag: 7076125f-4631-50b1-b652-674afa7a98db
 
-	/// Umsatzkosten der letzten zwölf Monate.
+	/// Umsatzkosten der letzten zwölf Monate; braucht wie Umsatz TTM einen Datumskontext aus dim_date.
 	measure 'COGS TTM' = CALCULATE ( [COGS], Zeitintelligenz[Zeit] = "TTM" )
 		formatString: #,0,," Mio"
 		displayFolder: GuV
@@ -195,41 +195,45 @@ table fact_financial_line
 		displayFolder: Working Capital
 		lineageTag: 8869d3e1-c584-5346-bf34-af66c9cbd319
 
-	/// Days Sales Outstanding: Forderungen Durchschnitt / Umsatz TTM * 365.
-	measure DSO = DIVIDE ( [Forderungen Durchschnitt], [Umsatz TTM] ) * 365
+	/// Days Sales Outstanding aus fact_kpi (dbt: Forderungen / Umsatz TTM * 365, Point-in-time je Periode), letzte Version.
+	measure DSO = CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DSO" )
 		formatString: 0.0
 		displayFolder: Working Capital
 		lineageTag: 4250bc30-2a96-502b-a01b-0e789fc058c0
 
-	/// Days Inventory Outstanding: Vorräte Durchschnitt / COGS TTM * 365.
-	measure DIO = DIVIDE ( [Vorräte Durchschnitt], [COGS TTM] ) * 365
+	/// Days Inventory Outstanding aus fact_kpi (dbt: Vorräte / COGS TTM * 365), letzte Version.
+	measure DIO = CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DIO" )
 		formatString: 0.0
 		displayFolder: Working Capital
 		lineageTag: 64bb7d1b-8a22-5ebf-9090-2cb8d69b4785
 
-	/// Days Payables Outstanding: Verbindlichkeiten LuL Durchschnitt / COGS TTM * 365.
-	measure DPO = DIVIDE ( [Verbindlichkeiten LuL Durchschnitt], [COGS TTM] ) * 365
+	/// Days Payables Outstanding aus fact_kpi (dbt: Verbindlichkeiten LuL / COGS TTM * 365), letzte Version.
+	measure DPO = CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DPO" )
 		formatString: 0.0
 		displayFolder: Working Capital
 		lineageTag: 8e7f040f-95dc-5b3c-b5bb-1b5e3eeba7f6
 
-	/// Cash Conversion Cycle in Tagen: DSO + DIO - DPO.
-	measure CCC = [DSO] + [DIO] - [DPO]
+	/// Cash Conversion Cycle in Tagen (DSO + DIO - DPO) aus fact_kpi, letzte Version; dieselbe Zahl wie in H1 und der Watchlist.
+	measure CCC = CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "CCC" )
 		formatString: 0.0
 		displayFolder: Working Capital
 		lineageTag: 29e85bc8-58ac-5c3e-af99-5d1282746427
 
-	/// Mittlerer absoluter prozentualer Fehler des Forecasts je Unternehmen und Quartal.
-	measure 'Prognosefehler MAPE' =
-			AVERAGEX (
-			    SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
-			    VAR _ist = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" )
-			    VAR _fc = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
-			    RETURN IF ( NOT ISBLANK ( _fc ), DIVIDE ( ABS ( _ist - _fc ), ABS ( _ist ) ) )
-			)
+	/// Gewichteter absoluter Prognosefehler: Summe |Ist - Forecast| geteilt durch Summe |Ist| über Unternehmen und Quartale im Kontext. Anders als ein einfacher MAPE dominieren Unternehmen mit sehr kleinem Umsatz das Ergebnis nicht.
+	measure 'Prognosefehler WAPE' =
+			VAR _paare =
+			    FILTER (
+			        ADDCOLUMNS (
+			            SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
+			            "@ist", CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" ),
+			            "@fc", CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
+			        ),
+			        NOT ISBLANK ( [@fc] ) && NOT ISBLANK ( [@ist] )
+			    )
+			RETURN DIVIDE ( SUMX ( _paare, ABS ( [@ist] - [@fc] ) ), SUMX ( _paare, ABS ( [@ist] ) ) )
 		formatString: 0.0%
 		displayFolder: Plan-Ist
-		lineageTag: dde69af8-6f7b-5bbb-887c-2b5b6f37d0d7
+		lineageTag: 4fdb9e8c-7882-5433-aba4-54076a9d7895
 
 	/// Letzter Veröffentlichungszeitpunkt (available_at) aller Werte im Modell, unabhängig von Filtern. Für Fußzeilen und das Excel-Cockpit.
 	measure Datenstand = CALCULATE ( MAX ( fact_financial_line[available_at] ), REMOVEFILTERS () )

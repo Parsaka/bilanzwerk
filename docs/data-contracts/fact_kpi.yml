@@ -28,5 +28,7 @@ columns:
   type: float
 - name: red_flag
   type: integer
+- name: is_restated
+  type: integer
 - name: available_at
   type: timestamp

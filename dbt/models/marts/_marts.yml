@@ -92,6 +92,9 @@ models:
       - name: value
         tests:
           - values_between: {min_value: 0, max_value: 3650, where: "kpi_key in ('FILING_LAG_D')"}
+      - name: is_restated
+        description: "1 when the latest value differs from the first-reported one by more than 0.5 % (both rows of the pair)."
+        tests: [not_null, {accepted_values: {values: [0, 1], quote: false}}]
 
   - name: fact_event
     tests:

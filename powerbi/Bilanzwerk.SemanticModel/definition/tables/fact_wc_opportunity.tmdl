@@ -15,7 +15,9 @@ table fact_wc_opportunity
 	measure 'Cash-Potenzial aktuell' =
 			SUMX (
 			    VALUES ( fact_wc_opportunity[company_id] ),
-			    VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+			    -- the company's latest fiscal year overall (H4 rule), not the latest within the sector or
+			    -- filter in context: a company that changed sector is counted once, in its latest sector
+			    VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ), ALLEXCEPT ( fact_wc_opportunity, fact_wc_opportunity[company_id] ) )
 			    RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
 			)
 		formatString: #,0.0,,," Mrd"
@@ -26,7 +28,9 @@ table fact_wc_opportunity
 	measure 'Cash-Potenzial Stretch aktuell' =
 			SUMX (
 			    VALUES ( fact_wc_opportunity[company_id] ),
-			    VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+			    -- the company's latest fiscal year overall (H4 rule), not the latest within the sector or
+			    -- filter in context: a company that changed sector is counted once, in its latest sector
+			    VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ), ALLEXCEPT ( fact_wc_opportunity, fact_wc_opportunity[company_id] ) )
 			    RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
 			)
 		formatString: #,0.0,,," Mrd"

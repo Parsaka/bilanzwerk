@@ -3,14 +3,19 @@ table fact_kpi
 	lineageTag: 9cc15d74-9159-523f-a2ce-0ae943d485dd
 	sourceLineageTag: [marts].[fact_kpi]
 
-	/// Median des CCC über alle Unternehmen des Sektors im Kontext (aus fact_kpi, letzte Version).
+	/// Median des CCC über alle Unternehmen mit CCC im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version).
 	measure 'CCC Sektor-Median' =
-			CALCULATE (
-			    MEDIANX ( VALUES ( dim_company[company_key] ), [KPI Wert] ),
-			    REMOVEFILTERS ( dim_company ),
-			    VALUES ( dim_sector[sector_key] ),
-			    dim_kpi[kpi_code] = "CCC"
-			)
+			-- the sector of the companies in context (dim_sector is not filtered by a company pick,
+			-- the relationship runs from dim_company to dim_sector); MEDIANX only over companies that
+			-- have a CCC: most keys have none, and MEDIANX returns blank when they dominate
+			VAR _sektoren = VALUES ( dim_company[sector_key] )
+			RETURN
+			    CALCULATE (
+			        MEDIANX ( FILTER ( VALUES ( dim_company[company_key] ), NOT ISBLANK ( [KPI Wert] ) ), [KPI Wert] ),
+			        REMOVEFILTERS ( dim_company ),
+			        TREATAS ( _sektoren, dim_company[sector_key] ),
+			        dim_kpi[kpi_code] = "CCC"
+			    )
 		formatString: 0.0
 		displayFolder: Working Capital
 		lineageTag: 664d9e1f-b41d-5fe9-94e0-d29ec3871af6
@@ -45,15 +50,14 @@ table fact_kpi
 		displayFolder: Kreditrisiko
 		lineageTag: f2371b39-df62-51cb-9731-3232d3e510ec
 
-	/// Anteil der Kennzahlenwerte, deren letzte Version von der Erstveröffentlichung abweicht.
+	/// Anteil der Kennzahlenwerte (letzte Version), die um mehr als 0,5 % von der Erstveröffentlichung abweichen.
 	measure 'Restatement-Quote' =
-			VAR _paare =
-			    ADDCOLUMNS (
-			        SUMMARIZE ( fact_kpi, fact_kpi[company_key], fact_kpi[period_key], fact_kpi[kpi_key] ),
-			        "@erst", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "first_reported" ),
-			        "@letzt", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "latest" )
-			    )
-			RETURN DIVIDE ( COUNTROWS ( FILTER ( _paare, ABS ( [@erst] - [@letzt] ) > 0.005 * ABS ( [@erst] ) ) ), COUNTROWS ( _paare ) )
+			-- fact_kpi[is_restated] is set in dbt on both rows of a pair (latest differs from first
+			-- reported by more than 0.5 %), so the measure is a filtered count in the storage engine
+			DIVIDE (
+			    CALCULATE ( COUNTROWS ( fact_kpi ), fact_kpi[version] = "latest", fact_kpi[is_restated] = 1 ),
+			    CALCULATE ( COUNTROWS ( fact_kpi ), fact_kpi[version] = "latest" )
+			)
 		formatString: 0.0%
 		displayFolder: Datenqualität
 		lineageTag: 1649e910-f3a5-5cc8-95c2-401a8397f82a
@@ -145,6 +149,14 @@ table fact_kpi
 		sourceColumn: red_flag
 		lineageTag: 184cc59b-17be-5a1a-9924-505c4f920a6e
 		sourceLineageTag: red_flag
+
+	column is_restated
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: is_restated
+		lineageTag: 8cd679d2-5a11-5698-bb1d-642cc81ba285
+		sourceLineageTag: is_restated
 
 	column available_at
 		dataType: dateTime

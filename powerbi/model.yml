@@ -290,7 +290,9 @@ measures:
     expression: |
       SUMX (
           VALUES ( fact_wc_opportunity[company_id] ),
-          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+          -- the company's latest fiscal year overall (H4 rule), not the latest within the sector or
+          -- filter in context: a company that changed sector is counted once, in its latest sector
+          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ), ALLEXCEPT ( fact_wc_opportunity, fact_wc_opportunity[company_id] ) )
           RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
       )
 
@@ -302,7 +304,9 @@ measures:
     expression: |
       SUMX (
           VALUES ( fact_wc_opportunity[company_id] ),
-          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ) )
+          -- the company's latest fiscal year overall (H4 rule), not the latest within the sector or
+          -- filter in context: a company that changed sector is counted once, in its latest sector
+          VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ), ALLEXCEPT ( fact_wc_opportunity, fact_wc_opportunity[company_id] ) )
           RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
       )
 
@@ -354,7 +358,7 @@ measures:
   - table: fact_risk_score
     name: "Befund Frühwarnung"
     folder: "Beschriftungen"
-    description: "Diagrammtitel: Unternehmen im roten Band zum letzten Stichtag (Champion-Modell), aus den Daten berechnet."
+    description: "Diagrammtitel: Unternehmen im roten Band zum jeweils letzten Stichtag je Unternehmen (Champion-Modell), aus den Daten berechnet."
     expression: |
       VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
       VAR _n = [Unternehmen rot]
@@ -362,8 +366,8 @@ measures:
       RETURN
           IF ( ISBLANK ( _stichtag ), BLANK (),
               IF ( _en,
-                  FORMAT ( COALESCE ( _n, 0 ), "#,0" ) & " companies in the red band on " & FORMAT ( _stichtag, "yyyy-MM-dd" ),
-                  FORMAT ( COALESCE ( _n, 0 ), "#,0" ) & " Unternehmen im roten Band zum " & FORMAT ( _stichtag, "dd.MM.yyyy" ) ) )
+                  FORMAT ( COALESCE ( _n, 0 ), "#,0" ) & " companies in the red band at their latest score (up to " & FORMAT ( _stichtag, "yyyy-MM-dd" ) & ")",
+                  FORMAT ( COALESCE ( _n, 0 ), "#,0" ) & " Unternehmen im roten Band zum jeweils letzten Stichtag (bis " & FORMAT ( _stichtag, "dd.MM.yyyy" ) & ")" ) )
 
   - table: fact_data_quality
     name: "Befund Datenqualität"
@@ -513,7 +517,7 @@ measures:
     name: "Umsatz TTM"
     folder: "GuV"
     format: "#,0,,\" Mio\""
-    description: "Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz)."
+    description: "Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz); braucht einen Datumskontext aus dim_date, im Geschäftsjahr-Kontext von dim_period leer."
     expression: |
       CALCULATE ( [Umsatz], Zeitintelligenz[Zeit] = "TTM" )
 
@@ -521,7 +525,7 @@ measures:
     name: "COGS TTM"
     folder: "GuV"
     format: "#,0,,\" Mio\""
-    description: "Umsatzkosten der letzten zwölf Monate."
+    description: "Umsatzkosten der letzten zwölf Monate; braucht wie Umsatz TTM einen Datumskontext aus dim_date."
     expression: |
       CALCULATE ( [COGS], Zeitintelligenz[Zeit] = "TTM" )
 
@@ -626,46 +630,51 @@ measures:
     name: "DSO"
     folder: "Working Capital"
     format: "0.0"
-    description: "Days Sales Outstanding: Forderungen Durchschnitt / Umsatz TTM * 365."
+    description: "Days Sales Outstanding aus fact_kpi (dbt: Forderungen / Umsatz TTM * 365, Point-in-time je Periode), letzte Version."
     expression: |
-      DIVIDE ( [Forderungen Durchschnitt], [Umsatz TTM] ) * 365
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DSO" )
 
   - table: fact_financial_line
     name: "DIO"
     folder: "Working Capital"
     format: "0.0"
-    description: "Days Inventory Outstanding: Vorräte Durchschnitt / COGS TTM * 365."
+    description: "Days Inventory Outstanding aus fact_kpi (dbt: Vorräte / COGS TTM * 365), letzte Version."
     expression: |
-      DIVIDE ( [Vorräte Durchschnitt], [COGS TTM] ) * 365
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DIO" )
 
   - table: fact_financial_line
     name: "DPO"
     folder: "Working Capital"
     format: "0.0"
-    description: "Days Payables Outstanding: Verbindlichkeiten LuL Durchschnitt / COGS TTM * 365."
+    description: "Days Payables Outstanding aus fact_kpi (dbt: Verbindlichkeiten LuL / COGS TTM * 365), letzte Version."
     expression: |
-      DIVIDE ( [Verbindlichkeiten LuL Durchschnitt], [COGS TTM] ) * 365
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "DPO" )
 
   - table: fact_financial_line
     name: "CCC"
     folder: "Working Capital"
     format: "0.0"
-    description: "Cash Conversion Cycle in Tagen: DSO + DIO - DPO."
+    description: "Cash Conversion Cycle in Tagen (DSO + DIO - DPO) aus fact_kpi, letzte Version; dieselbe Zahl wie in H1 und der Watchlist."
     expression: |
-      [DSO] + [DIO] - [DPO]
+      CALCULATE ( [KPI Wert], dim_kpi[kpi_code] = "CCC" )
 
   - table: fact_kpi
     name: "CCC Sektor-Median"
     folder: "Working Capital"
     format: "0.0"
-    description: "Median des CCC über alle Unternehmen des Sektors im Kontext (aus fact_kpi, letzte Version)."
+    description: "Median des CCC über alle Unternehmen mit CCC im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version)."
     expression: |
-      CALCULATE (
-          MEDIANX ( VALUES ( dim_company[company_key] ), [KPI Wert] ),
-          REMOVEFILTERS ( dim_company ),
-          VALUES ( dim_sector[sector_key] ),
-          dim_kpi[kpi_code] = "CCC"
-      )
+      -- the sector of the companies in context (dim_sector is not filtered by a company pick,
+      -- the relationship runs from dim_company to dim_sector); MEDIANX only over companies that
+      -- have a CCC: most keys have none, and MEDIANX returns blank when they dominate
+      VAR _sektoren = VALUES ( dim_company[sector_key] )
+      RETURN
+          CALCULATE (
+              MEDIANX ( FILTER ( VALUES ( dim_company[company_key] ), NOT ISBLANK ( [KPI Wert] ) ), [KPI Wert] ),
+              REMOVEFILTERS ( dim_company ),
+              TREATAS ( _sektoren, dim_company[sector_key] ),
+              dim_kpi[kpi_code] = "CCC"
+          )
 
   - table: fact_wc_opportunity
     name: "Cash-Potenzial"
@@ -727,14 +736,20 @@ measures:
     name: "Risiko 12M"
     folder: "Kreditrisiko"
     format: "0.0%"
-    description: "Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten, Champion-Modell (ADR-007), zum letzten Stichtag im Kontext."
+    description: "Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten, Champion-Modell (ADR-007), zum letzten Stichtag je Unternehmen im Kontext (die Stichtage unterscheiden sich je Unternehmen)."
     expression: |
-      VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+      -- one (company, latest as-of date) pair per company: a single latest date across the
+      -- context would keep only the few companies scored on exactly that day
+      VAR _letzte =
+          CALCULATETABLE (
+              ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
+              fact_risk_score[is_champion] = 1
+          )
       RETURN
           CALCULATE (
               AVERAGE ( fact_risk_score[probability_12m] ),
-              fact_risk_score[is_champion] = 1,
-              fact_risk_score[as_of_date] = _stichtag
+              TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
+              fact_risk_score[is_champion] = 1
           )
 
   - table: fact_risk_score
@@ -743,19 +758,18 @@ measures:
     format: "#,0"
     description: "Anzahl Unternehmen im roten Risikoband (Champion-Modell, letzter Stichtag je Unternehmen im Kontext)."
     expression: |
-      COUNTROWS (
-          FILTER (
-              VALUES ( dim_company[company_id] ),
-              VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
-              RETURN
-                  CALCULATE (
-                      COUNTROWS ( fact_risk_score ),
-                      fact_risk_score[is_champion] = 1,
-                      fact_risk_score[as_of_date] = _stichtag,
-                      fact_risk_score[risk_band] = "red"
-                  ) > 0
+      VAR _letzte =
+          CALCULATETABLE (
+              ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
+              fact_risk_score[is_champion] = 1
           )
-      )
+      RETURN
+          CALCULATE (
+              DISTINCTCOUNT ( fact_risk_score[company_id] ),
+              TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
+              fact_risk_score[is_champion] = 1,
+              fact_risk_score[risk_band] = "red"
+          ) + 0
 
   - table: fact_risk_score
     name: "Risiko Veränderung zum Vorquartal"
@@ -774,17 +788,21 @@ measures:
       CALCULATE ( COUNTROWS ( fact_event ), fact_event[event_type] = "BANKRUPTCY_8K_103" )
 
   - table: fact_financial_line
-    name: "Prognosefehler MAPE"
+    name: "Prognosefehler WAPE"
     folder: "Plan-Ist"
     format: "0.0%"
-    description: "Mittlerer absoluter prozentualer Fehler des Forecasts je Unternehmen und Quartal."
+    description: "Gewichteter absoluter Prognosefehler: Summe |Ist - Forecast| geteilt durch Summe |Ist| über Unternehmen und Quartale im Kontext. Anders als ein einfacher MAPE dominieren Unternehmen mit sehr kleinem Umsatz das Ergebnis nicht."
     expression: |
-      AVERAGEX (
-          SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
-          VAR _ist = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" )
-          VAR _fc = CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
-          RETURN IF ( NOT ISBLANK ( _fc ), DIVIDE ( ABS ( _ist - _fc ), ABS ( _ist ) ) )
-      )
+      VAR _paare =
+          FILTER (
+              ADDCOLUMNS (
+                  SUMMARIZE ( fact_financial_line, dim_company[company_key], dim_period[period_key] ),
+                  "@ist", CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "IST" ),
+                  "@fc", CALCULATE ( [Umsatz], dim_scenario[scenario_code] = "FC" )
+              ),
+              NOT ISBLANK ( [@fc] ) && NOT ISBLANK ( [@ist] )
+          )
+      RETURN DIVIDE ( SUMX ( _paare, ABS ( [@ist] - [@fc] ) ), SUMX ( _paare, ABS ( [@ist] ) ) )
 
   - table: fact_financial_line
     name: "Datenstand"
@@ -808,6 +826,23 @@ measures:
           )
 
   - table: fact_data_quality
+    name: "DQ Ziel"
+    folder: "Datenqualität"
+    format: "0.0%"
+    description: "Ziel-Pass-Rate der Regel im letzten Lauf."
+    expression: |
+      VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+      RETURN CALCULATE ( MAX ( fact_data_quality[target_pass_rate] ), fact_data_quality[run_at] = _lauf )
+
+  - table: fact_data_quality
+    name: "DQ Status"
+    folder: "Beschriftungen\\Datenqualität"
+    description: "Status der Regel im letzten Lauf (pass, fail, info, no_data); leer für Regeln, die der letzte Lauf nicht geprüft hat."
+    expression: |
+      VAR _lauf = CALCULATE ( MAX ( fact_data_quality[run_at] ), REMOVEFILTERS ( fact_data_quality ) )
+      RETURN CALCULATE ( SELECTEDVALUE ( fact_data_quality[status] ), fact_data_quality[run_at] = _lauf )
+
+  - table: fact_data_quality
     name: "Regeln verletzt"
     folder: "Datenqualität"
     format: "#,0"
@@ -820,9 +855,13 @@ measures:
     name: "LEI-Match-Quote"
     folder: "Stammdaten"
     format: "0.0%"
-    description: "Anteil der aktuellen Unternehmen mit LEI."
+    description: "Anteil der aktuellen SEC-Unternehmen (mit CIK) mit LEI."
     expression: |
-      DIVIDE ( CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, dim_company[is_lei_matched] = 1 ), CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1 ) )
+      -- SEC companies only: LEI-only ESEF issuers carry an LEI by construction
+      DIVIDE (
+          CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, dim_company[is_lei_matched] = 1, NOT ISBLANK ( dim_company[cik] ) ),
+          CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, NOT ISBLANK ( dim_company[cik] ) )
+      )
 
   - table: fact_stewardship_queue
     name: "Offene Stewardship-Fälle"
@@ -836,15 +875,14 @@ measures:
     name: "Restatement-Quote"
     folder: "Datenqualität"
     format: "0.0%"
-    description: "Anteil der Kennzahlenwerte, deren letzte Version von der Erstveröffentlichung abweicht."
+    description: "Anteil der Kennzahlenwerte (letzte Version), die um mehr als 0,5 % von der Erstveröffentlichung abweichen."
     expression: |
-      VAR _paare =
-          ADDCOLUMNS (
-              SUMMARIZE ( fact_kpi, fact_kpi[company_key], fact_kpi[period_key], fact_kpi[kpi_key] ),
-              "@erst", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "first_reported" ),
-              "@letzt", CALCULATE ( AVERAGE ( fact_kpi[value] ), fact_kpi[version] = "latest" )
-          )
-      RETURN DIVIDE ( COUNTROWS ( FILTER ( _paare, ABS ( [@erst] - [@letzt] ) > 0.005 * ABS ( [@erst] ) ) ), COUNTROWS ( _paare ) )
+      -- fact_kpi[is_restated] is set in dbt on both rows of a pair (latest differs from first
+      -- reported by more than 0.5 %), so the measure is a filtered count in the storage engine
+      DIVIDE (
+          CALCULATE ( COUNTROWS ( fact_kpi ), fact_kpi[version] = "latest", fact_kpi[is_restated] = 1 ),
+          CALCULATE ( COUNTROWS ( fact_kpi ), fact_kpi[version] = "latest" )
+      )
 
 calculation_groups:
   - name: Zeitintelligenz
