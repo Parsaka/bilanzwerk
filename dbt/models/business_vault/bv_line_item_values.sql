@@ -1,6 +1,10 @@
 -- Line item mapping: concepts -> about 60 target line items. When several tags feed one
 -- line item, the lowest priority number that the company reported wins. Both point-in-time
 -- versions are mapped; "version" becomes part of the fact grain.
+-- Point-in-time: in the first-reported version the tag known first wins, and priority only
+-- decides between tags of the same filing. Otherwise a tag a company adopted later (for
+-- example the ASC 606 revenue tag, repeated for two prior years in the next 10-K) would replace
+-- the value that was public at the time and date the period two years too late.
 with versions as (
     select
         '{{ var("version_first_reported") }}' as version,
@@ -72,7 +76,9 @@ from (
         valid_units.*,
         row_number() over (
             partition by valid_units.version, valid_units.hk_company, valid_units.line_item_code, valid_units.period_end, valid_units.qtrs
-            order by valid_units.priority, case when valid_units.unit = 'USD' then 0 when valid_units.unit = 'EUR' then 1 else 2 end, valid_units.unit
+            order by
+                case when valid_units.version = '{{ var("version_first_reported") }}' then valid_units.available_at end asc,
+                valid_units.priority, case when valid_units.unit = 'USD' then 0 when valid_units.unit = 'EUR' then 1 else 2 end, valid_units.unit
         ) as rn
     from valid_units
 ) as ranked

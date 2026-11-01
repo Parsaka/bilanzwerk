@@ -55,3 +55,33 @@ unit_tests:
         - {period_end: "2023-12-31", amount: 25, amount_ttm: 70}
         - {period_end: "2024-03-31", amount: 12, amount_ttm: 72}
         - {period_end: "2024-09-30", amount: 30, amount_ttm: null}
+
+  - name: first_reported_keeps_the_tag_known_first
+    description: >
+      A company switches its revenue tag (ASC 606) and repeats the prior year under the new tag in
+      the next 10-K. Point-in-time keeps the value of the old tag, known a year earlier; the latest
+      version takes the tag with the better priority.
+    model: bv_line_item_values
+    given:
+      - input: ref('pit_fact_first_reported')
+        rows:
+          - {hk_company: "c1", taxonomy: "us-gaap", tag: "Revenues", period_end: "2017-12-31", qtrs: 4, unit: "USD", value: 100, source_filing: "FY17", available_at: "2018-02-20 16:00:00"}
+          - {hk_company: "c1", taxonomy: "us-gaap", tag: "RevenueFromContractWithCustomerExcludingAssessedTax", period_end: "2017-12-31", qtrs: 4, unit: "USD", value: 101, source_filing: "FY18", available_at: "2019-02-19 16:00:00"}
+      - input: ref('pit_fact_latest')
+        rows:
+          - {hk_company: "c1", taxonomy: "us-gaap", tag: "Revenues", period_end: "2017-12-31", qtrs: 4, unit: "USD", value: 100, source_filing: "FY17", available_at: "2018-02-20 16:00:00"}
+          - {hk_company: "c1", taxonomy: "us-gaap", tag: "RevenueFromContractWithCustomerExcludingAssessedTax", period_end: "2017-12-31", qtrs: 4, unit: "USD", value: 101, source_filing: "FY18", available_at: "2019-02-19 16:00:00"}
+      - input: ref('line_item_map')
+        rows:
+          - {line_item_code: "REV", taxonomy: "us-gaap", tag: "RevenueFromContractWithCustomerExcludingAssessedTax", priority: 1, sign: 1}
+          - {line_item_code: "REV", taxonomy: "us-gaap", tag: "Revenues", priority: 2, sign: 1}
+      - input: ref('line_items')
+        rows:
+          - {line_item_code: "REV", period_type: "duration", is_monetary: 1}
+      - input: ref('currencies')
+        rows:
+          - {currency_code: "USD"}
+    expect:
+      rows:
+        - {version: "first_reported", line_item_code: "REV", tag: "Revenues", value: 100, available_at: "2018-02-20 16:00:00"}
+        - {version: "latest", line_item_code: "REV", tag: "RevenueFromContractWithCustomerExcludingAssessedTax", value: 101, available_at: "2019-02-19 16:00:00"}

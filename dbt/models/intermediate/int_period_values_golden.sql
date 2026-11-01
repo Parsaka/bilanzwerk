@@ -3,7 +3,8 @@
 -- Survivorship: a golden company can hold several source keys with values for the same period
 -- (an SEC filer and its ESEF reports under the same LEI, or two CIKs that state one LEI). One
 -- value per line item and period: SEC before ESEF (quarterly detail), reported before derived,
--- then the most recent source.
+-- then, in the first-reported version, the source known first (point-in-time), otherwise the
+-- most recent source.
 with values_golden as (
     select * from (
         select
@@ -14,6 +15,7 @@ with values_golden as (
                 order by
                     case when g.company_bk_type = 'CIK' then 0 else 1 end asc,
                     case when v.derivation = 'reported' then 0 else 1 end asc,
+                    case when v.version = '{{ var("version_first_reported") }}' then v.available_at end asc,
                     v.available_at desc,
                     v.hk_company asc
             ) as source_rn
