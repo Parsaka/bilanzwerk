@@ -105,6 +105,22 @@
             }
           }
         }
+      ],
+      "columnFormatting": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1000000000D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_wc_opportunity.Cash-Potenzial aktuell"
+          }
+        }
       ]
     },
     "visualContainerObjects": {

@@ -20,7 +20,7 @@ table fact_wc_opportunity
 			    VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ), ALLEXCEPT ( fact_wc_opportunity, fact_wc_opportunity[company_id] ) )
 			    RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
 			)
-		formatString: #,0.0,,," Mrd"
+		formatString: #,0.0
 		displayFolder: Working Capital
 		lineageTag: 396d95ea-fbba-5a44-8e04-304437203b28
 
@@ -33,7 +33,7 @@ table fact_wc_opportunity
 			    VAR _gj = CALCULATE ( MAX ( fact_wc_opportunity[fiscal_year] ), ALLEXCEPT ( fact_wc_opportunity, fact_wc_opportunity[company_id] ) )
 			    RETURN CALCULATE ( SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] ), fact_wc_opportunity[fiscal_year] = _gj )
 			)
-		formatString: #,0.0,,," Mrd"
+		formatString: #,0.0
 		displayFolder: Working Capital
 		lineageTag: 1a4a64a3-e553-5e52-a53c-90355c4c0453
 
@@ -53,13 +53,13 @@ table fact_wc_opportunity
 
 	/// Freisetzbare Liquidität in EUR, wenn DSO und DIO auf den Sektormedian sinken und DPO auf ihn steigt.
 	measure 'Cash-Potenzial' = SUM ( fact_wc_opportunity[cash_opportunity_eur] )
-		formatString: #,0.0,,," Mrd"
+		formatString: #,0.0
 		displayFolder: Working Capital
 		lineageTag: d5c94d5f-44ea-57fa-8e44-63b30f2b4dc5
 
 	/// Wie Cash-Potenzial, Ziel ist das 25. Perzentil des Sektors (DPO: 75.).
 	measure 'Cash-Potenzial Stretch' = SUM ( fact_wc_opportunity[cash_opportunity_stretch_eur] )
-		formatString: #,0.0,,," Mrd"
+		formatString: #,0.0
 		displayFolder: Working Capital
 		lineageTag: 672abfe2-642e-5bf6-8926-f7861b682f93
 

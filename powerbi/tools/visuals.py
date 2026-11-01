@@ -30,9 +30,10 @@ ROLES = {
     "scatterChart": ["Category", "Series", "X", "Y", "Size"],
 }
 CHARTS = {t for t in ROLES if t.endswith("Chart")}
-# Amounts carry their unit in the format string ("#,0.0,,," Mrd"), counts are "#,0": Power BI's
-# automatic display units would scale them a second time ("1,3T Mrd"), so they are switched off.
-NO_UNITS = {"expr": {"Literal": {"Value": "1D"}}}
+# Display units: amounts are EUR measures with `unit: Mio|Mrd` in model.yml, shown in that unit;
+# everything else (counts, days, ratios) without automatic scaling, which would print "1,3T".
+UNITS = {"Mio": "1000000D", "Mrd": "1000000000D"}
+CATEGORY_ROLES = {"Category", "Series", "Rows", "Columns", "Breakdown"}
 
 
 def lit(value: str) -> dict:
@@ -197,8 +198,15 @@ def top_n_filter(name: str, ref: str, by: str, n: int) -> dict:
     }
 
 
-def build(spec: dict, z: int) -> dict:
-    """One visual from its pages.yml entry."""
+def display_units(refs: list[str], units: dict[str, str]) -> dict:
+    """The display units literal for these value fields: their unit if they have one, else none."""
+    found = [units[parse(r)[1]] for r in refs if parse(r)[2] == "Measure" and parse(r)[1] in units]
+    return lit(UNITS[found[0]] if found else "1D")
+
+
+def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
+    """One visual from its pages.yml entry; `units` maps measure names to Mio/Mrd (model.yml)."""
+    units = units or {}
     vtype = spec["type"]
     x, y, w, h = spec["pos"]
     visual: dict = {"visualType": vtype}
@@ -221,6 +229,7 @@ def build(spec: dict, z: int) -> dict:
             }
         visual["query"] = query
 
+    values = [r for role, refs in roles.items() if role not in CATEGORY_ROLES | {"X"} for r in refs]
     objects: dict = {}
     if vtype == "slicer":
         mode = spec.get("slicer_mode", "Dropdown")
@@ -231,7 +240,12 @@ def build(spec: dict, z: int) -> dict:
             objects["general"] = [{"properties": {"filter": selection(spec["fields"]["Values"][0], spec["default"])}}]
     if vtype == "card":
         objects["labels"] = [
-            {"properties": {"fontSize": lit(f"{spec.get('font_size', 24)}D"), "labelDisplayUnits": NO_UNITS}}
+            {
+                "properties": {
+                    "fontSize": lit(f"{spec.get('font_size', 24)}D"),
+                    "labelDisplayUnits": display_units(values, units),
+                }
+            }
         ]
         objects["categoryLabels"] = [{"properties": {"show": lit("false")}}]
         if spec.get("word_wrap"):
@@ -248,6 +262,12 @@ def build(spec: dict, z: int) -> dict:
                     "selector": {"data": [{"dataViewWildcard": {"matchingOption": 1}}], "metadata": query_ref(target)},
                 }
             )
+        scaled = [r for r in values if parse(r)[2] == "Measure" and parse(r)[1] in units]
+        if scaled:
+            objects["columnFormatting"] = [
+                {"properties": {"labelDisplayUnits": display_units([r], units)}, "selector": {"metadata": query_ref(r)}}
+                for r in scaled
+            ]
     if "colour_by" in spec:
         # one accent colour for the item the title talks about, grey for the rest
         objects["dataPoint"] = [
@@ -259,10 +279,11 @@ def build(spec: dict, z: int) -> dict:
     if spec.get("data_labels"):
         objects["labels"] = [{"properties": {"show": lit("true")}}]
     if vtype in CHARTS:
-        objects.setdefault("labels", [{"properties": {}}])[0]["properties"]["labelDisplayUnits"] = NO_UNITS
-        objects["valueAxis"] = [{"properties": {"labelDisplayUnits": NO_UNITS}}]
+        unit = display_units(values, units)
+        objects.setdefault("labels", [{"properties": {}}])[0]["properties"]["labelDisplayUnits"] = unit
+        objects["valueAxis"] = [{"properties": {"labelDisplayUnits": unit}}]
         if vtype == "scatterChart":
-            objects["categoryAxis"] = [{"properties": {"labelDisplayUnits": NO_UNITS}}]
+            objects["categoryAxis"] = [{"properties": {"labelDisplayUnits": display_units(roles.get("X", []), units)}}]
     if objects:
         visual["objects"] = objects
 

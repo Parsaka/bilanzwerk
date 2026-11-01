@@ -15,7 +15,7 @@ table fact_financial_line
 			    ),
 			    [EBIT]
 			)
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: GuV
 		lineageTag: 49622978-94e3-5ee8-a9a4-b8aa8b3c43fb
 
@@ -71,25 +71,25 @@ table fact_financial_line
 
 	/// Umsatzerlöse (Position REV), Summe der Quartale im Kontext.
 	measure Umsatz = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "REV" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: GuV
 		lineageTag: 85134ba5-84e9-54b1-b43b-30372ecccc31
 
 	/// Umsatzkosten (Position COGS).
 	measure COGS = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "COGS" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: GuV
 		lineageTag: 763108ac-cf6b-5650-bb0c-d646743ed90b
 
 	/// Betriebsergebnis (Position EBIT).
 	measure EBIT = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "EBIT" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: GuV
 		lineageTag: 82c9e066-d59e-56e3-b01d-1f57bdf8c6ae
 
 	/// Jahresergebnis der Anteilseigner (Position NI).
 	measure Jahresergebnis = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "NI" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: GuV
 		lineageTag: 5a11b8ff-2e1f-582f-bf93-c9a5eab03d9a
 
@@ -107,31 +107,31 @@ table fact_financial_line
 
 	/// Umsatz der letzten zwölf Monate (Element TTM der Berechnungsgruppe Zeitintelligenz).
 	measure 'Umsatz TTM' = CALCULATE ( [Umsatz], Zeitintelligenz[Zeit] = "TTM" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: GuV
 		lineageTag: 7076125f-4631-50b1-b652-674afa7a98db
 
 	/// Umsatzkosten der letzten zwölf Monate.
 	measure 'COGS TTM' = CALCULATE ( [COGS], Zeitintelligenz[Zeit] = "TTM" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: GuV
 		lineageTag: 166c44d8-2f57-5450-969c-8c96ba07c788
 
 	/// Bilanzsumme Aktiva zum Stichtag.
 	measure Bilanzsumme = CALCULATE ( [Bestand], dim_line_item[line_item_code] = "TA" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: Bilanz
 		lineageTag: 45594c39-0d84-5ad7-bbb3-60e49a8b73b3
 
 	/// Eigenkapital gesamt zum Stichtag.
 	measure Eigenkapital = CALCULATE ( [Bestand], dim_line_item[line_item_code] = "EQ" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: Bilanz
 		lineageTag: ebec05e1-da02-5117-b68c-b4f87f44d7c6
 
 	/// Verbindlichkeiten gesamt zum Stichtag.
 	measure Verbindlichkeiten = CALCULATE ( [Bestand], dim_line_item[line_item_code] = "TL" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: Bilanz
 		lineageTag: 8011fa11-3d8b-50d5-ba40-6bc765c6c5b2
 
@@ -149,13 +149,13 @@ table fact_financial_line
 
 	/// Liquide Mittel zum Stichtag.
 	measure 'Liquide Mittel' = CALCULATE ( [Bestand], dim_line_item[line_item_code] = "CASH" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: Bilanz
 		lineageTag: d1c920e1-fa68-5891-80ec-a22dab02dc47
 
 	/// Cashflow aus laufender Geschäftstätigkeit.
 	measure 'Operativer Cashflow' = CALCULATE ( [Betrag], dim_line_item[line_item_code] = "CFO" )
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: Cashflow
 		lineageTag: d753b705-b01f-59b0-abf0-77c85f5d9990
 
@@ -171,7 +171,7 @@ table fact_financial_line
 			    VALUES ( dim_period[period_key] ),
 			    CALCULATE ( [Betrag], dim_line_item[line_item_code] = "AR" )
 			)
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: Working Capital
 		lineageTag: e30aaaec-1e63-5148-ba21-9b75a176b239
 
@@ -181,7 +181,7 @@ table fact_financial_line
 			    VALUES ( dim_period[period_key] ),
 			    CALCULATE ( [Betrag], dim_line_item[line_item_code] = "INV" )
 			)
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: Working Capital
 		lineageTag: d051dcc3-8c78-5d22-bf42-22bdfadd4158
 
@@ -191,7 +191,7 @@ table fact_financial_line
 			    VALUES ( dim_period[period_key] ),
 			    CALCULATE ( [Betrag], dim_line_item[line_item_code] = "AP" )
 			)
-		formatString: #,0,," Mio"
+		formatString: #,0
 		displayFolder: Working Capital
 		lineageTag: 8869d3e1-c584-5346-bf34-af66c9cbd319
 

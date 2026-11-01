@@ -124,7 +124,8 @@ def render_table(
         out.append("\t\t\t\tlet")
         out.append(f'\t\t\t\t    Quelle = Parquet.Document(File.Contents(MartsFolder & "\\{name}.parquet")),')
         names = ", ".join(f'"{col["name"]}"' for col in columns)
-        out.append(f"\t\t\t\t    Spalten = Table.SelectColumns(Quelle, {{{names}}}),")
+        # a column the contract added after these marts were exported loads as null instead of failing
+        out.append(f"\t\t\t\t    Spalten = Table.SelectColumns(Quelle, {{{names}}}, MissingField.UseNull),")
         out.append(f"\t\t\t\t    Typen = Table.TransformColumnTypes(Spalten, {{{types}}})")
         out.append("\t\t\t\tin")
         out.append("\t\t\t\t    Typen")
@@ -184,15 +185,17 @@ def render_field_parameter(fp: dict, measure_table: dict[str, str]) -> str:
         for i, m in enumerate(fp["measures"])
     )
     # The value of the selected measure, for visuals that need a measure rather than the parameter
-    # itself (a scatter's x and y axes do not summarize a field parameter).
-    cases = ", ".join(f'"{m}", [{m.replace("]", "]]")}]' for m in fp["measures"])
+    # itself (a scatter's x and y axes do not summarize a field parameter). It switches on the order
+    # column: the display column forms a composite key with the hidden fields column and cannot be
+    # read with SELECTEDVALUE alone.
+    cases = ", ".join(f"{i}, [{m.replace(']', ']]')}]" for i, m in enumerate(fp["measures"]))
     out = description(fp.get("description"), "")
     out += [
         f"table {q(name)}",
         f"\tlineageTag: {tag('table', name)}",
         "",
         f"\t/// Wert der in {name} gewählten Kennzahl (für die Achsen des Streudiagramms).",
-        f"\tmeasure {q(name + ' Wert')} = SWITCH ( SELECTEDVALUE ( {q(name)}[{name}] ), {cases} )",
+        f"\tmeasure {q(name + ' Wert')} = SWITCH ( SELECTEDVALUE ( {q(name)}[{name} Reihenfolge] ), {cases} )",
         "\t\tformatString: #,0.00",
         "\t\tdisplayFolder: Peer-Vergleich",
         f"\t\tlineageTag: {tag('measure', name, 'value')}",

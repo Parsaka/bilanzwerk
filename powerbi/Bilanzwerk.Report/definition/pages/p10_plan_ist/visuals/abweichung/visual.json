@@ -109,6 +109,22 @@
             }
           }
         }
+      ],
+      "columnFormatting": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1000000D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_financial_line.Umsatz"
+          }
+        }
       ]
     },
     "visualContainerObjects": {

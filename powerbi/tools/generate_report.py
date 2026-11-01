@@ -173,6 +173,8 @@ def render_markdown(spec: dict) -> str:
 
 def main() -> None:
     spec = yaml.safe_load((PBI / "report" / "pages.yml").read_text(encoding="utf-8"))
+    model = yaml.safe_load((PBI / "model.yml").read_text(encoding="utf-8"))
+    units = {m["name"]: m["unit"] for m in model["measures"] if "unit" in m}
 
     write_json(
         PBI / "Bilanzwerk.pbip",
@@ -259,7 +261,7 @@ def main() -> None:
             entry = dict(v)
             if "label" in entry and "title" not in entry:
                 entry["title"] = f"Sprache.[{label_name(i, v['name'])}]"
-            visuals.append(build(entry, z))
+            visuals.append(build(entry, z, units))
         for v in visuals:
             write_json(page_dir / "visuals" / v["name"] / "visual.json", v)
     write_json(
