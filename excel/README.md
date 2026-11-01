@@ -15,6 +15,17 @@ Macro `RefreshAndExport` (module `modRefreshAndExport.bas`) refreshes all connec
 foreground, waits for the CUBE formulas, refuses to export a cockpit with error values, and
 saves the cockpit as `Export/Management_Cockpit_<Unternehmen>_GJ<Jahr>_<Datum>.pdf`.
 
+## Results workbook without Fabric
+
+`Bilanzwerk_Ergebnisse.xlsx` holds the results of the real-data run as values with native
+Excel charts (answer H1–H4, sectors, top 20, models, lead times, case studies, label audit,
+data quality). It opens anywhere; the live report below needs the semantic model.
+
+```bash
+git archive origin/real-data-results results | tar -x -C /tmp/r
+uv run python scripts/results_workbook.py --results /tmp/r/results
+```
+
 ## Build
 
 ```bash
