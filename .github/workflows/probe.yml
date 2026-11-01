@@ -14,7 +14,7 @@ jobs:
           UA: "Parsa Kamali parsa.kamali.data@gmail.com"
         run: |
           mkdir -p out
-          for acc in 1031296:0001031296-18-000024 1166126:0001166126-14-000005 1166126:0001193125-20-144411 1400891:0001193125-18-083055; do
+          for acc in 1166126:0001166126-14-000005; do
             cik=${acc%%:*}; a=${acc#*:}; nd=${a//-/}
             curl -sS -A "$UA" "https://www.sec.gov/Archives/edgar/data/$cik/$nd/$a.txt" -o "out/$a.txt" || true
             sleep 1
@@ -24,9 +24,9 @@ jobs:
           for p in sorted(pathlib.Path("out").glob("*.txt")):
               t = p.read_text(errors="ignore")
               t = re.sub(r"<[^>]+>", " ", t); t = html.unescape(t); t = re.sub(r"\s+", " ", t)
-              i = t.lower().find("item 1.03")
+              i = t.lower().find("item 1.01")
               head = t[:600]
-              (p.with_suffix(".excerpt")).write_text(head + "\n\n---- around Item 1.03 ----\n" + (t[max(0, i - 200): i + 2500] if i >= 0 else "not found"))
+              (p.with_suffix(".excerpt")).write_text(head + "\n\n---- around Item 1.03 ----\n" + (t[max(0, i - 200): i + 6000] if i >= 0 else "not found"))
               p.unlink()
           PY
       - name: Commit
