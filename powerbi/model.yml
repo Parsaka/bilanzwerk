@@ -19,7 +19,7 @@ tables:
   fact_kpi: {hidden_columns: [company_id, available_at], description: "Kennzahlen mit Sektorperzentil, Veränderung und roter Flagge."}
   fact_event: {hidden_columns: [company_id, event_key, accepted_at], description: "Insolvenz (8-K Item 1.03), Delisting, Deregistrierung, Fristverlängerung."}
   fact_wc_opportunity: {hidden_columns: [company_id, sector_key], description: "Working-Capital-Potenzial gegen den Sektormedian in EUR."}
-  fact_risk_score: {hidden_columns: [company_id, risk_score_key, run_id], description: "Insolvenzwahrscheinlichkeit 12 Monate je Unternehmen, Stichtag und Modell."}
+  fact_risk_score: {hidden_columns: [company_id, risk_score_key, run_id, is_latest_for_company], description: "Insolvenzwahrscheinlichkeit 12 Monate je Unternehmen, Stichtag und Modell."}
   fact_data_quality: {hidden_columns: [run_id], description: "Datenqualitäts-Scorecard je Lauf, Regel und Tabelle."}
   fact_stewardship_queue: {description: "Offene Stewardship-Fälle der Stammdaten (Kandidatenpaare zur Prüfung)."}
   fact_hypothesis_result: {hidden_columns: [run_id, data_version], description: "H1–H4, wie der letzte Modelllauf sie entschieden hat (analysis/answer.json)."}
@@ -799,18 +799,18 @@ measures:
     format: "0.0%"
     description: "Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten, Champion-Modell (ADR-007), zum letzten Stichtag je Unternehmen im Kontext (die Stichtage unterscheiden sich je Unternehmen)."
     expression: |
-      -- one (company, latest as-of date) pair per company: a single latest date across the
-      -- context would keep only the few companies scored on exactly that day
-      -- one company in context (table rows, company pages): its latest date is a plain filter
+      -- no date filter (page 7, company pages): each company's latest score is flagged in dbt
+      -- (is_latest_for_company), a plain filter for the storage engine
+      -- with a date filter (Veränderung zum Vorquartal): the latest date per company within the
+      -- dates in context, as (company, as-of date) pairs; a single latest date across the context
+      -- would keep only the few companies scored on exactly that day
       IF (
-          HASONEVALUE ( dim_company[company_id] ),
-          VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
-          RETURN
-              CALCULATE (
-                  AVERAGE ( fact_risk_score[probability_12m] ),
-                  fact_risk_score[is_champion] = 1,
-                  fact_risk_score[as_of_date] = _stichtag
-              ),
+          NOT ISFILTERED ( dim_date ),
+          CALCULATE (
+              AVERAGE ( fact_risk_score[probability_12m] ),
+              fact_risk_score[is_champion] = 1,
+              fact_risk_score[is_latest_for_company] = 1
+          ),
           VAR _letzte =
               CALCULATETABLE (
                   ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
@@ -830,18 +830,27 @@ measures:
     format: "#,0"
     description: "Anzahl Unternehmen im roten Risikoband (Champion-Modell, letzter Stichtag je Unternehmen im Kontext)."
     expression: |
-      VAR _letzte =
-          CALCULATETABLE (
-              ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
-              fact_risk_score[is_champion] = 1
-          )
-      RETURN
+      IF (
+          NOT ISFILTERED ( dim_date ),
           CALCULATE (
               DISTINCTCOUNT ( fact_risk_score[company_id] ),
-              TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
               fact_risk_score[is_champion] = 1,
+              fact_risk_score[is_latest_for_company] = 1,
               fact_risk_score[risk_band] = "red"
-          ) + 0
+          ),
+          VAR _letzte =
+              CALCULATETABLE (
+                  ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
+                  fact_risk_score[is_champion] = 1
+              )
+          RETURN
+              CALCULATE (
+                  DISTINCTCOUNT ( fact_risk_score[company_id] ),
+                  TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
+                  fact_risk_score[is_champion] = 1,
+                  fact_risk_score[risk_band] = "red"
+              )
+      ) + 0
 
   - table: fact_risk_score
     name: "Risiko Veränderung zum Vorquartal"

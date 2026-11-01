@@ -46,18 +46,18 @@ table fact_risk_score
 
 	/// Durchschnittliche kalibrierte Insolvenzwahrscheinlichkeit in 12 Monaten, Champion-Modell (ADR-007), zum letzten Stichtag je Unternehmen im Kontext (die Stichtage unterscheiden sich je Unternehmen).
 	measure 'Risiko 12M' =
-			-- one (company, latest as-of date) pair per company: a single latest date across the
-			-- context would keep only the few companies scored on exactly that day
-			-- one company in context (table rows, company pages): its latest date is a plain filter
+			-- no date filter (page 7, company pages): each company's latest score is flagged in dbt
+			-- (is_latest_for_company), a plain filter for the storage engine
+			-- with a date filter (Veränderung zum Vorquartal): the latest date per company within the
+			-- dates in context, as (company, as-of date) pairs; a single latest date across the context
+			-- would keep only the few companies scored on exactly that day
 			IF (
-			    HASONEVALUE ( dim_company[company_id] ),
-			    VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
-			    RETURN
-			        CALCULATE (
-			            AVERAGE ( fact_risk_score[probability_12m] ),
-			            fact_risk_score[is_champion] = 1,
-			            fact_risk_score[as_of_date] = _stichtag
-			        ),
+			    NOT ISFILTERED ( dim_date ),
+			    CALCULATE (
+			        AVERAGE ( fact_risk_score[probability_12m] ),
+			        fact_risk_score[is_champion] = 1,
+			        fact_risk_score[is_latest_for_company] = 1
+			    ),
 			    VAR _letzte =
 			        CALCULATETABLE (
 			            ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
@@ -76,18 +76,27 @@ table fact_risk_score
 
 	/// Anzahl Unternehmen im roten Risikoband (Champion-Modell, letzter Stichtag je Unternehmen im Kontext).
 	measure 'Unternehmen rot' =
-			VAR _letzte =
-			    CALCULATETABLE (
-			        ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
-			        fact_risk_score[is_champion] = 1
-			    )
-			RETURN
+			IF (
+			    NOT ISFILTERED ( dim_date ),
 			    CALCULATE (
 			        DISTINCTCOUNT ( fact_risk_score[company_id] ),
-			        TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
 			        fact_risk_score[is_champion] = 1,
+			        fact_risk_score[is_latest_for_company] = 1,
 			        fact_risk_score[risk_band] = "red"
-			    ) + 0
+			    ),
+			    VAR _letzte =
+			        CALCULATETABLE (
+			            ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
+			            fact_risk_score[is_champion] = 1
+			        )
+			    RETURN
+			        CALCULATE (
+			            DISTINCTCOUNT ( fact_risk_score[company_id] ),
+			            TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
+			            fact_risk_score[is_champion] = 1,
+			            fact_risk_score[risk_band] = "red"
+			        )
+			) + 0
 		formatString: #,0
 		displayFolder: Kreditrisiko
 		lineageTag: 8d9dc8d2-ea49-5347-8b04-e5afa7a2c364
@@ -160,6 +169,15 @@ table fact_risk_score
 		sourceColumn: risk_band
 		lineageTag: 6ce87d2c-edb2-5a57-8158-b8fba03f0c2f
 		sourceLineageTag: risk_band
+
+	column is_latest_for_company
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: is_latest_for_company
+		lineageTag: 8b27af85-bf66-5c34-888a-771345941139
+		sourceLineageTag: is_latest_for_company
 
 	column top_3_drivers
 		dataType: string

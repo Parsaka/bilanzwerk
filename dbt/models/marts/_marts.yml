@@ -100,6 +100,8 @@ models:
     tests:
       - unique_combination: {columns: ['company_id', 'event_date', 'event_type']}
     columns:
+      - name: company_key
+        tests: [not_null]
       - name: event_type
         tests:
           - accepted_values:
@@ -122,6 +124,8 @@ models:
         tests: [{accepted_values: {values: ['green', 'yellow', 'red']}}]
       - name: is_champion
         tests: [{accepted_values: {values: [0, 1], quote: false}}]
+      - name: is_latest_for_company
+        tests: [not_null, {accepted_values: {values: [0, 1], quote: false}}]
 
   - name: fact_hypothesis_result
     description: H1-H4 as the last model run decided them (answer cards, finding titles).

@@ -1,5 +1,7 @@
 -- Events per company: bankruptcy (8-K Item 1.03), deregistration (Form 15), delisting
 -- (Form 25) and late-filing notices (NT 10-K/Q). Event date = filing date.
+-- Only companies in dim_company: a filer with events but no financial statements (about
+-- 93 600 rows in run 41328368604) has no KPIs, no model row and no company to report on.
 with events as (
     select
         e.hk_filing,
@@ -48,7 +50,7 @@ select
     w.items as all_items,
     w.accepted_at
 from with_company as w
-left join {{ ref('dim_company') }} as c
+inner join {{ ref('dim_company') }} as c
     on
         w.company_id = c.company_id
         and w.filing_date >= c.valid_from
