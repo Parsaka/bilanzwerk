@@ -17,11 +17,11 @@ table fact_risk_score
 		displayFolder: Beschriftungen\Farben
 		lineageTag: f653b133-9e8d-5cd0-8318-907ab527c5ea
 
-	/// Kopfzeile der Unternehmensseiten: Unternehmen, Insolvenzrisiko 12 Monate und rote Flaggen, aus den Daten.
+	/// Kopfzeile der Unternehmensseiten: Unternehmen, Insolvenzrisiko 12 Monate und rote Flaggen zum letzten Abschluss, aus den Daten.
 	measure 'Befund Unternehmen' =
 			VAR _en = SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN"
 			VAR _p = [Risiko 12M]
-			VAR _flaggen = COALESCE ( [Rote Flaggen], 0 )
+			VAR _flaggen = COALESCE ( [Rote Flaggen letzter Abschluss], 0 )
 			RETURN
 			    IF ( NOT HASONEVALUE ( dim_company[company_id] ), [Ausgewähltes Unternehmen],
 			        [Ausgewähltes Unternehmen] & " · "
