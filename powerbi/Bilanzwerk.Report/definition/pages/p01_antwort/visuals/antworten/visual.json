@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_hypothesis_result.hypothesis_code",
-              "nativeQueryRef": "hypothesis_code"
+              "nativeQueryRef": "hypothesis_code",
+              "displayName": "Hypothese"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "fact_hypothesis_result.Antwort Text",
-              "nativeQueryRef": "Antwort Text"
+              "nativeQueryRef": "Antwort Text",
+              "displayName": "Ergebnis"
             }
           ]
         }
@@ -98,7 +100,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "100D"
+                  "Value": "90D"
                 }
               }
             }
@@ -112,7 +114,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "690D"
+                  "Value": "700D"
                 }
               }
             }

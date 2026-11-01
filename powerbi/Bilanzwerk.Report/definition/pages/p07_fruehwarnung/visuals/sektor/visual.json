@@ -28,6 +28,7 @@
               },
               "queryRef": "dim_sector.sector_de",
               "nativeQueryRef": "sector_de",
+              "displayName": "Sektor",
               "active": true
             }
           ]

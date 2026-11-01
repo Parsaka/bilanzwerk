@@ -101,7 +101,8 @@ def test_field_parameter_percentile_uses_the_kpi_code_of_the_selected_measure():
     fp = {"name": "KPI-X", "measures": ["DSO", "Verschuldungsgrad"], "kpi_codes": {"DSO": "DSO"}}
     tmdl = gen.render_field_parameter(fp, {"DSO": "f", "Verschuldungsgrad": "f"})
     want = 'Reihenfolge] ), 0, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "DSO" ) )'
-    assert "measure 'KPI-X Perzentil' = SWITCH" in tmdl and want in tmdl  # no code: no branch, BLANK
+    assert "measure 'KPI-X Perzentil' = IF ( ISBLANK ( [KPI-X Wert] ), BLANK (), SWITCH" in tmdl
+    assert want + " )" in tmdl  # no code: no branch, BLANK
 
 
 def test_tables_have_widths_and_no_meaningless_total():
@@ -126,3 +127,20 @@ def test_year_slicer_filters_only_the_visuals_of_that_year():
     targets = {(i["source"], i["target"]) for i in interactions if i["type"] == "NoFilter"}
     assert ("geschaeftsjahr", "umsatz_bis_ebit") in targets and ("geschaeftsjahr", "margen") in targets
     assert ("geschaeftsjahr", "bruecke") not in targets
+
+
+def test_headers_show_display_names_and_a_measure_can_require_a_value():
+    v = load("visuals")
+    spec = {
+        "name": "r",
+        "type": "tableEx",
+        "pos": [0, 0, 1, 1],
+        "fields": {"Values": ["dim_company.company_name", "P.[Wert]"]},
+        "names": {"P.[Wert]": "Wert"},
+        "filters": [{"field": "P.[Wert]", "not_blank": True}],
+    }
+    out = v.build(spec, 0, names={"dim_company.company_name": "Unternehmen", "P.[Wert]": "Kennzahl x"})
+    projections = out["visual"]["query"]["queryState"]["Values"]["projections"]
+    assert [p["displayName"] for p in projections] == ["Unternehmen", "Wert"]  # the visual overrides the map
+    (flt,) = out["filterConfig"]["filters"]
+    assert flt["type"] == "Advanced" and "Measure" in flt["field"]

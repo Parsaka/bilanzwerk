@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "GuV-Brücke.Schritt",
-              "nativeQueryRef": "Schritt"
+              "nativeQueryRef": "Schritt",
+              "displayName": "Schritt"
             }
           ]
         },

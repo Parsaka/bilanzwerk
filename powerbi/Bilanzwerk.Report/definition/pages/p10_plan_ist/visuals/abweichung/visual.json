@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_sector.sector_de",
-              "nativeQueryRef": "sector_de"
+              "nativeQueryRef": "sector_de",
+              "displayName": "Sektor"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "dim_company.company_name",
-              "nativeQueryRef": "company_name"
+              "nativeQueryRef": "company_name",
+              "displayName": "Unternehmen"
             }
           ]
         },

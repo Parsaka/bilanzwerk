@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_period.period_end_date",
-              "nativeQueryRef": "period_end_date"
+              "nativeQueryRef": "period_end_date",
+              "displayName": "Periodenende"
             }
           ]
         },
@@ -45,7 +46,8 @@
                 }
               },
               "queryRef": "fact_case_study.Fall Rote Flaggen",
-              "nativeQueryRef": "Fall Rote Flaggen"
+              "nativeQueryRef": "Fall Rote Flaggen",
+              "displayName": "Rote Flaggen"
             }
           ]
         }

@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_model_backtest.model_name",
-              "nativeQueryRef": "model_name"
+              "nativeQueryRef": "model_name",
+              "displayName": "Modell"
             }
           ]
         },
@@ -97,6 +98,19 @@
               "expr": {
                 "Literal": {
                   "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "categoryAxis": [
+        {
+          "properties": {
+            "maxMarginFactor": {
+              "expr": {
+                "Literal": {
+                  "Value": "50L"
                 }
               }
             }

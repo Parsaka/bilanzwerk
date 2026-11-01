@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_period.fiscal_year",
-              "nativeQueryRef": "fiscal_year"
+              "nativeQueryRef": "fiscal_year",
+              "displayName": "Geschäftsjahr"
             }
           ]
         },
@@ -45,7 +46,8 @@
                 }
               },
               "queryRef": "dim_line_item.group_de",
-              "nativeQueryRef": "group_de"
+              "nativeQueryRef": "group_de",
+              "displayName": "Gruppe"
             }
           ]
         },

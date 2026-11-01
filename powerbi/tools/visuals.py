@@ -66,8 +66,11 @@ def query_ref(ref: str) -> str:
     return f"{table}.{prop}"
 
 
-def projection(ref: str, active: bool = False) -> dict:
+def projection(ref: str, active: bool = False, name: str | None = None) -> dict:
     out = {"field": field(ref), "queryRef": query_ref(ref), "nativeQueryRef": parse(ref)[1]}
+    if name:
+        # what headers, axis titles and legends show instead of the column or measure name
+        out["displayName"] = name
     if active:
         out["active"] = True
     return out
@@ -204,9 +207,11 @@ def display_units(refs: list[str], units: dict[str, str]) -> dict:
     return lit(UNITS[found[0]] if found else "1D")
 
 
-def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
+def build(spec: dict, z: int, units: dict[str, str] | None = None, names: dict[str, str] | None = None) -> dict:
     """One visual from its pages.yml entry; `units` maps measure names to Mio/Mrd (model.yml)."""
     units = units or {}
+    # display names: the report-wide map (pages.yml field_names), overridden per visual (names)
+    names = {**(names or {}), **spec.get("names", {})}
     vtype = spec["type"]
     x, y, w, h = spec["pos"]
     visual: dict = {"visualType": vtype}
@@ -217,7 +222,7 @@ def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
         raise ValueError(f"{spec['name']}: roles {sorted(unknown)} not valid for {vtype}")
     if roles:
         state = {
-            role: {"projections": [projection(r, active=(vtype == "slicer")) for r in refs]}
+            role: {"projections": [projection(r, active=(vtype == "slicer"), name=names.get(r)) for r in refs]}
             for role, refs in roles.items()
         }
         query: dict = {"queryState": state}
@@ -296,6 +301,15 @@ def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
             objects["categoryAxis"] = [{"properties": {"labelDisplayUnits": display_units(roles.get("X", []), units)}}]
         if "Series" in roles:
             objects["legend"] = [{"properties": {"showTitle": lit("false")}}]
+        # long category names (sectors, model names): up to `label_space` % of the width for the
+        # labels instead of cutting them; `category_width` lets all categories fit without a scrollbar
+        axis = objects.setdefault("categoryAxis", [{"properties": {}}])[0]["properties"]
+        if "label_space" in spec:
+            axis["maxMarginFactor"] = lit(f"{spec['label_space']}L")
+        if "category_width" in spec:
+            axis["minCategoryWidth"] = lit(f"{spec['category_width']}D")
+        if not axis:
+            del objects["categoryAxis"]
     if objects:
         visual["objects"] = objects
 
@@ -326,6 +340,8 @@ def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
     for i, flt in enumerate(spec.get("filters", [])):
         if "top" in flt:
             filters.append(top_n_filter(f"f{i}", flt["field"], flt["by"], flt["top"]))
+        elif flt.get("not_blank"):
+            filters.append(not_blank_filter(f"f{i}", flt["field"]))
         else:
             filters.append(categorical_filter(f"f{i}", flt["field"], flt["in"]))
     if filters:

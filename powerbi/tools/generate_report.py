@@ -270,7 +270,7 @@ def main() -> None:
             entry = dict(v)
             if "label" in entry and "title" not in entry:
                 entry["title"] = f"Sprache.[{label_name(i, v['name'])}]"
-            visuals.append(build(entry, z, units))
+            visuals.append(build(entry, z, units, spec.get("field_names", {})))
         for v in visuals:
             write_json(page_dir / "visuals" / v["name"] / "visual.json", v)
     write_json(

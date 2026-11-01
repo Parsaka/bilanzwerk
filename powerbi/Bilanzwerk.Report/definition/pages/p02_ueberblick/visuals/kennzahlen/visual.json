@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_kpi.name_de",
-              "nativeQueryRef": "name_de"
+              "nativeQueryRef": "name_de",
+              "displayName": "Kennzahl"
             },
             {
               "field": {
@@ -37,11 +38,12 @@
                       "Entity": "fact_kpi"
                     }
                   },
-                  "Property": "KPI Wert"
+                  "Property": "KPI Wert letzter Abschluss"
                 }
               },
-              "queryRef": "fact_kpi.KPI Wert",
-              "nativeQueryRef": "KPI Wert"
+              "queryRef": "fact_kpi.KPI Wert letzter Abschluss",
+              "nativeQueryRef": "KPI Wert letzter Abschluss",
+              "displayName": "Wert"
             },
             {
               "field": {
@@ -51,11 +53,12 @@
                       "Entity": "fact_kpi"
                     }
                   },
-                  "Property": "Sektorperzentil"
+                  "Property": "Sektorperzentil letzter Abschluss"
                 }
               },
-              "queryRef": "fact_kpi.Sektorperzentil",
-              "nativeQueryRef": "Sektorperzentil"
+              "queryRef": "fact_kpi.Sektorperzentil letzter Abschluss",
+              "nativeQueryRef": "Sektorperzentil letzter Abschluss",
+              "displayName": "Sektorperzentil"
             },
             {
               "field": {
@@ -65,11 +68,12 @@
                       "Entity": "fact_kpi"
                     }
                   },
-                  "Property": "Rote Flaggen"
+                  "Property": "Rote Flaggen letzter Abschluss"
                 }
               },
-              "queryRef": "fact_kpi.Rote Flaggen",
-              "nativeQueryRef": "Rote Flaggen"
+              "queryRef": "fact_kpi.Rote Flaggen letzter Abschluss",
+              "nativeQueryRef": "Rote Flaggen letzter Abschluss",
+              "displayName": "Rote Flaggen"
             }
           ]
         }
@@ -108,7 +112,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "180D"
+                  "Value": "170D"
                 }
               }
             }
@@ -128,7 +132,7 @@
             }
           },
           "selector": {
-            "metadata": "fact_kpi.KPI Wert"
+            "metadata": "fact_kpi.KPI Wert letzter Abschluss"
           }
         },
         {
@@ -136,13 +140,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "70D"
+                  "Value": "90D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "fact_kpi.Sektorperzentil"
+            "metadata": "fact_kpi.Sektorperzentil letzter Abschluss"
           }
         },
         {
@@ -156,7 +160,7 @@
             }
           },
           "selector": {
-            "metadata": "fact_kpi.Rote Flaggen"
+            "metadata": "fact_kpi.Rote Flaggen letzter Abschluss"
           }
         }
       ],

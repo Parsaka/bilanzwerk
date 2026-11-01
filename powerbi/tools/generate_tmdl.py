@@ -209,9 +209,9 @@ def render_field_parameter(fp: dict, measure_table: dict[str, str]) -> str:
     percentile = (
         [
             f"\t/// Sektorperzentil der in {name} gewählten Kennzahl "
-            "(Rang des Werts im Sektor, niedrig = kleiner Wert).",
-            f"\tmeasure {q(name + ' Perzentil')} = "
-            f"SWITCH ( SELECTEDVALUE ( {q(name)}[{name} Reihenfolge] ), {pct_cases} )",
+            "(Rang des Werts im Sektor, niedrig = kleiner Wert); leer, wo der Wert leer ist.",
+            f"\tmeasure {q(name + ' Perzentil')} = IF ( ISBLANK ( [{name} Wert] ), BLANK (), "
+            f"SWITCH ( SELECTEDVALUE ( {q(name)}[{name} Reihenfolge] ), {pct_cases} ) )",
             "\t\tformatString: 0%",
             "\t\tdisplayFolder: Peer-Vergleich",
             f"\t\tlineageTag: {tag('measure', name, 'percentile')}",

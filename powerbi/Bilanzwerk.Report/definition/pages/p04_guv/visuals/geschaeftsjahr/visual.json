@@ -28,6 +28,7 @@
               },
               "queryRef": "dim_period.fiscal_year",
               "nativeQueryRef": "fiscal_year",
+              "displayName": "Geschäftsjahr",
               "active": true
             }
           ]

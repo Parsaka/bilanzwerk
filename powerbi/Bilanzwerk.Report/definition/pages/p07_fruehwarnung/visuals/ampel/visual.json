@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_company.company_name",
-              "nativeQueryRef": "company_name"
+              "nativeQueryRef": "company_name",
+              "displayName": "Unternehmen"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "dim_sector.sector_de",
-              "nativeQueryRef": "sector_de"
+              "nativeQueryRef": "sector_de",
+              "displayName": "Sektor"
             },
             {
               "field": {
@@ -56,20 +58,6 @@
               },
               "queryRef": "fact_risk_score.Risiko 12M",
               "nativeQueryRef": "Risiko 12M"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "fact_risk_score"
-                    }
-                  },
-                  "Property": "Risiko Veränderung zum Vorquartal"
-                }
-              },
-              "queryRef": "fact_risk_score.Risiko Veränderung zum Vorquartal",
-              "nativeQueryRef": "Risiko Veränderung zum Vorquartal"
             },
             {
               "field": {
@@ -97,7 +85,8 @@
                 }
               },
               "queryRef": "fact_risk_score.top_3_drivers",
-              "nativeQueryRef": "top_3_drivers"
+              "nativeQueryRef": "top_3_drivers",
+              "displayName": "Stärkste Treiber"
             }
           ]
         }
@@ -175,6 +164,78 @@
                 }
               }
             }
+          }
+        }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "230D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "dim_company.company_name"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "130D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "dim_sector.sector_de"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "70D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_risk_score.Risiko 12M"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "60D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_kpi.Rote Flaggen"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "290D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_risk_score.top_3_drivers"
           }
         }
       ],

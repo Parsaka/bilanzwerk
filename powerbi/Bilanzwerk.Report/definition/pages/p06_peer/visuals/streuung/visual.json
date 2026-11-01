@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_company.company_name",
-              "nativeQueryRef": "company_name"
+              "nativeQueryRef": "company_name",
+              "displayName": "Unternehmen"
             }
           ]
         },
@@ -45,7 +46,8 @@
                 }
               },
               "queryRef": "KPI-Auswahl.KPI-Auswahl Wert",
-              "nativeQueryRef": "KPI-Auswahl Wert"
+              "nativeQueryRef": "KPI-Auswahl Wert",
+              "displayName": "Kennzahl x (Auswahl oben)"
             }
           ]
         },
@@ -63,7 +65,8 @@
                 }
               },
               "queryRef": "KPI-Auswahl Y.KPI-Auswahl Y Wert",
-              "nativeQueryRef": "KPI-Auswahl Y Wert"
+              "nativeQueryRef": "KPI-Auswahl Y Wert",
+              "displayName": "Kennzahl y (Auswahl oben)"
             }
           ]
         }

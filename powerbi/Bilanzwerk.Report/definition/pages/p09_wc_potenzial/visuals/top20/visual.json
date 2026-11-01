@@ -6,7 +6,7 @@
     "y": 84,
     "z": 4,
     "width": 610,
-    "height": 330,
+    "height": 290,
     "tabOrder": 4
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_company.company_name",
-              "nativeQueryRef": "company_name"
+              "nativeQueryRef": "company_name",
+              "displayName": "Unternehmen"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "dim_sector.sector_de",
-              "nativeQueryRef": "sector_de"
+              "nativeQueryRef": "sector_de",
+              "displayName": "Sektor"
             },
             {
               "field": {
@@ -55,7 +57,8 @@
                 }
               },
               "queryRef": "fact_wc_opportunity.Cash-Potenzial aktuell",
-              "nativeQueryRef": "Cash-Potenzial aktuell"
+              "nativeQueryRef": "Cash-Potenzial aktuell",
+              "displayName": "Cash-Potenzial"
             }
           ]
         }

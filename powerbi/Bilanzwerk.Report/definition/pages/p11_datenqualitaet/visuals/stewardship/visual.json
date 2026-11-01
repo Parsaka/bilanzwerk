@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_stewardship_queue.sec_name",
-              "nativeQueryRef": "sec_name"
+              "nativeQueryRef": "sec_name",
+              "displayName": "Name (SEC)"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "fact_stewardship_queue.gleif_legal_name",
-              "nativeQueryRef": "gleif_legal_name"
+              "nativeQueryRef": "gleif_legal_name",
+              "displayName": "Name (GLEIF)"
             },
             {
               "field": {
@@ -55,7 +57,8 @@
                 }
               },
               "queryRef": "fact_stewardship_queue.gleif_city",
-              "nativeQueryRef": "gleif_city"
+              "nativeQueryRef": "gleif_city",
+              "displayName": "Ort"
             },
             {
               "field": {
@@ -69,7 +72,8 @@
                 }
               },
               "queryRef": "fact_stewardship_queue.gleif_country",
-              "nativeQueryRef": "gleif_country"
+              "nativeQueryRef": "gleif_country",
+              "displayName": "Land"
             },
             {
               "field": {
@@ -83,7 +87,8 @@
                 }
               },
               "queryRef": "fact_stewardship_queue.match_probability",
-              "nativeQueryRef": "match_probability"
+              "nativeQueryRef": "match_probability",
+              "displayName": "Match-Wahrscheinlichkeit"
             }
           ]
         }
