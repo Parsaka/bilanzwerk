@@ -958,15 +958,29 @@ peer_bounds: &peer_bounds
   "Z'' Score": [-20, 20]
   Verschuldungsgrad: [-50, 50]
 
+# fact_kpi code of each peer measure, for the sector percentile of the selected ratio
+# (Verschuldungsgrad has none: EQ_TL is its inverse, so its percentile stays empty).
+peer_kpi_codes: &peer_kpi_codes
+  DSO: DSO
+  DIO: DIO
+  DPO: DPO
+  CCC: CCC
+  EBIT-Marge: EBIT_MARGIN
+  Eigenkapitalquote: EQUITY_RATIO
+  "Z'' Score": ZPP
+  Bruttomarge: GROSS_MARGIN
+
 field_parameters:
   - name: KPI-Auswahl
     description: "Feldparameter für den Peer-Vergleich: wählt die Kennzahl auf Achsen und in Tabellen."
     measures: [DSO, DIO, DPO, CCC, EBIT-Marge, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
     bounds: *peer_bounds
+    kpi_codes: *peer_kpi_codes
   - name: KPI-Auswahl Y
     description: "Zweiter Feldparameter für den Peer-Vergleich: die Kennzahl auf der y-Achse des Streudiagramms."
     measures: [EBIT-Marge, DSO, DIO, DPO, CCC, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
     bounds: *peer_bounds
+    kpi_codes: *peer_kpi_codes
 
 roles:
   - name: Sektor-Team

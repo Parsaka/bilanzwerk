@@ -198,6 +198,28 @@ def render_field_parameter(fp: dict, measure_table: dict[str, str]) -> str:
         return f"{i}, VAR _v = {ref} RETURN IF ( _v >= {lo} && _v <= {hi}, _v )"
 
     cases = ", ".join(case(i, m) for i, m in enumerate(fp["measures"]))
+    # sector percentile of the selected ratio (kpi_codes: measure -> fact_kpi code); a measure
+    # without a code (no matching KPI) stays BLANK
+    codes = fp.get("kpi_codes", {})
+    pct_cases = ", ".join(
+        f'{i}, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "{codes[m]}" )'
+        for i, m in enumerate(fp["measures"])
+        if m in codes
+    )
+    percentile = (
+        [
+            f"\t/// Sektorperzentil der in {name} gewählten Kennzahl "
+            "(Rang des Werts im Sektor, niedrig = kleiner Wert).",
+            f"\tmeasure {q(name + ' Perzentil')} = "
+            f"SWITCH ( SELECTEDVALUE ( {q(name)}[{name} Reihenfolge] ), {pct_cases} )",
+            "\t\tformatString: 0%",
+            "\t\tdisplayFolder: Peer-Vergleich",
+            f"\t\tlineageTag: {tag('measure', name, 'percentile')}",
+            "",
+        ]
+        if codes
+        else []
+    )
     out = description(fp.get("description"), "")
     out += [
         f"table {q(name)}",
@@ -210,6 +232,7 @@ def render_field_parameter(fp: dict, measure_table: dict[str, str]) -> str:
         "\t\tdisplayFolder: Peer-Vergleich",
         f"\t\tlineageTag: {tag('measure', name, 'value')}",
         "",
+        *percentile,
         f"\tcolumn {q(name)}",
         "\t\tdataType: string",
         "\t\tsummarizeBy: none",

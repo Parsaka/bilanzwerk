@@ -48,14 +48,14 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "fact_kpi"
+                      "Entity": "KPI-Auswahl"
                     }
                   },
-                  "Property": "Sektorperzentil"
+                  "Property": "KPI-Auswahl Perzentil"
                 }
               },
-              "queryRef": "fact_kpi.Sektorperzentil",
-              "nativeQueryRef": "Sektorperzentil"
+              "queryRef": "KPI-Auswahl.KPI-Auswahl Perzentil",
+              "nativeQueryRef": "KPI-Auswahl Perzentil"
             }
           ]
         }
@@ -67,10 +67,10 @@
               "Measure": {
                 "Expression": {
                   "SourceRef": {
-                    "Entity": "fact_kpi"
+                    "Entity": "KPI-Auswahl"
                   }
                 },
-                "Property": "Sektorperzentil"
+                "Property": "KPI-Auswahl Perzentil"
               }
             },
             "direction": "Descending"
@@ -146,7 +146,7 @@
             }
           },
           "selector": {
-            "metadata": "fact_kpi.Sektorperzentil"
+            "metadata": "KPI-Auswahl.KPI-Auswahl Perzentil"
           }
         }
       ],

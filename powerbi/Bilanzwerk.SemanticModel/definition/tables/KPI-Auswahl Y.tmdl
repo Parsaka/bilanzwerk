@@ -8,6 +8,12 @@ table 'KPI-Auswahl Y'
 		displayFolder: Peer-Vergleich
 		lineageTag: 274c0204-e370-5041-9001-8ee435f07012
 
+	/// Sektorperzentil der in KPI-Auswahl Y gewählten Kennzahl (Rang des Werts im Sektor, niedrig = kleiner Wert).
+	measure 'KPI-Auswahl Y Perzentil' = SWITCH ( SELECTEDVALUE ( 'KPI-Auswahl Y'[KPI-Auswahl Y Reihenfolge] ), 0, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "EBIT_MARGIN" ), 1, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "DSO" ), 2, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "DIO" ), 3, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "DPO" ), 4, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "CCC" ), 5, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "EQUITY_RATIO" ), 6, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "ZPP" ), 7, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "GROSS_MARGIN" ) )
+		formatString: 0%
+		displayFolder: Peer-Vergleich
+		lineageTag: 067493d5-6e5b-5d60-805d-18095631f685
+
 	column 'KPI-Auswahl Y'
 		dataType: string
 		summarizeBy: none

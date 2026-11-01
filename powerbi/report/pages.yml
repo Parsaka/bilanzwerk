@@ -235,9 +235,9 @@ pages:
       - name: rangliste
         type: tableEx
         pos: [760, 152, 496, 512]
-        fields: {Values: ["dim_company.company_name", "KPI-Auswahl.[KPI-Auswahl Wert]", "fact_kpi.[Sektorperzentil]"]}
-        widths: {"dim_company.company_name": 270, "KPI-Auswahl.[KPI-Auswahl Wert]": 90, "fact_kpi.[Sektorperzentil]": 100}
-        sort: ["fact_kpi.[Sektorperzentil]", desc]
+        fields: {Values: ["dim_company.company_name", "KPI-Auswahl.[KPI-Auswahl Wert]", "KPI-Auswahl.[KPI-Auswahl Perzentil]"]}
+        widths: {"dim_company.company_name": 270, "KPI-Auswahl.[KPI-Auswahl Wert]": 90, "KPI-Auswahl.[KPI-Auswahl Perzentil]": 100}
+        sort: ["KPI-Auswahl.[KPI-Auswahl Perzentil]", desc]
         label: {de: "Rangliste mit Sektorperzentil", en: "Ranking with sector percentile"}
   - id: fruehwarnung
     de: {name: "Frühwarnsystem", question: "Welche Unternehmen brauchen jetzt Aufmerksamkeit?"}

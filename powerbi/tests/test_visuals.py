@@ -96,6 +96,14 @@ def test_field_parameter_value_is_blank_outside_its_bounds():
         assert set(fp["bounds"]) == set(fp["measures"]), fp["name"]
 
 
+def test_field_parameter_percentile_uses_the_kpi_code_of_the_selected_measure():
+    gen = load("generate_tmdl")
+    fp = {"name": "KPI-X", "measures": ["DSO", "Verschuldungsgrad"], "kpi_codes": {"DSO": "DSO"}}
+    tmdl = gen.render_field_parameter(fp, {"DSO": "f", "Verschuldungsgrad": "f"})
+    want = 'Reihenfolge] ), 0, CALCULATE ( [Sektorperzentil], dim_kpi[kpi_code] = "DSO" ) )'
+    assert "measure 'KPI-X Perzentil' = SWITCH" in tmdl and want in tmdl  # no code: no branch, BLANK
+
+
 def test_tables_have_widths_and_no_meaningless_total():
     v = load("visuals")
     spec = {
