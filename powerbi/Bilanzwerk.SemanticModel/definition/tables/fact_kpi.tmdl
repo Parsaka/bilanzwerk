@@ -3,15 +3,21 @@ table fact_kpi
 	lineageTag: 9cc15d74-9159-523f-a2ce-0ae943d485dd
 	sourceLineageTag: [marts].[fact_kpi]
 
-	/// Median des CCC über alle Unternehmen mit CCC im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version).
+	/// Median des CCC über die Unternehmen mit CCC zwischen -730 und 730 Tagen im Sektor der Unternehmen im Kontext (aus fact_kpi, letzte Version); leer bei weniger als fünf solchen Unternehmen.
 	measure 'CCC Sektor-Median' =
 			-- the sector of the companies in context (dim_sector is not filtered by a company pick,
 			-- the relationship runs from dim_company to dim_sector); MEDIANX only over companies that
-			-- have a CCC: most keys have none, and MEDIANX returns blank when they dominate
+			-- have a CCC within the display bounds of page 6 (-730 to 730 days); fewer than five such
+			-- peers (dbt var wc_min_sector_peers) give no median
 			VAR _sektoren = VALUES ( dim_company[sector_key] )
 			RETURN
 			    CALCULATE (
-			        MEDIANX ( FILTER ( VALUES ( dim_company[company_key] ), NOT ISBLANK ( [KPI Wert] ) ), [KPI Wert] ),
+			        VAR _peers =
+			            FILTER (
+			                ADDCOLUMNS ( VALUES ( dim_company[company_key] ), "@ccc", [KPI Wert] ),
+			                NOT ISBLANK ( [@ccc] ) && [@ccc] >= -730 && [@ccc] <= 730
+			            )
+			        RETURN IF ( COUNTROWS ( _peers ) >= 5, MEDIANX ( _peers, [@ccc] ) ),
 			        REMOVEFILTERS ( dim_company ),
 			        TREATAS ( _sektoren, dim_company[sector_key] ),
 			        dim_kpi[kpi_code] = "CCC"

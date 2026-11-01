@@ -48,17 +48,28 @@ table fact_risk_score
 	measure 'Risiko 12M' =
 			-- one (company, latest as-of date) pair per company: a single latest date across the
 			-- context would keep only the few companies scored on exactly that day
-			VAR _letzte =
-			    CALCULATETABLE (
-			        ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
-			        fact_risk_score[is_champion] = 1
-			    )
-			RETURN
-			    CALCULATE (
-			        AVERAGE ( fact_risk_score[probability_12m] ),
-			        TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
-			        fact_risk_score[is_champion] = 1
-			    )
+			-- one company in context (table rows, company pages): its latest date is a plain filter
+			IF (
+			    HASONEVALUE ( dim_company[company_id] ),
+			    VAR _stichtag = CALCULATE ( MAX ( fact_risk_score[as_of_date] ), fact_risk_score[is_champion] = 1 )
+			    RETURN
+			        CALCULATE (
+			            AVERAGE ( fact_risk_score[probability_12m] ),
+			            fact_risk_score[is_champion] = 1,
+			            fact_risk_score[as_of_date] = _stichtag
+			        ),
+			    VAR _letzte =
+			        CALCULATETABLE (
+			            ADDCOLUMNS ( VALUES ( fact_risk_score[company_id] ), "@stichtag", CALCULATE ( MAX ( fact_risk_score[as_of_date] ) ) ),
+			            fact_risk_score[is_champion] = 1
+			        )
+			    RETURN
+			        CALCULATE (
+			            AVERAGE ( fact_risk_score[probability_12m] ),
+			            TREATAS ( _letzte, fact_risk_score[company_id], fact_risk_score[as_of_date] ),
+			            fact_risk_score[is_champion] = 1
+			        )
+			)
 		formatString: 0.0%
 		displayFolder: Kreditrisiko
 		lineageTag: b562c582-e93b-5404-a5a2-d922cb3c2d2c
