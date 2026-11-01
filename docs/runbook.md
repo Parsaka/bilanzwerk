@@ -27,6 +27,7 @@ uv run python -m mdm.cli match                # writes data/mdm/company_matches.
 cd dbt && BW_HAS_MDM=true uv run dbt build && cd ..
 uv run bw-analysis events                     # event count check (week 5)
 uv run bw-analysis run                        # backtest, statistics, write-back
+uv run bw-analysis label-audit                # reads each 8-K behind the label on EDGAR (needs sec.gov)
 cd dbt && BW_HAS_MDM=true BW_HAS_RISK_SCORES=true uv run dbt build && cd ..
 ```
 

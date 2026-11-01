@@ -1,5 +1,29 @@
 # Changelog
 
+## Real data, master data review, fixes found in the results (PR #2, PR #3, 2026-10-31 to 2026-11-01)
+
+- Master data: 300 candidate pairs labelled blind by written rules (`mdm/REVIEW.md`); model v1
+  reached precision 0.20 / recall 0.35 at 0.90. Model v3 (ADR-006 amendment): name levels for
+  series marks and name extensions, legal-form comparison, m from the labels, auto-match only
+  on an exact or near-exact name without contradicting legal form or tie. Holdout of 149 fresh
+  pairs: precision 1.00, recall 1.00. Golden records are reproducible (ties ordered by LEI).
+- Point-in-time: every KPI is dated by its own inputs, not by the latest item of the period;
+  the first-reported version keeps the tag known first (a tag switch such as ASC 606 had
+  dated two prior years of revenue to the later 10-K).
+- Label audit: `bw-analysis label-audit` reads every 8-K behind the bankruptcy label on EDGAR;
+  124 of 3 609 have no Item 1.03 in the text and 250 name only a subsidiary as debtor
+  (wording heuristic). Reported, the label is unchanged (ADR-001).
+- H1 sensitivity on computable quarters only, next to the pre-registered measurement.
+- Tableau: the extract joined every SCD2 version of a company and counted its potential up to
+  three times; it now joins the current name, and the run checks the workbook against H4.
+  `tableau/build_workbook.py` packs the `.twbx`.
+- Data quality: `SCALE_OUTLIER_TOTAL_ASSETS` compares against both neighbouring periods,
+  `MDM_LEI_MATCH_RATE` counts only filers with periods, an `--empty` build no longer appends
+  rows; results of the run in `docs/data-quality-results.md`.
+- Real-data run: base build single-threaded (DuckDB temp disk), exports of data-quality rules
+  and MDM counts, case-study events. Results: README and `docs/management-summary` from run
+  41282080293; case studies in `docs/case-studies.md`.
+
 ## Week 7 build: reporting, platform, operations (2026-10-27)
 
 - Power BI: semantic model rendered from `powerbi/model.yml` and the data contracts (TMDL, Direct
