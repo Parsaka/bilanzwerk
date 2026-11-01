@@ -31,17 +31,17 @@
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
                       "Entity": "KPI-Auswahl"
                     }
                   },
-                  "Property": "KPI-Auswahl"
+                  "Property": "KPI-Auswahl Wert"
                 }
               },
-              "queryRef": "KPI-Auswahl.KPI-Auswahl",
-              "nativeQueryRef": "KPI-Auswahl"
+              "queryRef": "KPI-Auswahl.KPI-Auswahl Wert",
+              "nativeQueryRef": "KPI-Auswahl Wert"
             },
             {
               "field": {
@@ -105,6 +105,63 @@
             }
           }
         }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "270D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "dim_company.company_name"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "90D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "KPI-Auswahl.KPI-Auswahl Wert"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "100D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_kpi.Sektorperzentil"
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "visualContainerObjects": {
@@ -127,6 +184,13 @@
                     }
                   },
                   "Property": "Diagramm 06 rangliste"
+                }
+              }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }

@@ -2,8 +2,8 @@
 table 'KPI-Auswahl Y'
 	lineageTag: 7a91671b-25ef-54d3-9162-e8ae15a4aeca
 
-	/// Wert der in KPI-Auswahl Y gewählten Kennzahl (für die Achsen des Streudiagramms).
-	measure 'KPI-Auswahl Y Wert' = SWITCH ( SELECTEDVALUE ( 'KPI-Auswahl Y'[KPI-Auswahl Y Reihenfolge] ), 0, [EBIT-Marge], 1, [DSO], 2, [DIO], 3, [DPO], 4, [CCC], 5, [Eigenkapitalquote], 6, [Z'' Score], 7, [Bruttomarge], 8, [Verschuldungsgrad] )
+	/// Wert der in KPI-Auswahl Y gewählten Kennzahl (für die Achsen des Streudiagramms), außerhalb plausibler Grenzen leer.
+	measure 'KPI-Auswahl Y Wert' = SWITCH ( SELECTEDVALUE ( 'KPI-Auswahl Y'[KPI-Auswahl Y Reihenfolge] ), 0, VAR _v = [EBIT-Marge] RETURN IF ( _v >= -2 && _v <= 1, _v ), 1, VAR _v = [DSO] RETURN IF ( _v >= 0 && _v <= 730, _v ), 2, VAR _v = [DIO] RETURN IF ( _v >= 0 && _v <= 730, _v ), 3, VAR _v = [DPO] RETURN IF ( _v >= 0 && _v <= 730, _v ), 4, VAR _v = [CCC] RETURN IF ( _v >= -730 && _v <= 730, _v ), 5, VAR _v = [Eigenkapitalquote] RETURN IF ( _v >= -5 && _v <= 1, _v ), 6, VAR _v = [Z'' Score] RETURN IF ( _v >= -20 && _v <= 20, _v ), 7, VAR _v = [Bruttomarge] RETURN IF ( _v >= -2 && _v <= 1, _v ), 8, VAR _v = [Verschuldungsgrad] RETURN IF ( _v >= -50 && _v <= 50, _v ) )
 		formatString: #,0.00
 		displayFolder: Peer-Vergleich
 		lineageTag: 274c0204-e370-5041-9001-8ee435f07012

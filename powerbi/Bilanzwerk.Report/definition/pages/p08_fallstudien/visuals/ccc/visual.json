@@ -115,6 +115,13 @@
                   "Property": "Diagramm 08 ccc"
                 }
               }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }

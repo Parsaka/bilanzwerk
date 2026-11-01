@@ -184,17 +184,27 @@ def render_field_parameter(fp: dict, measure_table: dict[str, str]) -> str:
         f"\t\t\t\t(\"{m}\", NAMEOF('{measure_table[m]}'[{m.replace(']', ']]')}]), {i})"
         for i, m in enumerate(fp["measures"])
     )
+
     # The value of the selected measure, for visuals that need a measure rather than the parameter
     # itself (a scatter's x and y axes do not summarize a field parameter). It switches on the order
     # column: the display column forms a composite key with the hidden fields column and cannot be
-    # read with SELECTEDVALUE alone.
-    cases = ", ".join(f"{i}, [{m.replace(']', ']]')}]" for i, m in enumerate(fp["measures"]))
+    # read with SELECTEDVALUE alone. Values outside `bounds` (model.yml peer_bounds) are BLANK, so a
+    # handful of implausible ratios does not squeeze all other points into one corner.
+    def case(i: int, m: str) -> str:
+        ref = f"[{m.replace(']', ']]')}]"
+        if m not in fp.get("bounds", {}):
+            return f"{i}, {ref}"
+        lo, hi = fp["bounds"][m]
+        return f"{i}, VAR _v = {ref} RETURN IF ( _v >= {lo} && _v <= {hi}, _v )"
+
+    cases = ", ".join(case(i, m) for i, m in enumerate(fp["measures"]))
     out = description(fp.get("description"), "")
     out += [
         f"table {q(name)}",
         f"\tlineageTag: {tag('table', name)}",
         "",
-        f"\t/// Wert der in {name} gewählten Kennzahl (für die Achsen des Streudiagramms).",
+        f"\t/// Wert der in {name} gewählten Kennzahl (für die Achsen des Streudiagramms), "
+        "außerhalb plausibler Grenzen leer.",
         f"\tmeasure {q(name + ' Wert')} = SWITCH ( SELECTEDVALUE ( {q(name)}[{name} Reihenfolge] ), {cases} )",
         "\t\tformatString: #,0.00",
         "\t\tdisplayFolder: Peer-Vergleich",

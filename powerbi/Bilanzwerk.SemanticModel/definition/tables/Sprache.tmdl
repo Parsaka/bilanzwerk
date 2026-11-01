@@ -169,7 +169,7 @@ table Sprache
 		lineageTag: d5d37781-527e-5a13-a6d4-fc19e62ecf4d
 
 	/// Diagrammtitel streuung auf Seite 06 (peer).
-	measure 'Diagramm 06 streuung' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Companies of the sector on two ratios of your choice", "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen" )
+	measure 'Diagramm 06 streuung' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Companies of the sector on two ratios of your choice (values outside plausible bounds hidden)", "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen (Werte außerhalb plausibler Grenzen ausgeblendet)" )
 		displayFolder: Beschriftungen\Diagramme
 		lineageTag: 44081a05-cc61-524c-945a-eea65bf6b612
 

@@ -24,6 +24,7 @@ pages:
         pos: [24, 84, 820, 300]
         fields: {Values: ["fact_hypothesis_result.hypothesis_code", "fact_hypothesis_result.[Antwort Text]"]}
         sort: ["fact_hypothesis_result.hypothesis_code", asc]
+        widths: {"fact_hypothesis_result.hypothesis_code": 100, "fact_hypothesis_result.[Antwort Text]": 690}
         label: {de: "Die vier Hypothesen (vorher festgelegt, ADR-001), Ergebnis des letzten Modelllaufs", en: "The four hypotheses (fixed beforehand, ADR-001), result of the last model run"}
       - name: vorlaufzeit
         type: clusteredBarChart
@@ -73,6 +74,7 @@ pages:
         type: tableEx
         pos: [24, 152, 400, 512]
         fields: {Values: ["dim_kpi.name_de", "fact_kpi.[KPI Wert]", "fact_kpi.[Sektorperzentil]", "fact_kpi.[Rote Flaggen]"]}
+        widths: {"dim_kpi.name_de": 180, "fact_kpi.[KPI Wert]": 60, "fact_kpi.[Sektorperzentil]": 70, "fact_kpi.[Rote Flaggen]": 55}
         label: {de: "Kennzahlen zum letzten Abschluss mit Sektorperzentil", en: "Ratios at the latest statement with sector percentile"}
       - name: umsatz
         type: lineChart
@@ -152,6 +154,7 @@ pages:
         pos: [440, 84, 200, 56]
         fields: {Values: ["dim_period.fiscal_year"]}
         default: "2025"
+        filters_only: [bruecke]
         label: {de: "Geschäftsjahr", en: "Fiscal year"}
       - name: bruecke
         type: waterfallChart
@@ -228,11 +231,12 @@ pages:
         type: scatterChart
         pos: [24, 152, 720, 512]
         fields: {Category: ["dim_company.company_name"], X: ["KPI-Auswahl.[KPI-Auswahl Wert]"], Y: ["KPI-Auswahl Y.[KPI-Auswahl Y Wert]"]}
-        label: {de: "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen", en: "Companies of the sector on two ratios of your choice"}
+        label: {de: "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen (Werte außerhalb plausibler Grenzen ausgeblendet)", en: "Companies of the sector on two ratios of your choice (values outside plausible bounds hidden)"}
       - name: rangliste
         type: tableEx
         pos: [760, 152, 496, 512]
-        fields: {Values: ["dim_company.company_name", "KPI-Auswahl.KPI-Auswahl", "fact_kpi.[Sektorperzentil]"]}
+        fields: {Values: ["dim_company.company_name", "KPI-Auswahl.[KPI-Auswahl Wert]", "fact_kpi.[Sektorperzentil]"]}
+        widths: {"dim_company.company_name": 270, "KPI-Auswahl.[KPI-Auswahl Wert]": 90, "fact_kpi.[Sektorperzentil]": 100}
         sort: ["fact_kpi.[Sektorperzentil]", desc]
         label: {de: "Rangliste mit Sektorperzentil", en: "Ranking with sector percentile"}
   - id: fruehwarnung
@@ -331,6 +335,7 @@ pages:
         pos: [646, 84, 610, 330]
         fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_wc_opportunity.[Cash-Potenzial aktuell]"]}
         sort: ["fact_wc_opportunity.[Cash-Potenzial aktuell]", desc]
+        widths: {"dim_company.company_name": 270, "dim_sector.sector_de": 200, "fact_wc_opportunity.[Cash-Potenzial aktuell]": 100}
         filters: [{field: "dim_company.company_name", by: "fact_wc_opportunity.[Cash-Potenzial aktuell]", top: 20}]
         label: {de: "Die 20 Unternehmen mit dem größten Potenzial (letztes Geschäftsjahr)", en: "The 20 companies with the largest potential (latest fiscal year)"}
       - name: stretch
@@ -358,12 +363,14 @@ pages:
         pos: [340, 84, 200, 56]
         fields: {Values: ["dim_period.fiscal_year"]}
         default: "2025"
+        filters_only: [abweichung, mape]
         label: {de: "Geschäftsjahr", en: "Fiscal year"}
       - name: abweichung
         type: pivotTable
         pos: [24, 152, 820, 512]
         fields: {Rows: ["dim_sector.sector_de", "dim_company.company_name"], Columns: ["Szenario.Szenario"], Values: ["fact_financial_line.[Umsatz]"]}
-        filters: [{field: "Szenario.Szenario", in: ["Ist", "Plan", "Plan-Ist-Abweichung", "Plan-Ist-Abweichung %"]}]
+        # one measure across the scenario items gets one display unit (Mio); the % item would read "0,0M%"
+        filters: [{field: "Szenario.Szenario", in: ["Ist", "Plan", "Plan-Ist-Abweichung"]}]
         label: {de: "Umsatz Ist gegen Plan nach Sektor und Unternehmen (Plan im Januar eingefroren)", en: "Revenue actual against plan by sector and company (plan frozen in January)"}
       - name: mape
         type: card

@@ -104,6 +104,13 @@
                   "Property": "Befund Vorlaufzeit"
                 }
               }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }

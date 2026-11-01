@@ -238,6 +238,8 @@ def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
             objects["selection"] = [{"properties": {"strictSingleSelect": lit("true")}}]
         if "default" in spec:
             objects["general"] = [{"properties": {"filter": selection(spec["fields"]["Values"][0], spec["default"])}}]
+        # the visual title names the field already; the header would only repeat the column name
+        objects["header"] = [{"properties": {"show": lit("false")}}]
     if vtype == "card":
         objects["labels"] = [
             {
@@ -268,6 +270,14 @@ def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
                 {"properties": {"labelDisplayUnits": display_units([r], units)}, "selector": {"metadata": query_ref(r)}}
                 for r in scaled
             ]
+        if spec.get("widths"):
+            objects["columnWidth"] = [
+                {"properties": {"value": lit(f"{px}D")}, "selector": {"metadata": query_ref(ref)}}
+                for ref, px in spec["widths"].items()
+            ]
+    if vtype == "tableEx":
+        # a total over companies, hypotheses or rules means nothing here
+        objects["total"] = [{"properties": {"totals": lit("false")}}]
     if "colour_by" in spec:
         # one accent colour for the item the title talks about, grey for the rest
         objects["dataPoint"] = [
@@ -284,13 +294,18 @@ def build(spec: dict, z: int, units: dict[str, str] | None = None) -> dict:
         objects["valueAxis"] = [{"properties": {"labelDisplayUnits": unit}}]
         if vtype == "scatterChart":
             objects["categoryAxis"] = [{"properties": {"labelDisplayUnits": display_units(roles.get("X", []), units)}}]
+        if "Series" in roles:
+            objects["legend"] = [{"properties": {"showTitle": lit("false")}}]
     if objects:
         visual["objects"] = objects
 
     title = spec.get("title")
     container: dict = {}
     if title:
-        container["title"] = [{"properties": {"show": lit("true"), "text": measure_expr(title)}}]
+        # findings are sentences; wrapped instead of cut off with "..."
+        container["title"] = [
+            {"properties": {"show": lit("true"), "text": measure_expr(title), "titleWrap": lit("true")}}
+        ]
     else:
         container["title"] = [{"properties": {"show": lit("false")}}]
     visual["visualContainerObjects"] = container

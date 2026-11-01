@@ -241,17 +241,26 @@ def main() -> None:
         page_dir = DEF / "pages" / name
         if page_dir.exists():
             shutil.rmtree(page_dir)
-        write_json(
-            page_dir / "page.json",
-            {
-                "$schema": f"{SCHEMA}/item/report/definition/page/1.3.0/schema.json",
-                "name": name,
-                "displayName": f"{i}. {page['de']['name']}",
-                "displayOption": "FitToPage",
-                "height": HEIGHT,
-                "width": WIDTH,
-            },
-        )
+        page_json = {
+            "$schema": f"{SCHEMA}/item/report/definition/page/1.3.0/schema.json",
+            "name": name,
+            "displayName": f"{i}. {page['de']['name']}",
+            "displayOption": "FitToPage",
+            "height": HEIGHT,
+            "width": WIDTH,
+        }
+        # a slicer with `filters_only` filters just those visuals (e.g. the fiscal year drives the
+        # waterfall of one year, not the charts "je Geschäftsjahr" next to it)
+        interactions = [
+            {"source": v["name"], "target": other["name"], "type": "NoFilter"}
+            for v in page.get("layout", [])
+            if "filters_only" in v
+            for other in page["layout"]
+            if other["name"] != v["name"] and other["name"] not in v["filters_only"] and other["type"] != "slicer"
+        ]
+        if interactions:
+            page_json["visualInteractions"] = interactions
+        write_json(page_dir / "page.json", page_json)
         visuals = [
             measure_card("titel", f"Titel {i:02d}", pos(24, 12, 1060, 56, 0), 20, "#262626"),
             language_slicer(pos(1100, 16, 156, 48, 1)),

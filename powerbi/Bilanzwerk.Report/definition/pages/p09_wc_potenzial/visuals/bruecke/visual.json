@@ -157,6 +157,13 @@
                   "Property": "Befund Cash-Potenzial"
                 }
               }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }

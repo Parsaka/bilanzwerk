@@ -4,5 +4,12 @@
   "displayName": "10. Plan-Ist",
   "displayOption": "FitToPage",
   "height": 720,
-  "width": 1280
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "geschaeftsjahr",
+      "target": "mape_verlauf",
+      "type": "NoFilter"
+    }
+  ]
 }

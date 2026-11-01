@@ -126,6 +126,13 @@
                   "Property": "Befund Modellgüte"
                 }
               }
+            },
+            "titleWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
             }
           }
         }

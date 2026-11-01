@@ -84,3 +84,37 @@ def test_field_parameter_value_measure_switches_on_the_order_column():
     tmdl = gen.render_field_parameter(fp, {"DSO": "f", "Z'' Score": "f"})
     want = "measure 'KPI-X Wert' = SWITCH ( SELECTEDVALUE ( 'KPI-X'[KPI-X Reihenfolge] ), 0, [DSO], 1, [Z'' Score] )"
     assert want in tmdl
+
+
+def test_field_parameter_value_is_blank_outside_its_bounds():
+    gen = load("generate_tmdl")
+    fp = {"name": "KPI-X", "measures": ["DSO", "CCC"], "bounds": {"DSO": [0, 730]}}
+    tmdl = gen.render_field_parameter(fp, {"DSO": "f", "CCC": "f"})
+    assert "0, VAR _v = [DSO] RETURN IF ( _v >= 0 && _v <= 730, _v ), 1, [CCC] )" in tmdl
+    model = yaml.safe_load((PBI / "model.yml").read_text(encoding="utf-8"))
+    for fp in model["field_parameters"]:
+        assert set(fp["bounds"]) == set(fp["measures"]), fp["name"]
+
+
+def test_tables_have_widths_and_no_meaningless_total():
+    v = load("visuals")
+    spec = {
+        "name": "t",
+        "type": "tableEx",
+        "pos": [0, 0, 1, 1],
+        "fields": {"Values": ["s.name", "t.[Wert]"]},
+        "widths": {"s.name": 200, "t.[Wert]": 80},
+    }
+    objects = v.build(spec, 0)["visual"]["objects"]
+    assert objects["total"] == [{"properties": {"totals": {"expr": {"Literal": {"Value": "false"}}}}}]
+    assert [w["selector"]["metadata"] for w in objects["columnWidth"]] == ["s.name", "t.Wert"]
+
+
+def test_year_slicer_filters_only_the_visuals_of_that_year():
+    import json
+
+    report = PBI / "Bilanzwerk.Report" / "definition" / "pages" / "p04_guv" / "page.json"
+    interactions = json.loads(report.read_text(encoding="utf-8"))["visualInteractions"]
+    targets = {(i["source"], i["target"]) for i in interactions if i["type"] == "NoFilter"}
+    assert ("geschaeftsjahr", "umsatz_bis_ebit") in targets and ("geschaeftsjahr", "margen") in targets
+    assert ("geschaeftsjahr", "bruecke") not in targets

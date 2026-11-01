@@ -459,6 +459,7 @@ measures:
     name: "Bestand"
     folder: "_Basis"
     format: "#,0"
+    unit: Mio
     hidden: true
     description: "Bilanzwert zum letzten Periodenende jedes Unternehmens im Kontext (Stichtagswert, nicht summiert über Quartale)."
     expression: |
@@ -926,13 +927,28 @@ static_tables:
       - ["Umsatzkosten", 2]
       - ["Übrige betriebliche Aufwendungen und Erträge", 3]
 
+# Display bounds of the peer scatter ([<name> Wert]): values outside are left out as implausible
+# (days as in fact_wc_opportunity, equity ratio as the rule VALID_EQUITY_RATIO_BOUNDS).
+peer_bounds: &peer_bounds
+  DSO: [0, 730]
+  DIO: [0, 730]
+  DPO: [0, 730]
+  CCC: [-730, 730]
+  EBIT-Marge: [-2, 1]
+  Bruttomarge: [-2, 1]
+  Eigenkapitalquote: [-5, 1]
+  "Z'' Score": [-20, 20]
+  Verschuldungsgrad: [-50, 50]
+
 field_parameters:
   - name: KPI-Auswahl
     description: "Feldparameter für den Peer-Vergleich: wählt die Kennzahl auf Achsen und in Tabellen."
     measures: [DSO, DIO, DPO, CCC, EBIT-Marge, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
+    bounds: *peer_bounds
   - name: KPI-Auswahl Y
     description: "Zweiter Feldparameter für den Peer-Vergleich: die Kennzahl auf der y-Achse des Streudiagramms."
     measures: [EBIT-Marge, DSO, DIO, DPO, CCC, Eigenkapitalquote, Z'' Score, Bruttomarge, Verschuldungsgrad]
+    bounds: *peer_bounds
 
 roles:
   - name: Sektor-Team
