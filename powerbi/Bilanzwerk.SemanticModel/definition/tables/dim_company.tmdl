@@ -13,8 +13,13 @@ table dim_company
 		displayFolder: Beschriftungen
 		lineageTag: 35411c86-0f44-5966-97f9-efe02ae72132
 
-	/// Anteil der aktuellen Unternehmen mit LEI.
-	measure 'LEI-Match-Quote' = DIVIDE ( CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, dim_company[is_lei_matched] = 1 ), CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1 ) )
+	/// Anteil der aktuellen SEC-Unternehmen (mit CIK) mit LEI.
+	measure 'LEI-Match-Quote' =
+			-- SEC companies only: LEI-only ESEF issuers carry an LEI by construction
+			DIVIDE (
+			    CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, dim_company[is_lei_matched] = 1, NOT ISBLANK ( dim_company[cik] ) ),
+			    CALCULATE ( COUNTROWS ( dim_company ), dim_company[is_current] = 1, NOT ISBLANK ( dim_company[cik] ) )
+			)
 		formatString: 0.0%
 		displayFolder: Stammdaten
 		lineageTag: 254e40dc-6f5c-5895-8046-4c4c449220f8

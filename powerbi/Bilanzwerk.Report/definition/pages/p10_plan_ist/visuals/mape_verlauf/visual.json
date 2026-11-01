@@ -41,11 +41,11 @@
                       "Entity": "fact_financial_line"
                     }
                   },
-                  "Property": "Prognosefehler MAPE"
+                  "Property": "Prognosefehler WAPE"
                 }
               },
-              "queryRef": "fact_financial_line.Prognosefehler MAPE",
-              "nativeQueryRef": "Prognosefehler MAPE"
+              "queryRef": "fact_financial_line.Prognosefehler WAPE",
+              "nativeQueryRef": "Prognosefehler WAPE"
             }
           ]
         }
