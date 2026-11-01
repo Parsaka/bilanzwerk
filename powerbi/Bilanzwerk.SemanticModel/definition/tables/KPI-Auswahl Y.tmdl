@@ -2,6 +2,12 @@
 table 'KPI-Auswahl Y'
 	lineageTag: 7a91671b-25ef-54d3-9162-e8ae15a4aeca
 
+	/// Wert der in KPI-Auswahl Y gewählten Kennzahl (für die Achsen des Streudiagramms).
+	measure 'KPI-Auswahl Y Wert' = SWITCH ( SELECTEDVALUE ( 'KPI-Auswahl Y'[KPI-Auswahl Y] ), "EBIT-Marge", [EBIT-Marge], "DSO", [DSO], "DIO", [DIO], "DPO", [DPO], "CCC", [CCC], "Eigenkapitalquote", [Eigenkapitalquote], "Z'' Score", [Z'' Score], "Bruttomarge", [Bruttomarge], "Verschuldungsgrad", [Verschuldungsgrad] )
+		formatString: #,0.00
+		displayFolder: Peer-Vergleich
+		lineageTag: 274c0204-e370-5041-9001-8ee435f07012
+
 	column 'KPI-Auswahl Y'
 		dataType: string
 		summarizeBy: none

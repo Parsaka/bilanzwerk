@@ -29,6 +29,10 @@ ROLES = {
     "waterfallChart": ["Category", "Breakdown", "Y"],
     "scatterChart": ["Category", "Series", "X", "Y", "Size"],
 }
+CHARTS = {t for t in ROLES if t.endswith("Chart")}
+# Amounts carry their unit in the format string ("#,0.0,,," Mrd"), counts are "#,0": Power BI's
+# automatic display units would scale them a second time ("1,3T Mrd"), so they are switched off.
+NO_UNITS = {"expr": {"Literal": {"Value": "1D"}}}
 
 
 def lit(value: str) -> dict:
@@ -95,6 +99,54 @@ def categorical_filter(name: str, ref: str, values: list[str]) -> dict:
             ],
         },
         "howCreated": "User",
+    }
+
+
+def not_blank_filter(name: str, ref: str) -> dict:
+    """Visual-level filter: column is not blank. Keeps the engine's blank member (facts without a
+    dimension row) out of a single-select slicer, which would otherwise preselect it."""
+    table, _, _ = parse(ref)
+    alias = "f"
+    return {
+        "name": name,
+        "field": field(ref),
+        "type": "Advanced",
+        "filter": {
+            "Version": 2,
+            "From": [{"Name": alias, "Entity": table, "Type": 0}],
+            "Where": [
+                {
+                    "Condition": {
+                        "Not": {
+                            "Expression": {
+                                "Comparison": {
+                                    "ComparisonKind": 0,
+                                    "Left": field(ref, alias),
+                                    "Right": {"Literal": {"Value": "null"}},
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+        },
+        "howCreated": "User",
+    }
+
+
+def selection(ref: str, value: str) -> dict:
+    """A slicer's saved selection: the member it shows when the report opens."""
+    table, _, _ = parse(ref)
+    # integers (fiscal_year) are Int64 literals, everything else a string
+    literal = f"{value}L" if re.fullmatch(r"-?\d+", str(value)) else "'" + str(value).replace("'", "''") + "'"
+    return {
+        "filter": {
+            "Version": 2,
+            "From": [{"Name": "s", "Entity": table, "Type": 0}],
+            "Where": [
+                {"Condition": {"In": {"Expressions": [field(ref, "s")], "Values": [[{"Literal": {"Value": literal}}]]}}}
+            ],
+        }
     }
 
 
@@ -175,8 +227,12 @@ def build(spec: dict, z: int) -> dict:
         objects["data"] = [{"properties": {"mode": text(mode)}}]
         if spec.get("single_select", True):
             objects["selection"] = [{"properties": {"strictSingleSelect": lit("true")}}]
+        if "default" in spec:
+            objects["general"] = [{"properties": {"filter": selection(spec["fields"]["Values"][0], spec["default"])}}]
     if vtype == "card":
-        objects["labels"] = [{"properties": {"fontSize": lit(f"{spec.get('font_size', 24)}D")}}]
+        objects["labels"] = [
+            {"properties": {"fontSize": lit(f"{spec.get('font_size', 24)}D"), "labelDisplayUnits": NO_UNITS}}
+        ]
         objects["categoryLabels"] = [{"properties": {"show": lit("false")}}]
         if spec.get("word_wrap"):
             objects["wordWrap"] = [{"properties": {"show": lit("true")}}]
@@ -202,6 +258,11 @@ def build(spec: dict, z: int) -> dict:
         ]
     if spec.get("data_labels"):
         objects["labels"] = [{"properties": {"show": lit("true")}}]
+    if vtype in CHARTS:
+        objects.setdefault("labels", [{"properties": {}}])[0]["properties"]["labelDisplayUnits"] = NO_UNITS
+        objects["valueAxis"] = [{"properties": {"labelDisplayUnits": NO_UNITS}}]
+        if vtype == "scatterChart":
+            objects["categoryAxis"] = [{"properties": {"labelDisplayUnits": NO_UNITS}}]
     if objects:
         visual["objects"] = objects
 
@@ -222,6 +283,8 @@ def build(spec: dict, z: int) -> dict:
         "visual": visual,
     }
     filters = []
+    if vtype == "slicer" and spec.get("single_select", True):
+        filters.append(not_blank_filter("nb", spec["fields"]["Values"][0]))
     for i, flt in enumerate(spec.get("filters", [])):
         if "top" in flt:
             filters.append(top_n_filter(f"f{i}", flt["field"], flt["by"], flt["top"]))

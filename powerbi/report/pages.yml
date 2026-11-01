@@ -61,6 +61,7 @@ pages:
         type: slicer
         pos: [24, 84, 400, 56]
         fields: {Values: ["dim_company.company_name"]}
+        default: "MICROSOFT CORP"
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
       - name: kopfzeile
@@ -106,6 +107,7 @@ pages:
         type: slicer
         pos: [24, 84, 400, 56]
         fields: {Values: ["dim_company.company_name"]}
+        default: "MICROSOFT CORP"
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
       - name: aktiva
@@ -142,12 +144,14 @@ pages:
         type: slicer
         pos: [24, 84, 400, 56]
         fields: {Values: ["dim_company.company_name"]}
+        default: "MICROSOFT CORP"
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
       - name: geschaeftsjahr
         type: slicer
         pos: [440, 84, 200, 56]
         fields: {Values: ["dim_period.fiscal_year"]}
+        default: "2025"
         label: {de: "Geschäftsjahr", en: "Fiscal year"}
       - name: bruecke
         type: waterfallChart
@@ -177,6 +181,7 @@ pages:
         type: slicer
         pos: [24, 84, 400, 56]
         fields: {Values: ["dim_company.company_name"]}
+        default: "MICROSOFT CORP"
         sync_group: Unternehmen
         label: {de: "Unternehmen", en: "Company"}
       - name: tage
@@ -222,7 +227,7 @@ pages:
       - name: streuung
         type: scatterChart
         pos: [24, 152, 720, 512]
-        fields: {Category: ["dim_company.company_name"], X: ["KPI-Auswahl.KPI-Auswahl"], Y: ["KPI-Auswahl Y.KPI-Auswahl Y"]}
+        fields: {Category: ["dim_company.company_name"], X: ["KPI-Auswahl.[KPI-Auswahl Wert]"], Y: ["KPI-Auswahl Y.[KPI-Auswahl Y Wert]"]}
         label: {de: "Unternehmen des Sektors auf zwei frei wählbaren Kennzahlen", en: "Companies of the sector on two ratios of your choice"}
       - name: rangliste
         type: tableEx
@@ -352,6 +357,7 @@ pages:
         type: slicer
         pos: [340, 84, 200, 56]
         fields: {Values: ["dim_period.fiscal_year"]}
+        default: "2025"
         label: {de: "Geschäftsjahr", en: "Fiscal year"}
       - name: abweichung
         type: pivotTable

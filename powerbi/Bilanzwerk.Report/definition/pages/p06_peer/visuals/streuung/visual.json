@@ -35,17 +35,17 @@
           "projections": [
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
                       "Entity": "KPI-Auswahl"
                     }
                   },
-                  "Property": "KPI-Auswahl"
+                  "Property": "KPI-Auswahl Wert"
                 }
               },
-              "queryRef": "KPI-Auswahl.KPI-Auswahl",
-              "nativeQueryRef": "KPI-Auswahl"
+              "queryRef": "KPI-Auswahl.KPI-Auswahl Wert",
+              "nativeQueryRef": "KPI-Auswahl Wert"
             }
           ]
         },
@@ -53,21 +53,62 @@
           "projections": [
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
                       "Entity": "KPI-Auswahl Y"
                     }
                   },
-                  "Property": "KPI-Auswahl Y"
+                  "Property": "KPI-Auswahl Y Wert"
                 }
               },
-              "queryRef": "KPI-Auswahl Y.KPI-Auswahl Y",
-              "nativeQueryRef": "KPI-Auswahl Y"
+              "queryRef": "KPI-Auswahl Y.KPI-Auswahl Y Wert",
+              "nativeQueryRef": "KPI-Auswahl Y Wert"
             }
           ]
         }
       }
+    },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "categoryAxis": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "visualContainerObjects": {
       "title": [
