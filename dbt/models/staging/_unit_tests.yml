@@ -30,3 +30,34 @@ unit_tests:
         - {adsh: "a1", tag: "Assets", taxonomy: "other", version: "invest/2013", value: 100}
         - {adsh: "a2", tag: "Revenues", taxonomy: "us-gaap", version: "us-gaap/2022", value: 6}
         - {adsh: "a3", tag: "Customtag", taxonomy: "custom", version: "a3", value: 8}
+
+  - name: submissions_one_cik_per_accession
+    description: >
+      A filing listed under several CIKs goes to one company: a Form 25-NSE to the delisted
+      company, not the exchange in the accession prefix (seen in the real data: NYSE, CIK 876661);
+      a joint 8-K to the CIK with financial statements, else the lowest CIK.
+    model: stg_sec_submissions__filings
+    given:
+      - input: source('sec_submissions', 'filings')
+        format: sql
+        rows: |
+          select '0000876661-24-000001' as accession_number, 876661 as cik, '25-NSE' as form, date '2024-03-01' as filing_date, cast(null as date) as report_date, '2024-03-01T10:00:00.000Z' as acceptance_datetime, cast(null as varchar) as items, '2024-04-01' as load_date
+          union all
+          select '0000876661-24-000001' as accession_number, 1094286 as cik, '25-NSE' as form, date '2024-03-01' as filing_date, cast(null as date) as report_date, '2024-03-01T10:00:00.000Z' as acceptance_datetime, cast(null as varchar) as items, '2024-04-01' as load_date
+          union all
+          select '0001193125-24-000002' as accession_number, 500 as cik, '8-K' as form, date '2024-05-01' as filing_date, cast(null as date) as report_date, '2024-05-01T10:00:00.000Z' as acceptance_datetime, '1.03' as items, '2024-06-01' as load_date
+          union all
+          select '0001193125-24-000002' as accession_number, 900 as cik, '8-K' as form, date '2024-05-01' as filing_date, cast(null as date) as report_date, '2024-05-01T10:00:00.000Z' as acceptance_datetime, '1.03' as items, '2024-06-01' as load_date
+          union all
+          select '0001193125-24-000003' as accession_number, 700 as cik, '8-K' as form, date '2024-07-01' as filing_date, cast(null as date) as report_date, '2024-07-01T10:00:00.000Z' as acceptance_datetime, '1.03' as items, '2024-08-01' as load_date
+          union all
+          select '0001193125-24-000003' as accession_number, 600 as cik, '8-K' as form, date '2024-07-01' as filing_date, cast(null as date) as report_date, '2024-07-01T10:00:00.000Z' as acceptance_datetime, '1.03' as items, '2024-08-01' as load_date
+      - input: source('sec_fsds', 'sub')
+        format: sql
+        rows: |
+          select 900 as cik
+    expect:
+      rows:
+        - {accession_number: "0000876661-24-000001", cik: 1094286}
+        - {accession_number: "0001193125-24-000002", cik: 900}
+        - {accession_number: "0001193125-24-000003", cik: 600}

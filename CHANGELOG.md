@@ -1,5 +1,17 @@
 # Changelog
 
+## Open data findings fixed (PR #11, PR #12, 2026-11-02)
+
+- Form 25-NSE: of the CIKs listing an accession, the delisted company is kept, not the exchange
+  that filed it. A filing listed under several CIKs goes to a CIK with financial statements,
+  then the lowest CIK, the same on every run (dbt unit test).
+- `fact_event` holds only companies in `dim_company`; `fact_risk_score.is_latest_for_company`
+  lets `[Risiko 12M]` and `[Unternehmen rot]` filter without per-company DAX; risk drivers are
+  written in German from the KPI seed.
+- Run 41374506654: 1 550 bankruptcies in the model instead of 1 686 on the same SEC data
+  (run 41328368604), because observations after a delisting are now dropped by the
+  pre-registered rule. H1 to H4 keep their verdicts (README, "Nachlauf").
+
 ## Power BI Desktop, Tableau Public, measure fixes (PR #6 to PR #10, 2026-11-01)
 
 - Local Power BI copy: `generate_tmdl.py --local` builds an import model from the

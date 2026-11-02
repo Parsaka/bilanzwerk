@@ -6,11 +6,19 @@ with source as (
     select * from {{ source('sec_submissions', 'filings') }}
 ),
 
+statement_filers as (
+    -- CIKs with financial statements (FSDS), all quarters
+    select distinct cast(cik as {{ dbt.type_bigint() }}) as cik
+    from {{ source('sec_fsds', 'sub') }}
+),
+
 latest as (
+    -- one CIK per accession. A filing listed under several CIKs (a joint 8-K of a parent and
+    -- its subsidiaries, a Form 25-NSE filed by the exchange for the delisted company) goes to:
+    -- not the exchange that filed a 25-NSE (the CIK in the accession prefix), then a CIK with
+    -- financial statements, then the lowest CIK, so the choice is the same on every run
     select
         source.*,
-        -- one CIK per accession. A Form 25-NSE is filed by the exchange (the CIK in the
-        -- accession prefix) and also listed under the delisted company: keep the company
         row_number() over (
             partition by source.accession_number
             order by
@@ -23,9 +31,12 @@ latest as (
                         then 1
                     else 0
                 end,
+                case when sf.cik is null then 1 else 0 end,
                 source.cik
         ) as rn
     from source
+    left join statement_filers as sf
+        on cast(source.cik as {{ dbt.type_bigint() }}) = sf.cik
 ),
 
 typed as (

@@ -121,6 +121,24 @@ Aus dem Lauf auf echten Daten [41282080293](https://github.com/Parsaka/bilanzwer
 | Abfragezeit langsamste Visuals vorher → nachher (Importmodus, lokaler PC, Median) | Restatement-Quote 67,4 s → 0,1 s; Risikotabelle Frühwarnsystem 22,1 s → 11,8 s |
 | Monatliche Kosten (Kapazität + Speicher) | – |
 
+**Nachlauf nach den Korrekturen #11 und #12** ([41374506654](https://github.com/Parsaka/bilanzwerk/actions/runs/41374506654),
+neuere SEC-Daten). Form 25-NSE zählt jetzt beim delisteten Unternehmen statt bei der Börse
+(NYSE, CIK 876661). Nach der vorab festgelegten Regel fallen Beobachtungen nach dem ersten
+Ereignis eines Unternehmens weg, also jetzt auch die nach einem Delisting; darum gibt es
+weniger Insolvenzen im Modell. Ereignisse von Filern ohne Abschlüsse stehen nicht mehr in
+`fact_event`; das Label-Audit liest deshalb nur noch die 8-K von Unternehmen mit Kennzahlen.
+Die Aussagen bleiben gleich:
+
+| Messgröße | Lauf 41282080293 (oben) | Lauf 41374506654 |
+|---|---|---|
+| Beobachtungen / mit Label / Insolvenzen | 229 017 / 199 933 / 1 726 | 219 720 / 192 081 / 1 550 |
+| H1 Differenz CCC − Z'' (Monate, 95%-KI) | −12,7 (−14,9 bis −11,1), nicht bestätigt | −12,4 (−14,7 bis −10,6), nicht bestätigt |
+| H2 PR-AUC M2 − M1 | −0,002 (−0,004 bis −0,001), nicht bestätigt | −0,002 (−0,003 bis −0,000), nicht bestätigt |
+| H3 PR-AUC sektorrelativ − absolut | +0,004 (+0,002 bis +0,006), bestätigt | +0,004 (+0,003 bis +0,006), bestätigt |
+| H4 Working-Capital-Potenzial | 1 309 Mrd. EUR, bestätigt | 1 308 Mrd. EUR, bestätigt |
+| PR-AUC M3 / Recall in den riskantesten 5 % | 0,053 / 34 % | 0,046 / 32 % |
+| Label-Audit: gelesene 8-K / nur Tochter / kein Item 1.03 | 3 609 / 250 / 124 | 1 882 / 149 / 40 |
+
 Alle Datenqualitätsregeln des Laufs: [docs/data-quality-results.md](docs/data-quality-results.md).
 
 ### Schnellstart
@@ -148,14 +166,9 @@ ist gebaut und auf echten Daten gelaufen:
   Abfragezeiten oben sind Importmodus auf einem PC, nicht Direct Lake.
 - **Stichprobe durch einen Menschen:** die Stammdaten-Labels (`mdm/labelled_pairs*.csv`, von
   Claude nach `mdm/REVIEW.md` gesetzt) und einige Zeilen aus `label_audit.csv` prüfen.
-- **Offene Befunde in den Daten** (dokumentiert, nicht behoben):
-  - Form 25-NSE reicht die Börse ein (NYSE, CIK 876661); das Ereignis wird der Börse statt
-    der SUBJECT COMPANY zugeordnet.
-  - `fact_event` hat rund 93 600 Zeilen von Filern ohne Abschlüsse (leerer `company_key`);
-    sie stehen in keiner Kennzahl.
-  - Die Risikotabelle im Frühwarnsystem braucht 11,8 s (nur Formel-Engine); ein Flag
-    `is_latest_for_company` in dbt würde den Filter auf den letzten Stichtag ersetzen.
-  - Die Treiber im Frühwarnsystem stehen als Rohcodes da (`EQUITY_RATIO value`, …).
+- **Befunde in den Daten** aus dem Power-BI-Abgleich sind behoben (#11, #12): Form 25-NSE
+  beim delisteten Unternehmen, keine Ereignisse von Filern ohne Abschlüsse, ein Flag
+  `is_latest_for_company` für die Risikotabelle, Treiber im Klartext.
 
 ---
 
