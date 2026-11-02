@@ -1,7 +1,7 @@
 # Fallstudien
 
 Lauf [41282080293](https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293) (Datenstand `c82f84b4f516fbe8`), Dateien `results/analysis/case_*.csv`,
-`case_*_events.csv` und `label_audit.csv` auf dem Branch `real-data-results`. Die Fälle wählt
+`case_*_events.csv` und `label_audit.csv` auf dem Branch [`results/run-41282080293`](https://github.com/Parsaka/bilanzwerk/tree/results/run-41282080293). Die Fälle wählt
 der Code nach einer festen Regel; Texte und Befunde unten sind nach dem Lauf geschrieben, die
 Zahlen stammen aus dem Lauf.
 
