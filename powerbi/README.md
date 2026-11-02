@@ -74,16 +74,22 @@ reads H1 to H4 from `fact_hypothesis_result`, which the model run writes.
 ## Performance
 
 Measured in Power BI Desktop with DAX Studio (server timings, cold cache) on the local import
-copy of run 41328368604, not on Direct Lake. Every page, the before/after of each change and
+copy of run 41374506654, not on Direct Lake. Every page, the before/after of each change and
 the machine: [docs/performance-local.md](../docs/performance-local.md).
 
 | Visual (page) | Before (ms) | Change | After (ms) |
 |---|---|---|---|
 | Restatement-Quote card (P11) | 67 449 | `fact_kpi.is_restated` computed in dbt instead of iterating versions in DAX | 101 |
 | Risk table (P7) | 22 099 | latest as_of_date per company via TREATAS pairs, HASONEVALUE fast path | 11 801 |
+| Risk table (P7) | 11 801 | `is_latest_for_company` flag from dbt as a plain filter | 7 504 |
+| Risk table (P7) | 7 504 | drivers as the measure `[Stärkste Treiber]` instead of the column `top_3_drivers`, flags of the latest filing (`[Rote Flaggen Risikotabelle]`) | 333 |
 
-The risk table is still formula-engine bound; an `is_latest_for_company` flag in dbt is the
-next step.
+The risk table now groups by company and sector only and takes about a third of a second, with
+two thirds of it in the formula engine. Before the last change it grouped by the driver column
+next to `[Rote Flaggen]` from `fact_kpi`, which pairs every company with every driver text. The
+slowest page is now page 5 (CCC against the sector median, 1.9 s in the same session), which
+filters the peers for the bounded median in the formula engine. The steps are measured in
+different Desktop sessions; in one session the last step went from 15 524 to 298 ms.
 
 Candidate changes, in the order to try: remove high-cardinality text columns from facts
 (`source_filing` is already hidden; drop it from the model if VertiPaq shows a large
@@ -104,9 +110,9 @@ where it happens.
 
 All 11 pages were opened against the real data and compared with `answer.json` of the run;
 the screenshots are in [docs/images](../docs/images/) (`powerbi_01_antwort.png` …
-`powerbi_11_datenqualitaet.png`). Known cosmetic points: the waterfall legend uses Power BI's
-default names (Increase/Decrease/Total), the risk drivers on P7 show raw codes, and Desktop
-with an English UI shows "bn"/"M" instead of "Mrd."/"Mio.".
+`powerbi_11_datenqualitaet.png`). Known cosmetic points: Desktop with an English UI shows
+"bn"/"M" instead of "Mrd."/"Mio." and names the last bar of the waterfall on P4 "Total"
+(Power BI's own label; the legend with Increase/Decrease/Total is hidden).
 
 ## Local copy without Fabric
 

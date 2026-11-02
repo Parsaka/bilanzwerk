@@ -115,6 +115,11 @@ def render_table(
         out.append(f"\t\tsourceColumn: {c}")
         out.append(f"\t\tlineageTag: {tag('column', name, c)}")
         out.append(f"\t\tsourceLineageTag: {c}")
+        if LOCAL and t in ("date", "timestamp"):
+            # without it Desktop's "Apply changes" after a refresh resets dates to the long format
+            # (a child object: after all properties)
+            out.append("")
+            out.append("\t\tchangedProperty = FormatString")
         out.append("")
     if LOCAL:
         types = ", ".join(f'{{"{col["name"]}", {M_TYPE[col["type"]]}}}' for col in columns)

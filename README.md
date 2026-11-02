@@ -53,7 +53,7 @@ Fabric-Verbindung: [excel/Bilanzwerk_Ergebnisse.xlsx](excel/Bilanzwerk_Ergebniss
 ![Power BI: Frühwarnsystem](docs/images/powerbi_07_fruehwarnsystem.png)
 ![Power BI: Working-Capital-Potenzial](docs/images/powerbi_09_wc_potenzial.png)
 
-Die Screenshots zeigen den späteren Lauf 41328368604 mit neueren SEC-Daten; die Zahlen in
+Die Screenshots zeigen den späteren Lauf 41374506654 mit neueren SEC-Daten; die Zahlen in
 diesem README stammen aus Lauf 41282080293. Die Aussagen sind gleich, einzelne Werte weichen
 leicht ab. Tableau Public: [Working-Capital-Potenzial nach Sektor](https://public.tableau.com/app/profile/parsa.kamali/viz/BilanzwerkWorking-Capital-PotenzialnachSektor/Working-Capital-Potenzial).
 
@@ -118,7 +118,7 @@ Aus dem Lauf auf echten Daten [41282080293](https://github.com/Parsaka/bilanzwer
 | PR-AUC M0 / M1 / M2 / M3 (gepoolt 2014–2025, 1 463 Ereignisse) | 0,018 / 0,019 / 0,017 / 0,053 |
 | PR-AUC M2r (sektorrelativ) / S1 (Hazard) | 0,021 / 0,016 |
 | Recall in den riskantesten 5 % M0 / M1 / M2 / M3 | 6 % / 10 % / 10 % / 34 % |
-| Abfragezeit langsamste Visuals vorher → nachher (Importmodus, lokaler PC, Median) | Restatement-Quote 67,4 s → 0,1 s; Risikotabelle Frühwarnsystem 22,1 s → 11,8 s |
+| Abfragezeit langsamste Visuals vorher → nachher (Importmodus, lokaler PC, Median) | Restatement-Quote 67,4 s → 0,1 s; Risikotabelle Frühwarnsystem 22,1 s → 0,3 s |
 | Monatliche Kosten (Kapazität + Speicher) | – |
 
 **Nachlauf nach den Korrekturen #11 und #12** ([41374506654](https://github.com/Parsaka/bilanzwerk/actions/runs/41374506654),

@@ -107,6 +107,22 @@ table fact_risk_score
 		displayFolder: Kreditrisiko
 		lineageTag: 5245682a-6de8-5fe4-a3ae-28d2493a5363
 
+	/// Die drei stärksten Treiber (SHAP) des Champion-Modells zum letzten Stichtag des Unternehmens. Ein Measure statt der Spalte top_3_drivers: so gruppiert die Risikotabelle nur nach Unternehmen und Sektor; mit der Spalte kreuzte jede Kennzahl aus fact_kpi jedes Unternehmen mit jedem Treibertext. Die OLS der Rolle Reporting auf top_3_drivers gilt weiter: dort liefert das Measure einen Fehler statt der Treiber.
+	measure 'Stärkste Treiber' =
+			CALCULATE (
+			    MAX ( fact_risk_score[top_3_drivers] ),
+			    fact_risk_score[is_champion] = 1,
+			    fact_risk_score[is_latest_for_company] = 1
+			)
+		displayFolder: Beschriftungen
+		lineageTag: d5bc1dc2-5f38-58c6-9f89-09b187b0ef4e
+
+	/// Rote Flaggen zum letzten Abschluss, nur für Unternehmen mit Risikowert (Risikotabelle Seite 7; vorher die Summe über alle Perioden).
+	measure 'Rote Flaggen Risikotabelle' = IF ( NOT ISBLANK ( [Risiko 12M] ), [Rote Flaggen letzter Abschluss] )
+		formatString: #,0
+		displayFolder: Kreditrisiko
+		lineageTag: dcc5724c-f2f8-53e9-b1a4-d6aa15fbef3e
+
 	column risk_score_key
 		dataType: string
 		isHidden

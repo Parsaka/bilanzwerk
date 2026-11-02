@@ -36,6 +36,7 @@ field_names:
   fact_stewardship_queue.gleif_country: Land
   fact_stewardship_queue.match_probability: Match-Wahrscheinlichkeit
   fact_risk_score.top_3_drivers: Stärkste Treiber
+  fact_risk_score.[Rote Flaggen Risikotabelle]: Rote Flaggen
   fact_model_backtest.model_name: Modell
   fact_case_study.company_name: Fall
   GuV-Brücke.Schritt: Schritt
@@ -144,6 +145,7 @@ pages:
         pos: [856, 274, 400, 390]
         fields: {Values: ["fact_event.event_date", "fact_event.event_type", "fact_event.form", "fact_event.item_code"]}
         sort: ["fact_event.event_date", desc]
+        widths: {"fact_event.event_date": 75, "fact_event.event_type": 170, "fact_event.form": 65, "fact_event.item_code": 50}
         label: {de: "Ereignisse und Einreichungen (8-K, Form 15/25, NT 10-K/Q)", en: "Events and filings (8-K, Form 15/25, NT 10-K/Q)"}
   - id: bilanz
     de: {name: "Bilanzanalyse", question: "Ist die Bilanz gesund?"}
@@ -294,9 +296,9 @@ pages:
     en: {name: "Early warning", question: "Which companies need attention now?"}
     visuals:
       - "Ampeltabelle der Risikobänder (rot/gelb/grün nur hier)"
-      - "Treiber je Unternehmen aus SHAP (fact_risk_score.top_3_drivers, per OLS für Reporting verborgen)"
+      - "Treiber je Unternehmen aus SHAP (Measure Stärkste Treiber über fact_risk_score.top_3_drivers, per OLS für Reporting verborgen)"
       - "Veränderung zum Vorquartal"
-    measures: ["Risiko 12M", "Unternehmen rot", "Risiko Veränderung zum Vorquartal", "Rote Flaggen"]
+    measures: ["Risiko 12M", "Unternehmen rot", "Risiko Veränderung zum Vorquartal", "Rote Flaggen Risikotabelle", "Stärkste Treiber"]
     layout:
       - name: sektor
         type: slicer
@@ -312,8 +314,8 @@ pages:
       - name: ampel
         type: tableEx
         pos: [24, 152, 820, 512]
-        fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_risk_score.[Risiko 12M]", "fact_kpi.[Rote Flaggen]", "fact_risk_score.top_3_drivers"]}
-        widths: {"dim_company.company_name": 230, "dim_sector.sector_de": 130, "fact_risk_score.[Risiko 12M]": 70, "fact_kpi.[Rote Flaggen]": 60, "fact_risk_score.top_3_drivers": 290}
+        fields: {Values: ["dim_company.company_name", "dim_sector.sector_de", "fact_risk_score.[Risiko 12M]", "fact_risk_score.[Rote Flaggen Risikotabelle]", "fact_risk_score.[Stärkste Treiber]"]}
+        widths: {"dim_company.company_name": 230, "dim_sector.sector_de": 130, "fact_risk_score.[Risiko 12M]": 70, "fact_risk_score.[Rote Flaggen Risikotabelle]": 60, "fact_risk_score.[Stärkste Treiber]": 290}
         sort: ["fact_risk_score.[Risiko 12M]", desc]
         conditional_back: ["fact_risk_score.[Risiko 12M]", "fact_risk_score.[Risiko Farbe]"]
         label: {de: "Unternehmen nach Insolvenzrisiko 12 Monate, mit den drei stärksten Treibern", en: "Companies by 12-month bankruptcy risk, with the three strongest drivers"}
@@ -337,7 +339,7 @@ pages:
         pos: [24, 84, 400, 56]
         fields: {Values: ["fact_case_study.company_name"]}
         slicer_mode: Basic
-        label: {de: "Fallstudie (Auswahlregel: die drei umsatzstärksten Insolvenzen im Testzeitraum, je Sektor eine)", en: "Case study (rule: the three largest bankruptcies by revenue in the test period, one per sector)"}
+        label: {de: "Fallstudie: umsatzstärkste Insolvenz je Sektor", en: "Case study: largest bankruptcy per sector"}
       - name: befund
         type: card
         pos: [440, 84, 816, 56]
