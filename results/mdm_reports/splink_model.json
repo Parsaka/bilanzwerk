@@ -1,0 +1,260 @@
+{
+    "link_type": "link_only",
+    "probability_two_random_records_match": 1.4853641687767799e-06,
+    "retain_matching_columns": true,
+    "retain_intermediate_calculation_columns": true,
+    "additional_columns_to_retain": [
+        "name_orig",
+        "tickers",
+        "other_names"
+    ],
+    "sql_dialect": "duckdb",
+    "linker_uid": "a1nuzhdj",
+    "em_convergence": 0.0001,
+    "max_iterations": 25,
+    "bayes_factor_column_prefix": "bf_",
+    "term_frequency_adjustment_column_prefix": "tf_",
+    "comparison_vector_value_column_prefix": "gamma_",
+    "unique_id_column_name": "unique_id",
+    "source_dataset_column_name": "source_dataset",
+    "blocking_rules_to_generate_predictions": [
+        {
+            "blocking_rule": "(l.\"country\" = r.\"country\") AND (l.\"name_prefix3\" = r.\"name_prefix3\")",
+            "sql_dialect": "duckdb"
+        },
+        {
+            "blocking_rule": "l.\"zip5\" = r.\"zip5\"",
+            "sql_dialect": "duckdb"
+        }
+    ],
+    "comparisons": [
+        {
+            "output_column_name": "name_std",
+            "comparison_levels": [
+                {
+                    "sql_condition": "\"name_std_l\" IS NULL OR \"name_std_r\" IS NULL",
+                    "label_for_charts": "name_std is NULL",
+                    "fix_m_probability": false,
+                    "fix_u_probability": false,
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "name_std_l = name_std_r or replace(name_std_l, ' ', '') = replace(name_std_r, ' ', '')",
+                    "label_for_charts": "exact (spaces ignored)",
+                    "m_probability": 0.9130434782608695,
+                    "u_probability": 1.0530648678666857e-06,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "name_marks_l <> name_marks_r",
+                    "label_for_charts": "series or vehicle marks differ",
+                    "m_probability": 0.010869565217391304,
+                    "u_probability": 0.37616449616575987,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "(starts_with(name_std_l || ' ', name_std_r || ' ') or starts_with(name_std_r || ' ', name_std_l || ' '))",
+                    "label_for_charts": "one name is the other plus words",
+                    "m_probability": 0.010869565217391304,
+                    "u_probability": 3.840589518102031e-06,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "jaro_winkler_similarity(\"name_std_l\", \"name_std_r\") >= 0.97",
+                    "label_for_charts": "Jaro-Winkler >= 0.97",
+                    "m_probability": 0.03260869565217391,
+                    "u_probability": 3.097249611372605e-08,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "jaro_winkler_similarity(\"name_std_l\", \"name_std_r\") >= 0.92",
+                    "label_for_charts": "Jaro-Winkler >= 0.92",
+                    "m_probability": 0.010869565217391304,
+                    "u_probability": 1.5795973018000285e-06,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "jaro_winkler_similarity(\"name_std_l\", \"name_std_r\") >= 0.85",
+                    "label_for_charts": "Jaro-Winkler >= 0.85",
+                    "m_probability": 0.010869565217391304,
+                    "u_probability": 5.593632798138925e-05,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.010869565217391304,
+                    "u_probability": 0.6237730632820749,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                }
+            ],
+            "comparison_description": "CustomComparison"
+        },
+        {
+            "output_column_name": "city_std",
+            "comparison_levels": [
+                {
+                    "sql_condition": "\"city_std_l\" IS NULL OR \"city_std_r\" IS NULL",
+                    "label_for_charts": "city_std is NULL",
+                    "fix_m_probability": false,
+                    "fix_u_probability": false,
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "\"city_std_l\" = \"city_std_r\"",
+                    "label_for_charts": "Exact match on city_std",
+                    "m_probability": 0.9201809259959869,
+                    "u_probability": 0.011635310067560908,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "jaro_winkler_similarity(\"city_std_l\", \"city_std_r\") >= 0.92",
+                    "label_for_charts": "Jaro-Winkler distance of city_std >= 0.92",
+                    "m_probability": 0.010409783823507766,
+                    "u_probability": 0.0001801731924912216,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.06940929018050533,
+                    "u_probability": 0.9881845167399479,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                }
+            ],
+            "comparison_description": "CustomComparison"
+        },
+        {
+            "output_column_name": "postal_code",
+            "comparison_levels": [
+                {
+                    "sql_condition": "\"zip5_l\" IS NULL OR \"zip5_r\" IS NULL",
+                    "label_for_charts": "zip5 is NULL",
+                    "fix_m_probability": false,
+                    "fix_u_probability": false,
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "\"zip5_l\" = \"zip5_r\"",
+                    "label_for_charts": "Exact match on zip5",
+                    "m_probability": 0.8542048613270844,
+                    "u_probability": 0.0011076019747151917,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "\"zip3_l\" = \"zip3_r\"",
+                    "label_for_charts": "Exact match on zip3",
+                    "m_probability": 0.11730746730695399,
+                    "u_probability": 0.009841919168935028,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.028487671365961746,
+                    "u_probability": 0.9890504788563498,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                }
+            ],
+            "comparison_description": "CustomComparison"
+        },
+        {
+            "output_column_name": "country",
+            "comparison_levels": [
+                {
+                    "sql_condition": "\"country_l\" IS NULL OR \"country_r\" IS NULL",
+                    "label_for_charts": "country is NULL",
+                    "fix_m_probability": false,
+                    "fix_u_probability": false,
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "\"country_l\" = \"country_r\"",
+                    "label_for_charts": "Exact match on country",
+                    "m_probability": 1.0,
+                    "u_probability": 0.9921017657110309,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 4.7875302202340855e-23,
+                    "u_probability": 0.007898234288969052,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                }
+            ],
+            "comparison_description": "CustomComparison"
+        },
+        {
+            "output_column_name": "legal_form",
+            "comparison_levels": [
+                {
+                    "sql_condition": "\"legal_form_l\" IS NULL OR \"legal_form_r\" IS NULL",
+                    "label_for_charts": "legal_form is NULL",
+                    "fix_m_probability": false,
+                    "fix_u_probability": false,
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "\"legal_form_l\" = \"legal_form_r\"",
+                    "label_for_charts": "Exact match on legal_form",
+                    "m_probability": 0.9246835202618121,
+                    "u_probability": 0.17761871269242047,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.07531647973818788,
+                    "u_probability": 0.8223812873075795,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                }
+            ],
+            "comparison_description": "CustomComparison"
+        },
+        {
+            "output_column_name": "ticker",
+            "comparison_levels": [
+                {
+                    "sql_condition": "len(tickers_l) = 0 and len(tickers_r) = 0",
+                    "label_for_charts": "no ticker",
+                    "fix_m_probability": false,
+                    "fix_u_probability": false,
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "list_has_any(tickers_l, other_names_r) or list_has_any(tickers_r, other_names_l)",
+                    "label_for_charts": "ticker found in GLEIF other names",
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 1.0,
+                    "u_probability": 1.0,
+                    "fix_m_probability": false,
+                    "fix_u_probability": false
+                }
+            ],
+            "comparison_description": "CustomComparison"
+        }
+    ]
+}
