@@ -301,6 +301,9 @@ def build(spec: dict, z: int, units: dict[str, str] | None = None, names: dict[s
             objects["categoryAxis"] = [{"properties": {"labelDisplayUnits": display_units(roles.get("X", []), units)}}]
         if "Series" in roles:
             objects["legend"] = [{"properties": {"showTitle": lit("false")}}]
+        if vtype == "waterfallChart":
+            # its legend can only say Increase/Decrease/Total (English, cannot be renamed): hidden
+            objects["legend"] = [{"properties": {"show": lit("false")}}]
         # long category names (sectors, model names): up to `label_space` % of the width for the
         # labels instead of cutting them; `category_width` lets all categories fit without a scrollbar
         axis = objects.setdefault("categoryAxis", [{"properties": {}}])[0]["properties"]

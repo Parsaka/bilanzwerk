@@ -199,7 +199,7 @@ table Sprache
 		lineageTag: 13b1e487-808d-57e4-ad96-bcdae3df6881
 
 	/// Diagrammtitel fall auf Seite 08 (fallstudien).
-	measure 'Diagramm 08 fall' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Case study (rule: the three largest bankruptcies by revenue in the test period, one per sector)", "Fallstudie (Auswahlregel: die drei umsatzstärksten Insolvenzen im Testzeitraum, je Sektor eine)" )
+	measure 'Diagramm 08 fall' = IF ( SELECTEDVALUE ( Sprache[Code], "DE" ) = "EN", "Case study: largest bankruptcy per sector", "Fallstudie: umsatzstärkste Insolvenz je Sektor" )
 		displayFolder: Beschriftungen\Diagramme
 		lineageTag: b825572f-0f13-5184-a8ea-a4ea05b612f1
 

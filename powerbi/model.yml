@@ -860,6 +860,25 @@ measures:
     expression: |
       [Risiko 12M] - CALCULATE ( [Risiko 12M], DATEADD ( dim_date[date_key], -3, MONTH ) )
 
+  - table: fact_risk_score
+    name: "Stärkste Treiber"
+    folder: "Beschriftungen"
+    description: "Die drei stärksten Treiber (SHAP) des Champion-Modells zum letzten Stichtag des Unternehmens. Ein Measure statt der Spalte top_3_drivers: so gruppiert die Risikotabelle nur nach Unternehmen und Sektor; mit der Spalte kreuzte jede Kennzahl aus fact_kpi jedes Unternehmen mit jedem Treibertext. Die OLS der Rolle Reporting auf top_3_drivers gilt weiter: dort liefert das Measure einen Fehler statt der Treiber."
+    expression: |
+      CALCULATE (
+          MAX ( fact_risk_score[top_3_drivers] ),
+          fact_risk_score[is_champion] = 1,
+          fact_risk_score[is_latest_for_company] = 1
+      )
+
+  - table: fact_risk_score
+    name: "Rote Flaggen Risikotabelle"
+    folder: "Kreditrisiko"
+    format: "#,0"
+    description: "Rote Flaggen zum letzten Abschluss, nur für Unternehmen mit Risikowert (Risikotabelle Seite 7; vorher die Summe über alle Perioden)."
+    expression: |
+      IF ( NOT ISBLANK ( [Risiko 12M] ), [Rote Flaggen letzter Abschluss] )
+
   - table: fact_event
     name: "Insolvenzen"
     folder: "Kreditrisiko"

@@ -64,29 +64,29 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "fact_kpi"
+                      "Entity": "fact_risk_score"
                     }
                   },
-                  "Property": "Rote Flaggen"
+                  "Property": "Rote Flaggen Risikotabelle"
                 }
               },
-              "queryRef": "fact_kpi.Rote Flaggen",
-              "nativeQueryRef": "Rote Flaggen"
+              "queryRef": "fact_risk_score.Rote Flaggen Risikotabelle",
+              "nativeQueryRef": "Rote Flaggen Risikotabelle",
+              "displayName": "Rote Flaggen"
             },
             {
               "field": {
-                "Column": {
+                "Measure": {
                   "Expression": {
                     "SourceRef": {
                       "Entity": "fact_risk_score"
                     }
                   },
-                  "Property": "top_3_drivers"
+                  "Property": "Stärkste Treiber"
                 }
               },
-              "queryRef": "fact_risk_score.top_3_drivers",
-              "nativeQueryRef": "top_3_drivers",
-              "displayName": "Stärkste Treiber"
+              "queryRef": "fact_risk_score.Stärkste Treiber",
+              "nativeQueryRef": "Stärkste Treiber"
             }
           ]
         }
@@ -221,7 +221,7 @@
             }
           },
           "selector": {
-            "metadata": "fact_kpi.Rote Flaggen"
+            "metadata": "fact_risk_score.Rote Flaggen Risikotabelle"
           }
         },
         {
@@ -235,7 +235,7 @@
             }
           },
           "selector": {
-            "metadata": "fact_risk_score.top_3_drivers"
+            "metadata": "fact_risk_score.Stärkste Treiber"
           }
         }
       ],

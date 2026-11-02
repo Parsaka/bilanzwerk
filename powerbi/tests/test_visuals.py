@@ -144,3 +144,25 @@ def test_headers_show_display_names_and_a_measure_can_require_a_value():
     assert [p["displayName"] for p in projections] == ["Unternehmen", "Wert"]  # the visual overrides the map
     (flt,) = out["filterConfig"]["filters"]
     assert flt["type"] == "Advanced" and "Measure" in flt["field"]
+
+
+def test_waterfall_hides_its_english_only_legend():
+    v = load("visuals")
+    spec = {
+        "name": "w",
+        "type": "waterfallChart",
+        "pos": [0, 0, 1, 1],
+        "fields": {"Category": ["s.name"], "Y": ["t.[Wert]"]},
+    }
+    legend = v.build(spec, 0)["visual"]["objects"]["legend"]
+    assert legend == [{"properties": {"show": {"expr": {"Literal": {"Value": "false"}}}}}]
+
+
+def test_risk_table_groups_only_by_dimensions():
+    # a fact column next to measures from another fact table (top_3_drivers beside fact_kpi's red
+    # flags) makes the engine cross every company with every value of that column: 7.5 s on page 7
+    spec = yaml.safe_load((PBI / "report" / "pages.yml").read_text(encoding="utf-8"))
+    page = next(p for p in spec["pages"] if p["id"] == "fruehwarnung")
+    table = next(v for v in page["layout"] if v["name"] == "ampel")
+    columns = [f for f in table["fields"]["Values"] if ".[" not in f]
+    assert columns and all(f.startswith("dim_") for f in columns), columns

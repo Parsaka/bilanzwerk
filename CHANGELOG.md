@@ -1,5 +1,18 @@
 # Changelog
 
+## Power BI on run 41374506654 (2026-11-02)
+
+- All 11 pages checked in Desktop against `answer.json` of run 41374506654 (1 550 positives,
+  H1 −12,4 months, H2 −0,002, H3 +0,004, H4 1 308,5 Mrd. EUR, top sector Technologie und
+  Telekommunikation 337,6); new screenshots in `docs/images/powerbi_*.png`.
+- Risk table (P7): drivers as the measure `[Stärkste Treiber]` and flags of the latest filing
+  (`[Rote Flaggen Risikotabelle]`) instead of grouping by `top_3_drivers` next to a `fact_kpi`
+  measure, which crossed every company with every driver text: 7,5 s → 0,3 s (11,8 s before
+  `is_latest_for_company`). The flag column now counts the latest filing, not all periods.
+- Polish: short dates kept after Desktop's "Apply changes" in the local model, column widths of
+  the event table (P2), waterfall legend hidden (P4), shorter case-study slicer title (P8).
+- Timings: `docs/performance-local.md` (run 41328368604 kept below).
+
 ## Open data findings fixed (PR #11, PR #12, 2026-11-02)
 
 - Form 25-NSE: of the CIKs listing an accession, the delisted company is kept, not the exchange

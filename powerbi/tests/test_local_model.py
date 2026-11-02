@@ -15,6 +15,8 @@ def test_local_model_reads_parquet_and_keeps_the_measures():
     kpi = (tables / "fact_kpi.tmdl").read_text()
     assert "mode: import" in kpi and 'MartsFolder & "\\fact_kpi.parquet"' in kpi
     assert "MissingField.UseNull" in kpi  # marts of an older run, without a newer column, still load
+    dates = (tables / "fact_event.tmdl").read_text()
+    assert "changedProperty = FormatString" in dates  # Desktop keeps dd.MM.yyyy after "Apply changes"
     assert "directLake" not in "".join(p.read_text() for p in tables.glob("*.tmdl"))
     original = PBI / "Bilanzwerk.SemanticModel" / "definition" / "tables"
     assert sorted(p.name for p in tables.glob("*.tmdl")) == sorted(p.name for p in original.glob("*.tmdl"))
