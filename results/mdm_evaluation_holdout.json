@@ -1,0 +1,115 @@
+{
+  "model_version": "splink4-v3",
+  "chosen": {
+    "threshold": 0.9,
+    "n_labelled": 149,
+    "n_unclear": 1,
+    "tp": 47,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "curve": [
+    {
+      "threshold": 0.5,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.55,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.6,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.65,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.7,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.75,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.8,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.85,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.9,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "threshold": 0.95,
+      "n_labelled": 149,
+      "n_unclear": 1,
+      "tp": 47,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  ]
+}

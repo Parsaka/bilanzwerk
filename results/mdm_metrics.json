@@ -1,0 +1,10 @@
+{
+  "sec_filers_considered": 16891,
+  "matches_by_status": {
+    "match": 3758,
+    "review": 1626
+  },
+  "golden_records_with_lei": 6857,
+  "stewardship_queue_open": 1626,
+  "duplicate_golden_records": 0
+}
