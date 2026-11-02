@@ -1,6 +1,6 @@
 # Datenqualität im Lauf auf echten Daten
 
-Lauf [41282080293](https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293), `results/data_quality.csv` auf dem Branch `real-data-results`
+Lauf [41282080293](https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293), `results/data_quality.csv` auf dem Branch [`results/run-41282080293`](https://github.com/Parsaka/bilanzwerk/tree/results/run-41282080293)
 (`marts.fact_data_quality`, letzter Stand je Regel). Regeln und Ziele:
 [ADR-010](adr/ADR-010-data-quality-and-contracts.md), `dbt/models/marts/facts/fact_data_quality.sql`.
 

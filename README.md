@@ -14,7 +14,7 @@
 > über Unternehmen). Die Hypothesen wurden vorher festgelegt:
 > [ADR-001](docs/adr/ADR-001-hypotheses.md) (27.10.2026).
 > Lauf: [Actions 41282080293](https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293) (Datenstand `c82f84b4f516fbe8`),
-> Zahlen: Branch `real-data-results`, `results/analysis/answer.json`.
+> Zahlen: Branch [`results/run-41282080293`](https://github.com/Parsaka/bilanzwerk/tree/results/run-41282080293), `results/analysis/answer.json`.
 >
 > **H1 nicht bestätigt:** Das CCC-Signal wurde im Median 0,0 Monate vor der Insolvenz rot, das
 > Z''-Signal 12,7 Monate; Differenz −12,7 Monate (95%-KI −14,9 bis −11,1).
@@ -122,10 +122,11 @@ Aus dem Lauf auf echten Daten [41282080293](https://github.com/Parsaka/bilanzwer
 | Monatliche Kosten (Kapazität + Speicher) | – |
 
 **Nachlauf nach den Korrekturen #11 und #12** ([41374506654](https://github.com/Parsaka/bilanzwerk/actions/runs/41374506654),
-neuere SEC-Daten). Form 25-NSE zählt jetzt beim delisteten Unternehmen statt bei der Börse
+neuere SEC-Daten; Zahlen auf [`results/run-41374506654`](https://github.com/Parsaka/bilanzwerk/tree/results/run-41374506654)). Form 25-NSE zählt jetzt beim delisteten Unternehmen statt bei der Börse
 (NYSE, CIK 876661). Nach der vorab festgelegten Regel fallen Beobachtungen nach dem ersten
 Ereignis eines Unternehmens weg, also jetzt auch die nach einem Delisting; darum gibt es
-weniger Insolvenzen im Modell. Ereignisse von Filern ohne Abschlüsse stehen nicht mehr in
+weniger Insolvenzen im Modell (gegen Lauf 41328368604 auf denselben SEC-Daten: 1 686 → 1 550,
+das Distress-Label steigt in den meisten Jahren). Ereignisse von Filern ohne Abschlüsse stehen nicht mehr in
 `fact_event`; das Label-Audit liest deshalb nur noch die 8-K von Unternehmen mit Kennzahlen.
 Die Aussagen bleiben gleich:
 

@@ -37,7 +37,8 @@ The same sequence runs on a GitHub runner without Azure: `.github/workflows/real
 (Actions -> real-data-run -> Run workflow, or a push to the branch `run/real-data`). The landing
 zone is cached between runs, so a rerun loads only new files. The results (analysis CSVs and
 `answer.json`, MDM review sample, event counts, contract check, ingest manifest, dbt run
-results; no raw data) land on the branch `real-data-results` and in the run's artifacts.
+results; no raw data) land on the branch `real-data-results` (latest run), on
+`results/run-<run id>` (kept per run, cited by the docs) and in the run's artifacts.
 
 ## Scheduled loads (prod)
 
