@@ -3,8 +3,8 @@ name: real-data-run
 # The whole local stack on the real sources, on a GitHub runner (open internet, no Azure
 # needed): loaders -> dbt (DuckDB) -> MDM -> early-warning analysis -> dbt with scores ->
 # contracts -> Tableau extract. The landing zone is cached between runs, so a rerun loads only
-# what is new. Results (CSV/JSON, no raw data) go to the branch `real-data-results` and to the
-# run's artifacts; README, management summary and report titles are filled from them.
+# what is new. Results (CSV/JSON, no raw data) go to the branch `real-data-results` (latest
+# run), to `results/run-<run id>` (kept per run) and to the run's artifacts; README, management summary and report titles are filled from them.
 #
 # Start: Actions -> real-data-run -> Run workflow, or push to the branch `run/real-data`.
 on:
@@ -217,6 +217,8 @@ jobs:
           git add -f results/
           git commit -m "Real-data run ${GITHUB_RUN_ID} on ${GITHUB_SHA::7}" || exit 0
           git push -f origin real-data-results
+          # the same commit under the run id: the docs cite one run, the branch above moves on
+          git push origin "HEAD:refs/heads/results/run-${GITHUB_RUN_ID}"
       - name: Fail the run when dbt tests failed
         if: env.DBT_TESTS_FAILED == '1'
         run: |

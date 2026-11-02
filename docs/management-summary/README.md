@@ -2,7 +2,7 @@
 
 Stand: Lauf auf echten Daten vom 01.11.2026
 ([Actions 41282080293](https://github.com/Parsaka/bilanzwerk/actions/runs/41282080293), Datenstand `c82f84b4f516fbe8`; Zahlen in `results/` auf dem Branch
-`real-data-results`). Keine Zahl hier stammt aus einer anderen Quelle.
+[`results/run-41282080293`](https://github.com/Parsaka/bilanzwerk/tree/results/run-41282080293)). Keine Zahl hier stammt aus einer anderen Quelle.
 
 ## Die Frage
 
